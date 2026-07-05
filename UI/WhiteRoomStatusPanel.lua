@@ -446,9 +446,110 @@ local function WR_BuildStatusText()
     return table.concat(lines, "[NEWLINE]")
 end
 
+local function WR_SetLabel(control, text)
+    if control ~= nil and control.SetString ~= nil then
+        control:SetString(text or "")
+    end
+end
+
+local function WR_BuildCitySummary(playerID, player)
+    local cityCount = 0
+    local bestCityName = "None"
+    local bestScore = -1
+    local totalDefenseStacks = 0
+    local totalRangedStacks = 0
+    local totalDuplicatePercent = 0
+
+    for city in player:Cities() do
+        cityCount = cityCount + 1
+
+        local hpStacks = WR_GetSavedNumber(WR_CitySaveKey("WR_CITY_HP_", playerID, city, "DEF_STACKS"))
+        local rangedStacks = WR_GetSavedNumber(WR_CitySaveKey("WR_CITY_RANGED_", playerID, city, "ATTACK_STACKS"))
+        local improvementCounts, yieldPercents = WR_CountWorkedImprovements(playerID, city)
+        local cityScore = hpStacks + rangedStacks
+
+        totalDefenseStacks = totalDefenseStacks + hpStacks
+        totalRangedStacks = totalRangedStacks + rangedStacks
+
+        for _, yieldName in ipairs(WR_YIELD_ORDER) do
+            local percent = yieldPercents[yieldName] or 0
+            totalDuplicatePercent = totalDuplicatePercent + percent
+            cityScore = cityScore + (percent * 4)
+        end
+
+        if cityScore > bestScore then
+            bestScore = cityScore
+            bestCityName = city:GetName()
+        end
+    end
+
+    return cityCount, bestCityName, totalDefenseStacks, totalRangedStacks, totalDuplicatePercent
+end
+
+local function WR_UnitHpLine(unit)
+    if unit == nil then
+        return "Not deployed"
+    end
+
+    return string.format("HP %d/100", 100 - unit:GetDamage())
+end
+
+local function WR_UpdateSummaryPanel()
+    local playerID, player = WR_GetActiveWhiteRoomPlayer()
+    if player == nil then
+        WR_SetLabel(Controls.SummaryTitle, "No White Room civilization found")
+        WR_SetLabel(Controls.SummaryMetricOne, "")
+        WR_SetLabel(Controls.SummaryMetricTwo, "")
+        WR_SetLabel(Controls.SummaryMetricThree, "")
+        WR_SetLabel(Controls.SummaryMetricFour, "")
+        return
+    end
+
+    local tradeHalfStacks = WR_GetSavedNumber(WR_PlayerSaveKey("WR_TRADE_ROUTE_LEARNING_", playerID, "HALF_GOLD_STACKS"))
+    local cityLossStacks = WR_GetSavedNumber(WR_PlayerSaveKey("WR_CAPTURED_CITY_LEARNING_", playerID, "CITY_LOSS_STACKS"))
+    local cityCount, bestCityName, totalDefenseStacks, totalRangedStacks, totalDuplicatePercent = WR_BuildCitySummary(playerID, player)
+    local kiyotaka = WR_FindKiyotaka(player)
+    local keyPrefix = "WR_KIYOTAKA_" .. tostring(playerID) .. "_"
+
+    if WR_ACTIVE_TAB == "CITIES" then
+        WR_SetLabel(Controls.SummaryTitle, "City Adaptation Overview")
+        WR_SetLabel(Controls.SummaryMetricOne, "Cities[NEWLINE]" .. tostring(cityCount))
+        WR_SetLabel(Controls.SummaryMetricTwo, "Most Adapted[NEWLINE]" .. bestCityName)
+        WR_SetLabel(Controls.SummaryMetricThree, "Defense Stacks[NEWLINE]" .. tostring(totalDefenseStacks))
+        WR_SetLabel(Controls.SummaryMetricFour, "Duplicate Yields[NEWLINE]+" .. string.format("%.2f%%", totalDuplicatePercent))
+    elseif WR_ACTIVE_TAB == "KIYOTAKA" then
+        WR_SetLabel(Controls.SummaryTitle, "Kiyotaka Dossier")
+        WR_SetLabel(Controls.SummaryMetricOne, "Deployment[NEWLINE]" .. (kiyotaka ~= nil and "Active" or "Missing"))
+        WR_SetLabel(Controls.SummaryMetricTwo, "Vitals[NEWLINE]" .. WR_UnitHpLine(kiyotaka))
+        WR_SetLabel(Controls.SummaryMetricThree, "Combat[NEWLINE]+" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "COMBAT")))
+        WR_SetLabel(Controls.SummaryMetricFour, "Flow State[NEWLINE]" .. WR_StatusTag(WR_GetSavedNumber(keyPrefix .. "MOVE_CHANCE") >= 10000) .. " " .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "MOVE_CHANCE")))
+    elseif WR_ACTIVE_TAB == "UNITS" then
+        local operativeCount = WR_CountOperatives(player)
+        WR_SetLabel(Controls.SummaryTitle, "Unique Unit Readiness")
+        WR_SetLabel(Controls.SummaryMetricOne, "Kiyotaka[NEWLINE]" .. tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1")
+        WR_SetLabel(Controls.SummaryMetricTwo, "Operatives[NEWLINE]" .. tostring(operativeCount) .. " / 3")
+        WR_SetLabel(Controls.SummaryMetricThree, "Kiyotaka Tech[NEWLINE]" .. WR_TechStatus(player, UNIT_WR_KIYOTAKA))
+        WR_SetLabel(Controls.SummaryMetricFour, "Operative Tech[NEWLINE]" .. WR_TechStatus(player, GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE))
+    else
+        WR_SetLabel(Controls.SummaryTitle, "Empire Learning Overview")
+        WR_SetLabel(Controls.SummaryMetricOne, "Trade Gold[NEWLINE]" .. WR_FormatStoredApplied(tradeHalfStacks * 0.5, math.floor(tradeHalfStacks / 2)))
+        WR_SetLabel(Controls.SummaryMetricTwo, "City Losses[NEWLINE]" .. tostring(cityLossStacks))
+        WR_SetLabel(Controls.SummaryMetricThree, "Vs Cities[NEWLINE]" .. WR_FormatStoredApplied(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK, math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)))
+        WR_SetLabel(Controls.SummaryMetricFour, "Best City[NEWLINE]" .. bestCityName)
+    end
+end
+
 local function WR_SetButtonDisabled(control, disabled)
     if control ~= nil and control.SetDisabled ~= nil then
         control:SetDisabled(disabled)
+    end
+end
+
+local function WR_SetButtonString(control, text)
+    if control ~= nil and control.SetText ~= nil then
+        control:SetText(text)
+    elseif control ~= nil and control.SetString ~= nil then
+        control:SetString(text)
     end
 end
 
@@ -457,6 +558,10 @@ local function WR_UpdateTabButtons()
     WR_SetButtonDisabled(Controls.CitiesTabButton, WR_ACTIVE_TAB == "CITIES")
     WR_SetButtonDisabled(Controls.KiyotakaTabButton, WR_ACTIVE_TAB == "KIYOTAKA")
     WR_SetButtonDisabled(Controls.UnitsTabButton, WR_ACTIVE_TAB == "UNITS")
+    WR_SetButtonString(Controls.EmpireTabButton, WR_ACTIVE_TAB == "EMPIRE" and "[ Empire ]" or "Empire")
+    WR_SetButtonString(Controls.CitiesTabButton, WR_ACTIVE_TAB == "CITIES" and "[ Cities ]" or "Cities")
+    WR_SetButtonString(Controls.KiyotakaTabButton, WR_ACTIVE_TAB == "KIYOTAKA" and "[ Kiyotaka ]" or "Kiyotaka")
+    WR_SetButtonString(Controls.UnitsTabButton, WR_ACTIVE_TAB == "UNITS" and "[ Units ]" or "Units")
 end
 
 local WR_RefreshPanel
@@ -469,6 +574,7 @@ end
 
 WR_RefreshPanel = function()
     WR_UpdateTabButtons()
+    WR_UpdateSummaryPanel()
     Controls.StatusText:SetString(WR_BuildStatusText())
 
     if Controls.StatusScrollPanel ~= nil and Controls.StatusScrollPanel.CalculateInternalSize ~= nil then

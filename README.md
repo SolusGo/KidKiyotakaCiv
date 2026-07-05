@@ -105,6 +105,9 @@ The panel is split into focused tabs:
 - **Kiyotaka**: deployment details, Perfect Adaptation counters, Flow State progress, and class adaptations.
 - **Units**: Kiyotaka and 4th Generation Operative caps, tech status, trainability, and deployment status.
 
+Each tab includes a compact summary strip above the detailed readout so the
+most important status can be checked quickly.
+
 ## Requirements
 
 - Civilization V: Brave New World
