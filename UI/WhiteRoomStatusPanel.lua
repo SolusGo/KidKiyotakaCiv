@@ -147,12 +147,32 @@ local function WR_FormatHalfPercentStacks(halfStacks)
     return string.format("%.2f%%", (halfStacks or 0) * 0.5)
 end
 
+local function WR_Divider()
+    return "------------------------------------------------------------"
+end
+
+local function WR_StatusTag(isReady)
+    if isReady then
+        return "[READY]"
+    end
+
+    return "[PENDING]"
+end
+
+local function WR_FormatStoredApplied(storedPercent, appliedPercent)
+    return string.format("+%.2f%% stored, +%d%% applied", storedPercent or 0, appliedPercent or 0)
+end
+
+local function WR_FormatYieldPercent(percent)
+    return string.format("%.2f", percent or 0)
+end
+
 local function WR_AppendYieldLine(lines, label, yieldPercents)
     local parts = {}
     for _, yieldName in ipairs(WR_YIELD_ORDER) do
         local percent = yieldPercents[yieldName] or 0
         if percent > 0 then
-            table.insert(parts, yieldName .. " +" .. tostring(percent) .. "%")
+            table.insert(parts, yieldName .. " +" .. WR_FormatYieldPercent(percent) .. "%")
         end
     end
 
@@ -249,17 +269,18 @@ end
 
 local function WR_AppendPanelHeader(lines, title, player)
     table.insert(lines, title)
-    table.insert(lines, "Player: " .. (player:GetName() or "White Room"))
-    table.insert(lines, "Turn: " .. tostring(Game.GetGameTurn()))
+    table.insert(lines, WR_Divider())
+    table.insert(lines, "Player: " .. (player:GetName() or "White Room") .. "    Turn: " .. tostring(Game.GetGameTurn()))
     table.insert(lines, "")
 end
 
 local function WR_AppendKiyotaka(lines, playerID, player)
     table.insert(lines, "Deployment")
+    table.insert(lines, WR_Divider())
 
     local unit = WR_FindKiyotaka(player)
     if unit == nil then
-        table.insert(lines, "  Not currently deployed.")
+        table.insert(lines, "  [MISSING] Not currently deployed.")
     else
         local plot = unit:GetPlot()
         local location = "unknown location"
@@ -268,7 +289,7 @@ local function WR_AppendKiyotaka(lines, playerID, player)
         end
 
         table.insert(lines, string.format(
-            "  Deployed: level %d, XP %d, HP %d/100, location %s",
+            "  [ACTIVE] Level %d    XP %d    HP %d/100    Location %s",
             unit:GetLevel(),
             unit:GetExperience(),
             100 - unit:GetDamage(),
@@ -279,12 +300,13 @@ local function WR_AppendKiyotaka(lines, playerID, player)
     local keyPrefix = "WR_KIYOTAKA_" .. tostring(playerID) .. "_"
     table.insert(lines, "")
     table.insert(lines, "Perfect Adaptation")
-    table.insert(lines, "  Combat strength: +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "COMBAT")))
-    table.insert(lines, "  Attack strength: +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "ATTACK")))
-    table.insert(lines, "  Resistance: +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "RESISTANCE")))
-    table.insert(lines, "  Healing received: +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "HEALING")))
-    table.insert(lines, "  Low-HP combat strength: +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "DESPERATION")))
-    table.insert(lines, "  Move-after-combat progress: " .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "MOVE_CHANCE")))
+    table.insert(lines, WR_Divider())
+    table.insert(lines, "  Combat       +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "COMBAT")))
+    table.insert(lines, "  Attack       +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "ATTACK")))
+    table.insert(lines, "  Resistance   +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "RESISTANCE")))
+    table.insert(lines, "  Healing      +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "HEALING")))
+    table.insert(lines, "  Low-HP power +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "DESPERATION")))
+    table.insert(lines, "  Flow State   " .. WR_StatusTag(WR_GetSavedNumber(keyPrefix .. "MOVE_CHANCE") >= 10000) .. " " .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "MOVE_CHANCE")))
 
     local classParts = {}
     for unitCombatInfo in GameInfo.UnitCombatInfos() do
@@ -297,21 +319,40 @@ local function WR_AppendKiyotaka(lines, playerID, player)
     table.sort(classParts)
 
     if #classParts > 0 then
-        table.insert(lines, "  Class adaptations: " .. table.concat(classParts, ", "))
+        table.insert(lines, "")
+        table.insert(lines, "Class Adaptations")
+        table.insert(lines, WR_Divider())
+        for _, classLine in ipairs(classParts) do
+            table.insert(lines, "  " .. classLine)
+        end
     else
-        table.insert(lines, "  Class adaptations: none yet")
+        table.insert(lines, "")
+        table.insert(lines, "Class Adaptations")
+        table.insert(lines, WR_Divider())
+        table.insert(lines, "  None yet")
     end
 end
 
 local function WR_AppendEmpire(lines, playerID)
     local tradeHalfStacks = WR_GetSavedNumber(WR_PlayerSaveKey("WR_TRADE_ROUTE_LEARNING_", playerID, "HALF_GOLD_STACKS"))
     local cityLossStacks = WR_GetSavedNumber(WR_PlayerSaveKey("WR_CAPTURED_CITY_LEARNING_", playerID, "CITY_LOSS_STACKS"))
+    local tradeStored = tradeHalfStacks * 0.5
+    local tradeApplied = math.floor(tradeHalfStacks / 2)
+    local cityAttackStored = cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK
+    local cityAttackApplied = math.floor(cityAttackStored)
+    local cityDefenseStored = cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK
+    local cityDefenseApplied = math.floor(cityDefenseStored)
 
-    table.insert(lines, "  Trade-route gold learning: +" .. WR_FormatHalfPercentStacks(tradeHalfStacks) .. " (applied +" .. tostring(math.floor(tradeHalfStacks / 2)) .. "% Gold)")
-    table.insert(lines, "  Trade-route trigger progress: " .. string.format("%.2f / 2.00 half-stacks toward next +1%% Gold", tradeHalfStacks % 2))
+    table.insert(lines, "Summary")
+    table.insert(lines, WR_Divider())
+    table.insert(lines, "  Trade gold       " .. WR_StatusTag(tradeApplied > 0) .. " " .. WR_FormatStoredApplied(tradeStored, tradeApplied))
+    table.insert(lines, "  Attack vs cities " .. WR_StatusTag(cityAttackApplied > 0) .. " " .. WR_FormatStoredApplied(cityAttackStored, cityAttackApplied))
+    table.insert(lines, "  City defense     " .. WR_StatusTag(cityDefenseApplied > 0) .. " " .. WR_FormatStoredApplied(cityDefenseStored, cityDefenseApplied))
+    table.insert(lines, "")
+    table.insert(lines, "Learning Counters")
+    table.insert(lines, WR_Divider())
+    table.insert(lines, "  Trade-route progress: " .. string.format("%.2f / 2.00 half-stacks toward next +1%% Gold", tradeHalfStacks % 2))
     table.insert(lines, "  Observed city losses: " .. tostring(cityLossStacks))
-    table.insert(lines, "  Attack vs cities: +" .. tostring(math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)) .. "%")
-    table.insert(lines, "  Global city defense from city losses: +" .. string.format("%.2f%%", cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK) .. " (applied +" .. tostring(math.floor(cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK)) .. "%)")
 end
 
 local function WR_AppendCities(lines, playerID, player)
@@ -335,18 +376,26 @@ local function WR_AppendCities(lines, playerID, player)
             bestCityName = city:GetName()
         end
 
-        table.insert(lines, string.format("  %s", city:GetName()))
-        table.insert(lines, string.format("    Damage defense stacks: %d (+%.2f%% city defense, applied +%d%%)", hpStacks, hpStacks * WR_CITY_DEF_PERCENT_PER_STACK, math.floor(hpStacks * WR_CITY_DEF_PERCENT_PER_STACK)))
-        table.insert(lines, string.format("    Ranged strike stacks: %d (+%.2f%% city ranged attack, applied +%d%%)", rangedStacks, rangedStacks * WR_CITY_RANGED_PERCENT_PER_STACK, math.floor(rangedStacks * WR_CITY_RANGED_PERCENT_PER_STACK)))
+        local hpStored = hpStacks * WR_CITY_DEF_PERCENT_PER_STACK
+        local hpApplied = math.floor(hpStored)
+        local rangedStored = rangedStacks * WR_CITY_RANGED_PERCENT_PER_STACK
+        local rangedApplied = math.floor(rangedStored)
+
+        table.insert(lines, city:GetName())
+        table.insert(lines, WR_Divider())
+        table.insert(lines, string.format("  Defense stacks %3d  %s %s", hpStacks, WR_StatusTag(hpApplied > 0), WR_FormatStoredApplied(hpStored, hpApplied)))
+        table.insert(lines, string.format("  Ranged stacks  %3d  %s %s", rangedStacks, WR_StatusTag(rangedApplied > 0), WR_FormatStoredApplied(rangedStored, rangedApplied)))
         WR_AppendYieldLine(lines, "    Duplicate yields", yieldPercents)
         WR_AppendWorkedImprovements(lines, improvementCounts)
+        table.insert(lines, "")
     end
 
     if not hasCities then
         table.insert(lines, "  No White Room cities found.")
     elseif bestCityName ~= nil then
-        table.insert(lines, "")
-        table.insert(lines, "Most adapted city: " .. bestCityName)
+        table.insert(lines, "Most adapted city")
+        table.insert(lines, WR_Divider())
+        table.insert(lines, "  " .. bestCityName)
     end
 end
 
@@ -356,15 +405,17 @@ local function WR_AppendUnits(lines, player)
     local operativeCount = WR_CountUnitsOfType(player, operativeID)
 
     table.insert(lines, "Kiyotaka Ayanokoji")
-    table.insert(lines, "  Active: " .. tostring(kiyotakaCount) .. " / 1")
-    table.insert(lines, "  " .. WR_TechStatus(player, UNIT_WR_KIYOTAKA))
-    table.insert(lines, "  " .. WR_CanTrainStatus(player, UNIT_WR_KIYOTAKA))
+    table.insert(lines, WR_Divider())
+    table.insert(lines, "  " .. WR_StatusTag(kiyotakaCount > 0) .. " Active: " .. tostring(kiyotakaCount) .. " / 1")
+    table.insert(lines, "  Tech: " .. WR_TechStatus(player, UNIT_WR_KIYOTAKA))
+    table.insert(lines, "  Training: " .. WR_CanTrainStatus(player, UNIT_WR_KIYOTAKA))
     table.insert(lines, "  Cannot be purchased; extras are removed by the cap script.")
     table.insert(lines, "")
     table.insert(lines, "4th Generation Operatives")
-    table.insert(lines, "  Active: " .. tostring(operativeCount) .. " / 3")
-    table.insert(lines, "  " .. WR_TechStatus(player, operativeID))
-    table.insert(lines, "  " .. WR_CanTrainStatus(player, operativeID))
+    table.insert(lines, WR_Divider())
+    table.insert(lines, "  " .. WR_StatusTag(operativeCount > 0) .. " Active: " .. tostring(operativeCount) .. " / 3")
+    table.insert(lines, "  Tech: " .. WR_TechStatus(player, operativeID))
+    table.insert(lines, "  Training: " .. WR_CanTrainStatus(player, operativeID))
     table.insert(lines, "  Cannot be purchased or gifted to City-States.")
 end
 
@@ -387,7 +438,7 @@ local function WR_BuildStatusText()
         WR_AppendUnits(lines, player)
     else
         WR_AppendPanelHeader(lines, "Empire Learning", player)
-        table.insert(lines, "4th Generation Operatives: " .. tostring(WR_CountOperatives(player)) .. " / 3")
+        table.insert(lines, "Unit overview: Kiyotaka " .. tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1    4th Gen Operatives " .. tostring(WR_CountOperatives(player)) .. " / 3")
         table.insert(lines, "")
         WR_AppendEmpire(lines, playerID)
     end

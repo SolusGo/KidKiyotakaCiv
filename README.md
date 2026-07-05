@@ -100,10 +100,10 @@ for tracking adaptation progress during play and testing.
 
 The panel is split into focused tabs:
 
-- **Empire**: trade-route learning, captured-city learning, and applied global bonuses.
-- **Cities**: per-city damage defense, ranged-strike stacks, duplicate yields, and worked improvements.
-- **Kiyotaka**: deployment details and Perfect Adaptation counters.
-- **Units**: Kiyotaka and 4th Generation Operative caps, tech status, and trainability.
+- **Empire**: trade-route learning, captured-city learning, applied global bonuses, and ready/pending status.
+- **Cities**: per-city damage defense, ranged-strike stacks, duplicate yields, worked improvements, and most-adapted city.
+- **Kiyotaka**: deployment details, Perfect Adaptation counters, Flow State progress, and class adaptations.
+- **Units**: Kiyotaka and 4th Generation Operative caps, tech status, trainability, and deployment status.
 
 ## Requirements
 
