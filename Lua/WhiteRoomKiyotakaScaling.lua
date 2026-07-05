@@ -7,8 +7,15 @@ local UNIT_WR_KIYOTAKA = GameInfoTypes.UNIT_WR_KIYOTAKA
 local PROMOTION_WR_KIYOTAKA_FLOW_STATE = GameInfoTypes.PROMOTION_WR_KIYOTAKA_FLOW_STATE
 
 local WR_SAVE = Modding.OpenSaveData()
+local WR_KIYOTAKA_DEBUG = false
 local WR_TIERS = {100, 500, 1000, 2000, 3500, 5000, 7500, 10000}
 local WR_ROMAN = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII"}
+
+local function WR_Debug(message)
+    if WR_KIYOTAKA_DEBUG then
+        print(message)
+    end
+end
 
 local WR_COMBAT_PROMOTIONS = {
     "PROMOTION_WR_KIYOTAKA_COMBAT_ADAPTATION_I",
@@ -179,7 +186,7 @@ local function WR_ApplyPerfectAdaptation(playerID, unit)
 end
 
 local function WR_LogCounters(playerID, reason)
-    print(string.format(
+    WR_Debug(string.format(
         "WR Perfect Adaptation: %s -> combat %.2f%%, attack %.2f%%, resistance %.2f%%, healing %.2f%%, lowHP %.2f%%, move-after-combat %.2f%%",
         reason,
         WR_GetSavedNumber(playerID, "COMBAT") / 100,
@@ -303,7 +310,7 @@ local function WR_ApplyPendingHeal(playerID, unit)
     local totalHeal = pendingHeal + healingBonus
     WR_SetSavedNumber(playerID, "PENDING_HEAL", 0)
     WR_HealUnit(unit, totalHeal, playerID)
-    print(string.format(
+    WR_Debug(string.format(
         "WR Perfect Adaptation: healed Kiyotaka for %d HP at start of turn",
         totalHeal
     ))

@@ -7,7 +7,14 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local WR_TRADE_SAVE = Modding.OpenSaveData()
 local WR_TRADE_RECENT_EVENTS = {}
 local WR_TRADE_POLL_SUPPORT = nil
+local WR_TRADE_DEBUG = false
 local WR_TRADE_HALF_STACKS_PER_CONNECTION = 0.25
+
+local function WR_Debug(message)
+    if WR_TRADE_DEBUG then
+        print(message)
+    end
+end
 
 local WR_TRADE_GOLD_DUMMY_BUILDINGS = {
     { percent = 50, type = "BUILDING_WR_TRADE_GOLD_50", id = GameInfoTypes.BUILDING_WR_TRADE_GOLD_50 },
@@ -121,7 +128,7 @@ local function WR_RecordTradeRouteLearning(playerID, otherPlayerID, fromCityID, 
     local wholePercent = math.floor(halfStacks / 2)
     local learnedPercent = halfStacks * 0.5
 
-    print(string.format(
+    WR_Debug(string.format(
         "WR Trade Route Learning: trade connection learned by White Room (%s -> %s); gold learning now +%.2f%%, applied gold modifier +%d%%",
         WR_CityName(playerID, fromCityID),
         WR_CityName(otherPlayerID, toCityID),
@@ -199,7 +206,7 @@ local function WR_PollActiveTradeRoutes(playerID)
     if player.GetTradeRoutes == nil then
         if WR_TRADE_POLL_SUPPORT == nil then
             WR_TRADE_POLL_SUPPORT = false
-            print("WR Trade Route Learning: player:GetTradeRoutes() unavailable")
+            WR_Debug("WR Trade Route Learning: player:GetTradeRoutes() unavailable")
         end
         return
     end
@@ -211,9 +218,9 @@ local function WR_PollActiveTradeRoutes(playerID)
     if WR_TRADE_POLL_SUPPORT == nil then
         WR_TRADE_POLL_SUPPORT = ok
         if ok then
-            print("WR Trade Route Learning: player:GetTradeRoutes() polling available")
+            WR_Debug("WR Trade Route Learning: player:GetTradeRoutes() polling available")
         else
-            print("WR Trade Route Learning: player:GetTradeRoutes() polling unavailable")
+            WR_Debug("WR Trade Route Learning: player:GetTradeRoutes() polling unavailable")
         end
     end
 
@@ -250,9 +257,9 @@ if GameEvents.PlayerTradeRouteCompleted ~= nil then
         end
     end)
 
-    print("WR Trade Route Learning: PlayerTradeRouteCompleted hook available")
+    WR_Debug("WR Trade Route Learning: PlayerTradeRouteCompleted hook available")
 else
-    print("WR Trade Route Learning: PlayerTradeRouteCompleted hook unavailable")
+    WR_Debug("WR Trade Route Learning: PlayerTradeRouteCompleted hook unavailable")
 end
 
 print("WR Trade Route Learning: initialized")

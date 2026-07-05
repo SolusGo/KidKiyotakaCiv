@@ -4,6 +4,13 @@ print("WhiteRoomCannotSettle.lua loaded")
 
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local UNITCLASS_SETTLER = GameInfoTypes.UNITCLASS_SETTLER
+local WR_CANNOT_SETTLE_DEBUG = false
+
+local function WR_Debug(message)
+    if WR_CANNOT_SETTLE_DEBUG then
+        print(message)
+    end
+end
 
 local function WR_IsWhiteRoomPlayer(player)
     return player
@@ -46,7 +53,7 @@ local function WR_KillAllSettlers(player, reason)
         local y = plot and plot:GetY() or -1
 
         unit:Kill(false, -1)
-        print(string.format(
+        WR_Debug(string.format(
             "WR Cannot Settle: removed Settler for %s at (%d,%d) [%s]",
             player:GetName(),
             x,
@@ -77,7 +84,7 @@ local function WR_AutoFoundStartingCapital(player)
     player:InitCity(x, y)
     WR_KillAllSettlers(player, "starting capital founded")
 
-    print(string.format(
+    WR_Debug(string.format(
         "WR Cannot Settle: auto-founded starting capital for %s at (%d,%d)",
         player:GetName(),
         x,
@@ -111,7 +118,7 @@ if GameEvents.PlayerCanTrain ~= nil then
 
         local unitInfo = GameInfo.Units[unitType]
         if unitInfo ~= nil and unitInfo.Class == "UNITCLASS_SETTLER" then
-            print(string.format(
+            WR_Debug(string.format(
                 "WR Cannot Settle: blocked Settler training for %s",
                 player:GetName()
             ))

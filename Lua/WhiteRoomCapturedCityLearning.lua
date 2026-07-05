@@ -6,8 +6,15 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 
 local WR_CITY_LOSS_SAVE = Modding.OpenSaveData()
 local WR_CITY_LOSS_RECENT_EVENTS = {}
+local WR_CITY_LOSS_DEBUG = false
 local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 0.5
+
+local function WR_Debug(message)
+    if WR_CITY_LOSS_DEBUG then
+        print(message)
+    end
+end
 
 local WR_CITY_LOSS_DEF_DUMMY_BUILDINGS = {
     { percent = 50, type = "BUILDING_WR_CITY_LOSS_DEF_50", id = GameInfoTypes.BUILDING_WR_CITY_LOSS_DEF_50 },
@@ -155,7 +162,7 @@ local function WR_RecordCityLossForWhiteRoom(playerID, oldOwnerID, cityID, newOw
     WR_SetSavedNumber(playerID, "CITY_LOSS_STACKS", cityLossStacks)
     WR_ApplyCapturedCityLearningForPlayer(playerID)
 
-    print(string.format(
+    WR_Debug(string.format(
         "WR Captured City Learning: %s lost city id %s to %s; White Room learned from collapse -> vs cities +%d%%, city defense +%.2f%%",
         WR_PlayerName(oldOwnerID),
         tostring(cityID),
@@ -189,9 +196,9 @@ if Events.SerialEventCityCaptured ~= nil then
     Events.SerialEventCityCaptured.Add(function(hexPos, oldOwnerID, cityID, newOwnerID)
         WR_RecordOtherPlayerCityLoss(oldOwnerID, cityID, newOwnerID)
     end)
-    print("WR Captured City Learning: SerialEventCityCaptured hook available")
+    WR_Debug("WR Captured City Learning: SerialEventCityCaptured hook available")
 else
-    print("WR Captured City Learning: SerialEventCityCaptured hook unavailable")
+    WR_Debug("WR Captured City Learning: SerialEventCityCaptured hook unavailable")
 end
 
 print("WR Captured City Learning: initialized")

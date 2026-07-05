@@ -5,6 +5,13 @@ print("WhiteRoomUnitCaps.lua loaded")
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local UNIT_WR_KIYOTAKA = GameInfoTypes.UNIT_WR_KIYOTAKA
 local UNIT_WR_FOURTH_GEN_OPERATIVE = GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE
+local WR_UNIT_CAPS_DEBUG = false
+
+local function WR_Debug(message)
+    if WR_UNIT_CAPS_DEBUG then
+        print(message)
+    end
+end
 
 local WR_UNIT_CAPS = {}
 WR_UNIT_CAPS[UNIT_WR_KIYOTAKA] = 1
@@ -73,7 +80,7 @@ local function WR_EnforceUnitCap(player, unitType, cap)
         local y = plot and plot:GetY() or -1
 
         unit:Kill(false, -1)
-        print(string.format(
+        WR_Debug(string.format(
             "WR Unit Caps: removed extra %s for %s at (%d,%d); cap is %d",
             WR_GetUnitName(unitType),
             player:GetName(),
@@ -110,7 +117,7 @@ if GameEvents.PlayerCanTrain ~= nil then
         end
 
         if WR_CountUnits(player, unitType) >= cap then
-            print(string.format(
+            WR_Debug(string.format(
                 "WR Unit Caps: blocked %s training for %s; cap is %d",
                 WR_GetUnitName(unitType),
                 player:GetName(),

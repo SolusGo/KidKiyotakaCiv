@@ -7,7 +7,14 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local WR_CITY_RANGED_SAVE = Modding.OpenSaveData()
 local WR_CITY_RANGED_STATE = {}
 local WR_HAS_PERFORMED_SUPPORT = nil
+local WR_CITY_RANGED_DEBUG = false
 local WR_CITY_RANGED_PERCENT_PER_STACK = 0.25
+
+local function WR_Debug(message)
+    if WR_CITY_RANGED_DEBUG then
+        print(message)
+    end
+end
 
 local WR_CITY_RANGED_DUMMY_BUILDINGS = {
     { percent = 50, type = "BUILDING_WR_CITY_RANGE_ADAPT_50", id = GameInfoTypes.BUILDING_WR_CITY_RANGE_ADAPT_50 },
@@ -72,7 +79,7 @@ local function WR_RecordRangedStrike(playerID, city, reason)
     WR_SetSavedNumber(playerID, city, "ATTACK_STACKS", stacks)
     WR_ApplyRangedStacks(city, stacks)
 
-    print(string.format(
+    WR_Debug(string.format(
         "WR City Ranged Adaptation: %s fired a ranged strike (%s); ranged stacks now %d (+%.2f%%, applied +%d%%)",
         city:GetName(),
         reason,
@@ -94,9 +101,9 @@ local function WR_GetHasPerformedRangedStrike(city)
     if WR_HAS_PERFORMED_SUPPORT == nil then
         WR_HAS_PERFORMED_SUPPORT = ok
         if ok then
-            print("WR City Ranged Probe: city:HasPerformedRangedStrikeThisTurn() is available")
+            WR_Debug("WR City Ranged Probe: city:HasPerformedRangedStrikeThisTurn() is available")
         else
-            print("WR City Ranged Probe: city:HasPerformedRangedStrikeThisTurn() is not available")
+            WR_Debug("WR City Ranged Probe: city:HasPerformedRangedStrikeThisTurn() is not available")
         end
     end
 
@@ -118,7 +125,7 @@ local function WR_PollCity(playerID, city, reason)
     WR_CITY_RANGED_STATE[key] = hasPerformed
 
     if hasPerformed and previous ~= true then
-        print(string.format(
+        WR_Debug(string.format(
             "WR City Ranged Probe: %s has performed a ranged strike this turn (%s)",
             city:GetName(),
             reason

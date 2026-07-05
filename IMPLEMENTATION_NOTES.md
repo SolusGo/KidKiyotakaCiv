@@ -10,6 +10,18 @@ mechanics implemented and tested. Leader/civilization icons and Dawn of Man
 art now use the supplied Kid Kiyotaka image; the animated diplomacy leader
 scene still uses safe existing Civilization V art.
 
+## Logging Policy
+
+- Keep visible startup logs so `Lua.log` can confirm each feature file loaded
+  and initialized.
+- Keep loader include/error logs visible because they are the fastest way to
+  confirm the mod's Lua activation path.
+- Gate noisy gameplay-event logs behind per-feature debug flags, including
+  combat adaptation triggers, city damage/ranged triggers, trade-route learning
+  triggers, settler removal, unit-cap enforcement, and duplicate-improvement
+  per-city recalculation logs.
+- To debug a specific feature, set that file's `WR_*_DEBUG` flag to `true`.
+
 ## Done
 
 - ModBuddy project setup:

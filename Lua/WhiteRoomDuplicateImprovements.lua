@@ -256,6 +256,10 @@ local function BuildYieldSignature(yieldPercents)
 end
 
 local function LogCityResult(playerID, city, improvementCounts, yieldPercents, forceLog)
+    if not WR_DUP_DEBUG and not WR_DUP_LOG_EVERY_TURN then
+        return
+    end
+
     local cityKey = GetCityKey(playerID, city)
     local signature = BuildImprovementSignature(improvementCounts) .. "|" .. BuildYieldSignature(yieldPercents)
 
