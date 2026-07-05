@@ -6,6 +6,8 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 
 local WR_CITY_LOSS_SAVE = Modding.OpenSaveData()
 local WR_CITY_LOSS_RECENT_EVENTS = {}
+local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.5
+local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 1
 
 local WR_CITY_LOSS_DEF_DUMMY_BUILDINGS = {
     { percent = 50, type = "BUILDING_WR_CITY_LOSS_DEF_50", id = GameInfoTypes.BUILDING_WR_CITY_LOSS_DEF_50 },
@@ -25,7 +27,8 @@ local WR_CITY_LOSS_ATTACK_PROMOTIONS = {
     { percent = 50, type = "PROMOTION_WR_CITY_LOSS_ATTACK_50", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_50 },
     { percent = 20, type = "PROMOTION_WR_CITY_LOSS_ATTACK_20", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_20 },
     { percent = 10, type = "PROMOTION_WR_CITY_LOSS_ATTACK_10", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_10 },
-    { percent = 2, type = "PROMOTION_WR_CITY_LOSS_ATTACK_2", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_2 }
+    { percent = 2, type = "PROMOTION_WR_CITY_LOSS_ATTACK_2", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_2 },
+    { percent = 1, type = "PROMOTION_WR_CITY_LOSS_ATTACK_1", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_1 }
 }
 
 local function WR_IsWhiteRoomPlayer(player)
@@ -62,7 +65,7 @@ end
 local function WR_ApplyCityLossDefenseToCity(city, stacks)
     WR_ClearCityLossDefenseDummies(city)
 
-    local remaining = math.max(0, stacks)
+    local remaining = math.floor(math.max(0, stacks) * WR_CITY_LOSS_DEF_PERCENT_PER_STACK)
     for _, entry in ipairs(WR_CITY_LOSS_DEF_DUMMY_BUILDINGS) do
         if entry.id ~= nil and remaining >= entry.percent then
             local count = math.floor(remaining / entry.percent)
@@ -107,7 +110,7 @@ local function WR_ApplyCapturedCityLearningForPlayer(playerID)
     end
 
     local cityLossStacks = WR_GetSavedNumber(playerID, "CITY_LOSS_STACKS")
-    local cityAttackPercent = cityLossStacks * 2
+    local cityAttackPercent = math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)
 
     for city in player:Cities() do
         WR_ApplyCityLossDefenseToCity(city, cityLossStacks)
@@ -153,12 +156,12 @@ local function WR_RecordCityLossForWhiteRoom(playerID, oldOwnerID, cityID, newOw
     WR_ApplyCapturedCityLearningForPlayer(playerID)
 
     print(string.format(
-        "WR Captured City Learning: %s lost city id %s to %s; White Room learned from collapse -> vs cities +%d%%, city defense +%d%%",
+        "WR Captured City Learning: %s lost city id %s to %s; White Room learned from collapse -> vs cities +%d%%, city defense +%.1f%%",
         WR_PlayerName(oldOwnerID),
         tostring(cityID),
         WR_PlayerName(newOwnerID),
-        cityLossStacks * 2,
-        cityLossStacks
+        math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK),
+        cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK
     ))
 end
 

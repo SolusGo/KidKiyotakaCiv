@@ -6,7 +6,11 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local UNIT_WR_KIYOTAKA = GameInfoTypes.UNIT_WR_KIYOTAKA
 
 local WR_STATUS_SAVE = Modding.OpenSaveData()
-local WR_PERCENT_PER_DUPLICATE = 1
+local WR_PERCENT_PER_DUPLICATE = 0.5
+local WR_CITY_DEF_PERCENT_PER_STACK = 0.5
+local WR_CITY_RANGED_PERCENT_PER_STACK = 0.5
+local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.5
+local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 1
 
 local WR_YIELD_ORDER = {"FOOD", "PRODUCTION", "GOLD", "SCIENCE", "CULTURE", "FAITH"}
 
@@ -139,7 +143,7 @@ local function WR_FormatPercentFromHundredths(value)
 end
 
 local function WR_FormatHalfPercentStacks(halfStacks)
-    return string.format("%.1f%%", (halfStacks or 0) * 0.5)
+    return string.format("%.2f%%", (halfStacks or 0) * 0.5)
 end
 
 local function WR_AppendYieldLine(lines, label, yieldPercents)
@@ -272,8 +276,8 @@ local function WR_BuildStatusText()
     table.insert(lines, "Empire Learning")
     table.insert(lines, "  Trade-route gold learning: +" .. WR_FormatHalfPercentStacks(tradeHalfStacks) .. " (applied +" .. tostring(math.floor(tradeHalfStacks / 2)) .. "% Gold)")
     table.insert(lines, "  Observed city losses: " .. tostring(cityLossStacks))
-    table.insert(lines, "  Attack vs cities: +" .. tostring(cityLossStacks * 2) .. "%")
-    table.insert(lines, "  Global city defense from city losses: +" .. tostring(cityLossStacks) .. "%")
+    table.insert(lines, "  Attack vs cities: +" .. tostring(math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)) .. "%")
+    table.insert(lines, "  Global city defense from city losses: +" .. string.format("%.1f%%", cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK) .. " (applied +" .. tostring(math.floor(cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK)) .. "%)")
 
     table.insert(lines, "")
     table.insert(lines, "Cities")
@@ -286,8 +290,8 @@ local function WR_BuildStatusText()
         local improvementCounts, yieldPercents = WR_CountWorkedImprovements(playerID, city)
 
         table.insert(lines, string.format("  %s", city:GetName()))
-        table.insert(lines, string.format("    Damage defense stacks: %d (+%d%% city defense)", hpStacks, hpStacks))
-        table.insert(lines, string.format("    Ranged strike stacks: %d (+%d%% city ranged attack)", rangedStacks, rangedStacks))
+        table.insert(lines, string.format("    Damage defense stacks: %d (+%.1f%% city defense, applied +%d%%)", hpStacks, hpStacks * WR_CITY_DEF_PERCENT_PER_STACK, math.floor(hpStacks * WR_CITY_DEF_PERCENT_PER_STACK)))
+        table.insert(lines, string.format("    Ranged strike stacks: %d (+%.1f%% city ranged attack, applied +%d%%)", rangedStacks, rangedStacks * WR_CITY_RANGED_PERCENT_PER_STACK, math.floor(rangedStacks * WR_CITY_RANGED_PERCENT_PER_STACK)))
         WR_AppendYieldLine(lines, "    Duplicate yields", yieldPercents)
         WR_AppendWorkedImprovements(lines, improvementCounts)
     end

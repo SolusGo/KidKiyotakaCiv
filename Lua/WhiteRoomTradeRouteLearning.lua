@@ -7,6 +7,7 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local WR_TRADE_SAVE = Modding.OpenSaveData()
 local WR_TRADE_RECENT_EVENTS = {}
 local WR_TRADE_POLL_SUPPORT = nil
+local WR_TRADE_HALF_STACKS_PER_CONNECTION = 0.5
 
 local WR_TRADE_GOLD_DUMMY_BUILDINGS = {
     { percent = 50, type = "BUILDING_WR_TRADE_GOLD_50", id = GameInfoTypes.BUILDING_WR_TRADE_GOLD_50 },
@@ -113,19 +114,18 @@ local function WR_RecordTradeRouteLearning(playerID, otherPlayerID, fromCityID, 
     end
     WR_TRADE_RECENT_EVENTS[eventKey] = true
 
-    local halfStacks = WR_GetSavedNumber(playerID, "HALF_GOLD_STACKS") + 1
+    local halfStacks = WR_GetSavedNumber(playerID, "HALF_GOLD_STACKS") + WR_TRADE_HALF_STACKS_PER_CONNECTION
     WR_SetSavedNumber(playerID, "HALF_GOLD_STACKS", halfStacks)
     WR_ApplyTradeGoldForPlayer(playerID)
 
     local wholePercent = math.floor(halfStacks / 2)
-    local remainder = halfStacks % 2
+    local learnedPercent = halfStacks * 0.5
 
     print(string.format(
-        "WR Trade Route Learning: trade connection learned by White Room (%s -> %s); gold learning now +%d.%d%%, applied gold modifier +%d%%",
+        "WR Trade Route Learning: trade connection learned by White Room (%s -> %s); gold learning now +%.2f%%, applied gold modifier +%d%%",
         WR_CityName(playerID, fromCityID),
         WR_CityName(otherPlayerID, toCityID),
-        wholePercent,
-        remainder * 5,
+        learnedPercent,
         wholePercent
     ))
 end

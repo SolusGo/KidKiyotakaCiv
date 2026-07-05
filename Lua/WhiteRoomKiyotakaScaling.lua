@@ -219,9 +219,9 @@ local function WR_RecordLowHpSurvival(playerID, unit, reason)
     end
 
     WR_SetSavedNumber(playerID, "LOW_HP_TURN", turn)
-    WR_ChangeSavedNumber(playerID, "COMBAT", 300)
-    WR_ChangeSavedNumber(playerID, "RESISTANCE", 300)
-    WR_ChangeSavedNumber(playerID, "PENDING_HEAL", 10)
+    WR_ChangeSavedNumber(playerID, "COMBAT", 150)
+    WR_ChangeSavedNumber(playerID, "RESISTANCE", 150)
+    WR_ChangeSavedNumber(playerID, "PENDING_HEAL", 5)
     WR_ApplyPerfectAdaptation(playerID, unit)
     WR_LogCounters(playerID, "survived below 25 HP (" .. reason .. ")")
 end
@@ -231,9 +231,9 @@ local function WR_RecordDamageTaken(playerID, unit, oldDamage, newDamage)
         return
     end
 
-    WR_ChangeSavedNumber(playerID, "RESISTANCE", 75)
-    WR_ChangeSavedNumber(playerID, "HEALING", 50)
-    WR_ChangeSavedNumber(playerID, "DESPERATION", 50)
+    WR_ChangeSavedNumber(playerID, "RESISTANCE", 38)
+    WR_ChangeSavedNumber(playerID, "HEALING", 25)
+    WR_ChangeSavedNumber(playerID, "DESPERATION", 25)
 
     if oldDamage < 75 and newDamage >= 75 then
         WR_RecordLowHpSurvival(playerID, unit, "damage taken")
@@ -244,9 +244,9 @@ local function WR_RecordDamageTaken(playerID, unit, oldDamage, newDamage)
 end
 
 local function WR_RecordDamageDealt(playerID, unit, targetLabel)
-    WR_ChangeSavedNumber(playerID, "COMBAT", 50)
-    WR_ChangeSavedNumber(playerID, "ATTACK", 50)
-    WR_ChangeSavedNumber(playerID, "MOVE_CHANCE", 25)
+    WR_ChangeSavedNumber(playerID, "COMBAT", 25)
+    WR_ChangeSavedNumber(playerID, "ATTACK", 25)
+    WR_ChangeSavedNumber(playerID, "MOVE_CHANCE", 13)
     WR_ApplyPerfectAdaptation(playerID, unit)
     WR_LogCounters(playerID, "dealt damage to " .. targetLabel)
 end
@@ -255,13 +255,13 @@ local function WR_RecordKill(playerID, unit, killedUnitType)
     local killedUnitInfo = GameInfo.Units[killedUnitType]
     local killedClass = killedUnitInfo and killedUnitInfo.CombatClass or nil
 
-    WR_ChangeSavedNumber(playerID, "COMBAT", 100)
-    WR_ChangeExperience(unit, 2)
+    WR_ChangeSavedNumber(playerID, "COMBAT", 50)
+    WR_ChangeExperience(unit, 1)
 
     if killedClass ~= nil then
         local suffix = WR_ClassSuffix(killedClass)
         if suffix ~= nil then
-            WR_ChangeSavedNumber(playerID, "CLASS_" .. suffix, 100)
+            WR_ChangeSavedNumber(playerID, "CLASS_" .. suffix, 50)
         end
     end
 

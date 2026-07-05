@@ -38,7 +38,8 @@ scene still uses safe existing Civilization V art.
   - file: `Lua/WhiteRoomDuplicateImprovements.lua`
   - SQL: `SQL/WhiteRoomDuplicateDummyBuildings.sql`
   - counts only worked, owned, unpillaged improvements
-  - each duplicate worked improvement gives +1% to the matching city yield
+  - each duplicate worked improvement gives +0.5% to the matching city yield
+  - because Civ V building yield modifiers are integer percentages, fractional duplicate bonuses only become visible once they reach a whole percent
   - applies current dummy building counts idempotently to avoid unnecessary city updates
   - recalculates every player turn and after `BuildFinished` when available
   - logs only when a city's worked-improvement state changes, unless forced through the manual helper
@@ -73,10 +74,10 @@ scene still uses safe existing Civilization V art.
 - Perfect Adaptation for Kiyotaka:
   - files: `Lua/WhiteRoomKiyotakaScaling.lua`, `SQL/WhiteRoomAdaptationDummyPromotions.sql`
   - Kiyotaka gets the base `PROMOTION_WR_PERFECT_ADAPTATION`
-  - on credited kill: +1% combat counter, +1% counter against the killed unit's combat class, +2 XP
-  - on Kiyotaka-attributed damage dealt to a unit: +0.5% combat counter, +0.5% attack counter, +0.25% move-after-combat chance counter
-  - on damage taken: +0.75% resistance counter, +0.5% healing counter, +0.5% below-50-HP combat counter
-  - on surviving a drop below 25 HP: +3% combat counter, +3% resistance counter, and a 10 HP heal queued for the next White Room turn
+  - on credited kill: +0.5% combat counter, +0.5% counter against the killed unit's combat class, +1 XP
+  - on Kiyotaka-attributed damage dealt to a unit: +0.25% combat counter, +0.25% attack counter, +0.13% move-after-combat chance counter
+  - on damage taken: +0.38% resistance counter, +0.25% healing counter, +0.25% below-50-HP combat counter
+  - on surviving a drop below 25 HP: +1.5% combat counter, +1.5% resistance counter, and a 5 HP heal queued for the next White Room turn
   - class-specific adaptation uses generated `PROMOTION_WR_KIYOTAKA_VS_<UNITCOMBAT>_<TIER>` promotions
   - movement-after-combat becomes the `Flow State` promotion once the stored chance reaches 100%
   - exact counters are saved with `Modding.OpenSaveData()` and converted into visible tier promotions
@@ -87,7 +88,7 @@ scene still uses safe existing Civilization V art.
   - tracks each White Room city's damage between player turns
   - when city damage increases, adds +1 city defense adaptation stack for that city
   - applies invisible dummy buildings in 1/5/10/25/50 denominations
-  - each stack currently adds city `Defense` and `ExtraCityHitPoints`
+  - each stack is worth +0.5% city defense/HP scaling; visible dummy buildings apply only whole-percent amounts
   - logs `WR City HP Adaptation: <city> took damage (...)`
   - tested in-game and confirmed working
 - City ranged strike adaptation:
@@ -98,15 +99,15 @@ scene still uses safe existing Civilization V art.
   - when a White Room city flips to "has performed a ranged strike this turn", adds +1 ranged adaptation stack for that city
   - applies invisible dummy buildings in 1/5/10/25/50 denominations
   - dummy building writes are idempotent to avoid city-info dirty event loops/freezes
-  - each stack currently adds +1% city `RangedStrikeModifier`
+  - each stack is worth +0.5% city `RangedStrikeModifier`; visible dummy buildings apply only whole-percent amounts
   - logs `WR City Ranged Adaptation: <city> fired a ranged strike (...)`
   - tested in-game and confirmed working
 - Trade route learning:
   - files: `Lua/WhiteRoomTradeRouteLearning.lua`, `SQL/WhiteRoomTradeRouteLearningDummyBuildings.sql`
   - uses Community Patch `GameEvents.PlayerTradeRouteCompleted` when available
   - also polls active routes with `player:GetTradeRoutes()` each White Room turn, because the CP completed event may not fire for already-active routes
-  - when a White Room trade route connection completes, adds +0.5% permanent gold learning
-  - because Civ V building yield modifiers are integer percentages, every 2 half-stacks applies +1% Gold
+  - when a White Room trade route connection completes, adds +0.25% permanent gold learning
+  - because Civ V building yield modifiers are integer percentages, every 4 learned connections applies +1% Gold
   - applies the current whole-percent gold modifier to all White Room cities through invisible dummy buildings
   - logs `WR Trade Route Learning: trade connection learned by White Room (...)`
   - tested in-game and confirmed working
@@ -114,7 +115,7 @@ scene still uses safe existing Civilization V art.
   - files: `Lua/WhiteRoomCapturedCityLearning.lua`, `SQL/WhiteRoomCapturedCityLearningDummyBuildings.sql`
   - listens for `Events.SerialEventCityCaptured`
   - triggers when any non-White-Room major civ or City-State loses a city
-  - each city-loss event gives White Room +2% attack vs cities and +1 city defense adaptation stack
+  - each city-loss event gives White Room +1% attack vs cities and +0.5% city defense learning
   - city defense uses repeatable invisible dummy buildings in 1/5/10/25/50 denominations
   - attack vs cities uses hidden city-attack promotions applied to White Room combat units
   - reapplies existing bonuses to current cities/units each White Room turn

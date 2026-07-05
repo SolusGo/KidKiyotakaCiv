@@ -7,6 +7,7 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local WR_CITY_RANGED_SAVE = Modding.OpenSaveData()
 local WR_CITY_RANGED_STATE = {}
 local WR_HAS_PERFORMED_SUPPORT = nil
+local WR_CITY_RANGED_PERCENT_PER_STACK = 0.5
 
 local WR_CITY_RANGED_DUMMY_BUILDINGS = {
     { percent = 50, type = "BUILDING_WR_CITY_RANGE_ADAPT_50", id = GameInfoTypes.BUILDING_WR_CITY_RANGE_ADAPT_50 },
@@ -44,7 +45,7 @@ local function WR_SetSavedNumber(playerID, city, suffix, value)
 end
 
 local function WR_ApplyRangedStacks(city, stacks)
-    local remaining = math.max(0, stacks)
+    local remaining = math.floor(math.max(0, stacks) * WR_CITY_RANGED_PERCENT_PER_STACK)
     local desiredCounts = {}
 
     for _, entry in ipairs(WR_CITY_RANGED_DUMMY_BUILDINGS) do
@@ -72,10 +73,12 @@ local function WR_RecordRangedStrike(playerID, city, reason)
     WR_ApplyRangedStacks(city, stacks)
 
     print(string.format(
-        "WR City Ranged Adaptation: %s fired a ranged strike (%s); ranged stacks now %d",
+        "WR City Ranged Adaptation: %s fired a ranged strike (%s); ranged stacks now %d (+%.1f%%, applied +%d%%)",
         city:GetName(),
         reason,
-        stacks
+        stacks,
+        stacks * WR_CITY_RANGED_PERCENT_PER_STACK,
+        math.floor(stacks * WR_CITY_RANGED_PERCENT_PER_STACK)
     ))
 end
 

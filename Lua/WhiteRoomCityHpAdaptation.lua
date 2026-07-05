@@ -6,6 +6,7 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 
 local WR_CITY_HP_SAVE = Modding.OpenSaveData()
 local WR_CITY_DAMAGE_CACHE = {}
+local WR_CITY_DEF_PERCENT_PER_STACK = 0.5
 
 local WR_CITY_DEF_DUMMY_BUILDINGS = {
     { percent = 50, type = "BUILDING_WR_CITY_DEF_ADAPT_50", id = GameInfoTypes.BUILDING_WR_CITY_DEF_ADAPT_50 },
@@ -65,7 +66,7 @@ end
 local function WR_ApplyCityDefenseStacks(city, stacks)
     WR_ClearCityDefenseDummies(city)
 
-    local remaining = math.max(0, stacks)
+    local remaining = math.floor(math.max(0, stacks) * WR_CITY_DEF_PERCENT_PER_STACK)
     for _, entry in ipairs(WR_CITY_DEF_DUMMY_BUILDINGS) do
         if entry.id ~= nil and remaining >= entry.percent then
             local count = math.floor(remaining / entry.percent)
@@ -81,11 +82,13 @@ local function WR_RecordCityHpLoss(playerID, city, oldDamage, newDamage)
     WR_ApplyCityDefenseStacks(city, stacks)
 
     print(string.format(
-        "WR City HP Adaptation: %s took damage (%d -> %d); defense stacks now %d",
+        "WR City HP Adaptation: %s took damage (%d -> %d); defense stacks now %d (+%.1f%%, applied +%d%%)",
         city:GetName(),
         oldDamage,
         newDamage,
-        stacks
+        stacks,
+        stacks * WR_CITY_DEF_PERCENT_PER_STACK,
+        math.floor(stacks * WR_CITY_DEF_PERCENT_PER_STACK)
     ))
 end
 
