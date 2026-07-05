@@ -121,13 +121,16 @@ scene still uses safe existing Civilization V art.
   - reapplies existing bonuses to current cities/units each White Room turn
   - logs `WR Captured City Learning: <old owner> lost city id <id> to <new owner> (...)`
   - tested in-game with IGE and confirmed working
-- Phase 1 in-game status UI:
+- Phase 2 in-game status UI:
   - files: `UI/WhiteRoomStatusPanel.xml`, `UI/WhiteRoomStatusPanel.lua`
   - separate `White Room Status Panel` InGameUIAddin
   - adds a small in-game `White Room` button
-  - opens a text status panel showing empire learning, per-city city stacks, worked-improvement duplicate bonuses, Kiyotaka deployment/counters, and active 4th Generation Operative count
+  - opens a tabbed status panel with Empire, Cities, Kiyotaka, and Units views
+  - Empire tab shows trade-route learning, captured-city learning, applied anti-city attack, and applied global city defense
+  - Cities tab shows per-city damage defense stacks, ranged-strike stacks, duplicate yield bonuses, worked improvements, and the currently most-adapted city
+  - Kiyotaka tab shows deployment details and Perfect Adaptation counters
+  - Units tab shows unique unit active counts, caps, tech status, and trainability
   - reads existing saved counters through `Modding.OpenSaveData()` and recalculates worked-improvement display live from city plots
-  - intended as phase 1 test/debug UI; visual polish can come later
 
 ## Hardest To Easiest Remaining Work
 

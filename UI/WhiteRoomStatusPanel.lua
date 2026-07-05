@@ -11,6 +11,7 @@ local WR_CITY_DEF_PERCENT_PER_STACK = 0.25
 local WR_CITY_RANGED_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 0.5
+local WR_ACTIVE_TAB = "EMPIRE"
 
 local WR_YIELD_ORDER = {"FOOD", "PRODUCTION", "GOLD", "SCIENCE", "CULTURE", "FAITH"}
 
@@ -192,16 +193,15 @@ local function WR_FindKiyotaka(player)
     return nil
 end
 
-local function WR_CountOperatives(player)
-    local operativeID = GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE
+local function WR_CountUnitsOfType(player, unitType)
     local count = 0
 
-    if player == nil or operativeID == nil then
+    if player == nil or unitType == nil then
         return 0
     end
 
     for unit in player:Units() do
-        if unit:GetUnitType() == operativeID then
+        if unit:GetUnitType() == unitType then
             count = count + 1
         end
     end
@@ -209,9 +209,53 @@ local function WR_CountOperatives(player)
     return count
 end
 
-local function WR_AppendKiyotaka(lines, playerID, player)
+local function WR_CountOperatives(player)
+    return WR_CountUnitsOfType(player, GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE)
+end
+
+local function WR_TechStatus(player, unitType)
+    local unitInfo = unitType ~= nil and GameInfo.Units[unitType] or nil
+    if player == nil or unitInfo == nil or unitInfo.PrereqTech == nil then
+        return "No tech requirement found"
+    end
+
+    local techID = GameInfoTypes[unitInfo.PrereqTech]
+    local techInfo = techID ~= nil and GameInfo.Technologies[techID] or nil
+    local techName = techInfo ~= nil and Locale.ConvertTextKey(techInfo.Description) or unitInfo.PrereqTech
+    local team = Teams[player:GetTeam()]
+
+    if team ~= nil and techID ~= nil and team:IsHasTech(techID) then
+        return "Unlocked by " .. techName
+    end
+
+    return "Requires " .. techName
+end
+
+local function WR_CanTrainStatus(player, unitType)
+    if player == nil or unitType == nil then
+        return "Unavailable"
+    end
+
+    local ok, result = pcall(function()
+        return player:CanTrain(unitType)
+    end)
+
+    if ok and result == true then
+        return "Can train"
+    end
+
+    return "Cannot train right now"
+end
+
+local function WR_AppendPanelHeader(lines, title, player)
+    table.insert(lines, title)
+    table.insert(lines, "Player: " .. (player:GetName() or "White Room"))
+    table.insert(lines, "Turn: " .. tostring(Game.GetGameTurn()))
     table.insert(lines, "")
-    table.insert(lines, "Kiyotaka Status")
+end
+
+local function WR_AppendKiyotaka(lines, playerID, player)
+    table.insert(lines, "Deployment")
 
     local unit = WR_FindKiyotaka(player)
     if unit == nil then
@@ -233,6 +277,8 @@ local function WR_AppendKiyotaka(lines, playerID, player)
     end
 
     local keyPrefix = "WR_KIYOTAKA_" .. tostring(playerID) .. "_"
+    table.insert(lines, "")
+    table.insert(lines, "Perfect Adaptation")
     table.insert(lines, "  Combat strength: +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "COMBAT")))
     table.insert(lines, "  Attack strength: +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "ATTACK")))
     table.insert(lines, "  Resistance: +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "RESISTANCE")))
@@ -257,37 +303,37 @@ local function WR_AppendKiyotaka(lines, playerID, player)
     end
 end
 
-local function WR_BuildStatusText()
-    local playerID, player = WR_GetActiveWhiteRoomPlayer()
-    local lines = {}
-
-    if player == nil then
-        return "No active White Room civilization found in this game."
-    end
-
-    table.insert(lines, "Player: " .. (player:GetName() or "White Room"))
-    table.insert(lines, "Turn: " .. tostring(Game.GetGameTurn()))
-    table.insert(lines, "4th Generation Operatives: " .. tostring(WR_CountOperatives(player)) .. " / 3")
-
+local function WR_AppendEmpire(lines, playerID)
     local tradeHalfStacks = WR_GetSavedNumber(WR_PlayerSaveKey("WR_TRADE_ROUTE_LEARNING_", playerID, "HALF_GOLD_STACKS"))
     local cityLossStacks = WR_GetSavedNumber(WR_PlayerSaveKey("WR_CAPTURED_CITY_LEARNING_", playerID, "CITY_LOSS_STACKS"))
 
-    table.insert(lines, "")
-    table.insert(lines, "Empire Learning")
     table.insert(lines, "  Trade-route gold learning: +" .. WR_FormatHalfPercentStacks(tradeHalfStacks) .. " (applied +" .. tostring(math.floor(tradeHalfStacks / 2)) .. "% Gold)")
+    table.insert(lines, "  Trade-route trigger progress: " .. string.format("%.2f / 2.00 half-stacks toward next +1%% Gold", tradeHalfStacks % 2))
     table.insert(lines, "  Observed city losses: " .. tostring(cityLossStacks))
     table.insert(lines, "  Attack vs cities: +" .. tostring(math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)) .. "%")
     table.insert(lines, "  Global city defense from city losses: +" .. string.format("%.2f%%", cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK) .. " (applied +" .. tostring(math.floor(cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK)) .. "%)")
+end
 
-    table.insert(lines, "")
-    table.insert(lines, "Cities")
-
+local function WR_AppendCities(lines, playerID, player)
     local hasCities = false
+    local bestCityName = nil
+    local bestCityScore = -1
+
     for city in player:Cities() do
         hasCities = true
         local hpStacks = WR_GetSavedNumber(WR_CitySaveKey("WR_CITY_HP_", playerID, city, "DEF_STACKS"))
         local rangedStacks = WR_GetSavedNumber(WR_CitySaveKey("WR_CITY_RANGED_", playerID, city, "ATTACK_STACKS"))
         local improvementCounts, yieldPercents = WR_CountWorkedImprovements(playerID, city)
+        local cityScore = hpStacks + rangedStacks
+
+        for _, yieldName in ipairs(WR_YIELD_ORDER) do
+            cityScore = cityScore + ((yieldPercents[yieldName] or 0) * 4)
+        end
+
+        if cityScore > bestCityScore then
+            bestCityScore = cityScore
+            bestCityName = city:GetName()
+        end
 
         table.insert(lines, string.format("  %s", city:GetName()))
         table.insert(lines, string.format("    Damage defense stacks: %d (+%.2f%% city defense, applied +%d%%)", hpStacks, hpStacks * WR_CITY_DEF_PERCENT_PER_STACK, math.floor(hpStacks * WR_CITY_DEF_PERCENT_PER_STACK)))
@@ -298,14 +344,80 @@ local function WR_BuildStatusText()
 
     if not hasCities then
         table.insert(lines, "  No White Room cities found.")
+    elseif bestCityName ~= nil then
+        table.insert(lines, "")
+        table.insert(lines, "Most adapted city: " .. bestCityName)
+    end
+end
+
+local function WR_AppendUnits(lines, player)
+    local kiyotakaCount = WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)
+    local operativeID = GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE
+    local operativeCount = WR_CountUnitsOfType(player, operativeID)
+
+    table.insert(lines, "Kiyotaka Ayanokoji")
+    table.insert(lines, "  Active: " .. tostring(kiyotakaCount) .. " / 1")
+    table.insert(lines, "  " .. WR_TechStatus(player, UNIT_WR_KIYOTAKA))
+    table.insert(lines, "  " .. WR_CanTrainStatus(player, UNIT_WR_KIYOTAKA))
+    table.insert(lines, "  Cannot be purchased; extras are removed by the cap script.")
+    table.insert(lines, "")
+    table.insert(lines, "4th Generation Operatives")
+    table.insert(lines, "  Active: " .. tostring(operativeCount) .. " / 3")
+    table.insert(lines, "  " .. WR_TechStatus(player, operativeID))
+    table.insert(lines, "  " .. WR_CanTrainStatus(player, operativeID))
+    table.insert(lines, "  Cannot be purchased or gifted to City-States.")
+end
+
+local function WR_BuildStatusText()
+    local playerID, player = WR_GetActiveWhiteRoomPlayer()
+    local lines = {}
+
+    if player == nil then
+        return "No active White Room civilization found in this game."
     end
 
-    WR_AppendKiyotaka(lines, playerID, player)
+    if WR_ACTIVE_TAB == "CITIES" then
+        WR_AppendPanelHeader(lines, "Cities", player)
+        WR_AppendCities(lines, playerID, player)
+    elseif WR_ACTIVE_TAB == "KIYOTAKA" then
+        WR_AppendPanelHeader(lines, "Kiyotaka", player)
+        WR_AppendKiyotaka(lines, playerID, player)
+    elseif WR_ACTIVE_TAB == "UNITS" then
+        WR_AppendPanelHeader(lines, "Unique Units", player)
+        WR_AppendUnits(lines, player)
+    else
+        WR_AppendPanelHeader(lines, "Empire Learning", player)
+        table.insert(lines, "4th Generation Operatives: " .. tostring(WR_CountOperatives(player)) .. " / 3")
+        table.insert(lines, "")
+        WR_AppendEmpire(lines, playerID)
+    end
 
     return table.concat(lines, "[NEWLINE]")
 end
 
-local function WR_RefreshPanel()
+local function WR_SetButtonDisabled(control, disabled)
+    if control ~= nil and control.SetDisabled ~= nil then
+        control:SetDisabled(disabled)
+    end
+end
+
+local function WR_UpdateTabButtons()
+    WR_SetButtonDisabled(Controls.EmpireTabButton, WR_ACTIVE_TAB == "EMPIRE")
+    WR_SetButtonDisabled(Controls.CitiesTabButton, WR_ACTIVE_TAB == "CITIES")
+    WR_SetButtonDisabled(Controls.KiyotakaTabButton, WR_ACTIVE_TAB == "KIYOTAKA")
+    WR_SetButtonDisabled(Controls.UnitsTabButton, WR_ACTIVE_TAB == "UNITS")
+end
+
+local WR_RefreshPanel
+
+local function WR_SetActiveTab(tabName)
+    WR_ACTIVE_TAB = tabName
+    WR_UpdateTabButtons()
+    WR_RefreshPanel()
+end
+
+WR_RefreshPanel = function()
+    WR_UpdateTabButtons()
     Controls.StatusText:SetString(WR_BuildStatusText())
 
     if Controls.StatusScrollPanel ~= nil and Controls.StatusScrollPanel.CalculateInternalSize ~= nil then
@@ -331,6 +443,10 @@ local function WR_TogglePanel()
 end
 
 Controls.WhiteRoomStatusButton:RegisterCallback(Mouse.eLClick, WR_TogglePanel)
+Controls.EmpireTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("EMPIRE") end)
+Controls.CitiesTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("CITIES") end)
+Controls.KiyotakaTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("KIYOTAKA") end)
+Controls.UnitsTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("UNITS") end)
 Controls.RefreshButton:RegisterCallback(Mouse.eLClick, WR_RefreshPanel)
 Controls.CloseButton:RegisterCallback(Mouse.eLClick, WR_HidePanel)
 

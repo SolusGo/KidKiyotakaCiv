@@ -98,13 +98,12 @@ in Civ V's normal UI.
 The mod includes a small **White Room** button in-game. It opens a status panel
 for tracking adaptation progress during play and testing.
 
-The panel currently shows:
+The panel is split into focused tabs:
 
-- Empire-wide trade-route learning and captured-city learning.
-- Per-city damage defense stacks and ranged-strike stacks.
-- Per-city worked-improvement counts and duplicate yield bonuses.
-- Kiyotaka deployment status and Perfect Adaptation counters.
-- Active 4th Generation Operative count.
+- **Empire**: trade-route learning, captured-city learning, and applied global bonuses.
+- **Cities**: per-city damage defense, ranged-strike stacks, duplicate yields, and worked improvements.
+- **Kiyotaka**: deployment details and Perfect Adaptation counters.
+- **Units**: Kiyotaka and 4th Generation Operative caps, tech status, and trainability.
 
 ## Requirements
 
