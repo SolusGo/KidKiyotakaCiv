@@ -89,7 +89,7 @@ The White Room favors a controlled, compact empire.
 - Keep Kiyotaka alive and active so Perfect Adaptation can compound.
 
 The civ is strongest in longer games where its many small adaptations have time
-to stack. Current balance uses slower fractional scaling for most adaptation
+to stack. Current balance uses very slow fractional scaling for most adaptation
 systems, so several triggers may be needed before a whole-percent bonus appears
 in Civ V's normal UI.
 

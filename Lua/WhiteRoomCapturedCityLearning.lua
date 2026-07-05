@@ -6,8 +6,8 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 
 local WR_CITY_LOSS_SAVE = Modding.OpenSaveData()
 local WR_CITY_LOSS_RECENT_EVENTS = {}
-local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.5
-local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 1
+local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.25
+local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 0.5
 
 local WR_CITY_LOSS_DEF_DUMMY_BUILDINGS = {
     { percent = 50, type = "BUILDING_WR_CITY_LOSS_DEF_50", id = GameInfoTypes.BUILDING_WR_CITY_LOSS_DEF_50 },
@@ -156,7 +156,7 @@ local function WR_RecordCityLossForWhiteRoom(playerID, oldOwnerID, cityID, newOw
     WR_ApplyCapturedCityLearningForPlayer(playerID)
 
     print(string.format(
-        "WR Captured City Learning: %s lost city id %s to %s; White Room learned from collapse -> vs cities +%d%%, city defense +%.1f%%",
+        "WR Captured City Learning: %s lost city id %s to %s; White Room learned from collapse -> vs cities +%d%%, city defense +%.2f%%",
         WR_PlayerName(oldOwnerID),
         tostring(cityID),
         WR_PlayerName(newOwnerID),

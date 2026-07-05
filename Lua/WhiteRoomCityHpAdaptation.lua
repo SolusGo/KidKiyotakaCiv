@@ -6,7 +6,7 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 
 local WR_CITY_HP_SAVE = Modding.OpenSaveData()
 local WR_CITY_DAMAGE_CACHE = {}
-local WR_CITY_DEF_PERCENT_PER_STACK = 0.5
+local WR_CITY_DEF_PERCENT_PER_STACK = 0.25
 
 local WR_CITY_DEF_DUMMY_BUILDINGS = {
     { percent = 50, type = "BUILDING_WR_CITY_DEF_ADAPT_50", id = GameInfoTypes.BUILDING_WR_CITY_DEF_ADAPT_50 },
@@ -82,7 +82,7 @@ local function WR_RecordCityHpLoss(playerID, city, oldDamage, newDamage)
     WR_ApplyCityDefenseStacks(city, stacks)
 
     print(string.format(
-        "WR City HP Adaptation: %s took damage (%d -> %d); defense stacks now %d (+%.1f%%, applied +%d%%)",
+        "WR City HP Adaptation: %s took damage (%d -> %d); defense stacks now %d (+%.2f%%, applied +%d%%)",
         city:GetName(),
         oldDamage,
         newDamage,

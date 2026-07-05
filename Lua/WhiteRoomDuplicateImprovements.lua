@@ -4,13 +4,13 @@
 --
 -- Mechanic:
 --   Each White Room city counts its currently worked, unpillaged improvements.
---   For each duplicate of the same improvement, the city gets +0.5% to the
+--   For each duplicate of the same improvement, the city gets +0.25% to the
 --   matching city yield through invisible dummy buildings.
 --
 -- Examples:
 --   1 worked Farm  = +0% Food
---   3 worked Farms = +1% Food
---   5 worked Mines = +2% Production
+--   3 worked Farms = +0.5% Food
+--   5 worked Mines = +1% Production
 --
 -- This recalculates from current city state, clears old dummy buildings first,
 -- and then reapplies the current correct values. It should not permanently
@@ -22,7 +22,7 @@ print("WhiteRoomDuplicateImprovements.lua loaded")
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local WR_DUP_DEBUG = false
 local WR_DUP_LOG_EVERY_TURN = false
-local WR_DUP_PERCENT_PER_DUPLICATE = 0.5
+local WR_DUP_PERCENT_PER_DUPLICATE = 0.25
 
 local PERCENT_DENOMS = {50, 25, 10, 5, 1}
 local YIELD_ORDER = {"FOOD", "PRODUCTION", "GOLD", "SCIENCE", "CULTURE", "FAITH"}
@@ -266,7 +266,7 @@ local function LogCityResult(playerID, city, improvementCounts, yieldPercents, f
     LastCitySignatures[cityKey] = signature
 
     WR_Log(string.format(
-        "Turn %d, %s -> Worked Improvements [%s], Food +%.1f%%, Prod +%.1f%%, Gold +%.1f%%, Science +%.1f%%, Culture +%.1f%%, Faith +%.1f%%",
+        "Turn %d, %s -> Worked Improvements [%s], Food +%.2f%%, Prod +%.2f%%, Gold +%.2f%%, Science +%.2f%%, Culture +%.2f%%, Faith +%.2f%%",
         Game.GetGameTurn(),
         city:GetName(),
         BuildImprovementSignature(improvementCounts),
