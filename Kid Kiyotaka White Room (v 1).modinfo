@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod id="995265a7-f41f-495b-a753-2688d72cdca3" version="1">
+  <Properties>
+    <Name>Kid Kiyotaka White Room</Name>
+    <Teaser>White Room adaptation mechanics for Civilization V.</Teaser>
+    <Description>Work-in-progress Civilization V BNW mod for Kid Kiyotaka and the Fourth Generation White Room.</Description>
+    <Authors>ThatOneYi</Authors>
+    <SpecialThanks></SpecialThanks>
+    <AffectsSavedGames>1</AffectsSavedGames>
+    <MinCompatibleSaveVersion>0</MinCompatibleSaveVersion>
+    <SupportsSinglePlayer>1</SupportsSinglePlayer>
+    <SupportsMultiplayer>0</SupportsMultiplayer>
+    <SupportsHotSeat>0</SupportsHotSeat>
+    <SupportsMac>0</SupportsMac>
+    <ReloadAudioSystem>0</ReloadAudioSystem>
+    <ReloadLandmarkSystem>0</ReloadLandmarkSystem>
+    <ReloadStrategicViewSystem>0</ReloadStrategicViewSystem>
+    <ReloadUnitSystem>0</ReloadUnitSystem>
+  </Properties>
+  <Dependencies />
+  <References />
+  <Blocks />
+  <Files>
+    <File md5="CE32E1BEEEC6C93AA92DB8229DDD31C7" import="0">SQL\WhiteRoomAdaptationDummyPromotions.sql</File>
+    <File md5="1BEACAB73905429889D69DB5DD394637" import="0">SQL\WhiteRoomDuplicateDummyBuildings.sql</File>
+    <File md5="64B14AD7E74687B222D2A75DDF3B9F59" import="1">Lua\WhiteRoomDuplicateImprovements.lua</File>
+  </Files>
+  <Actions>
+    <OnModActivated>
+      <UpdateDatabase>SQL\WhiteRoomAdaptationDummyPromotions.sql</UpdateDatabase>
+      <UpdateDatabase>SQL\WhiteRoomDuplicateDummyBuildings.sql</UpdateDatabase>
+    </OnModActivated>
+  </Actions>
+  <EntryPoints>
+    <EntryPoint type="InGameUIAddin" file="Lua\WhiteRoomDuplicateImprovements.lua">
+      <Name>White Room Duplicate Improvement Scaling</Name>
+      <Description>Recalculates duplicate worked-improvement city yield bonuses each turn.</Description>
+    </EntryPoint>
+  </EntryPoints>
+</Mod>

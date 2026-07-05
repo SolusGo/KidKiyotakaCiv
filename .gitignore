@@ -1,0 +1,17 @@
+# Local IDE/ModBuddy state
+*.suo
+*.civ5suo
+*.user
+*.sdf
+*.opensdf
+*.VC.db
+
+# Build outputs
+bin/
+obj/
+Build/
+Packages/
+
+# Local Codex/agent scratch data
+.agents/
+.codex/
