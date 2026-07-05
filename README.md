@@ -91,6 +91,19 @@ The White Room favors a controlled, compact empire.
 The civ is strongest in longer games where its many small adaptations have time
 to stack.
 
+## In-Game Status Panel
+
+The mod includes a small **White Room** button in-game. It opens a status panel
+for tracking adaptation progress during play and testing.
+
+The panel currently shows:
+
+- Empire-wide trade-route learning and captured-city learning.
+- Per-city damage defense stacks and ranged-strike stacks.
+- Per-city worked-improvement counts and duplicate yield bonuses.
+- Kiyotaka deployment status and Perfect Adaptation counters.
+- Active 4th Generation Operative count.
+
 ## Requirements
 
 - Civilization V: Brave New World

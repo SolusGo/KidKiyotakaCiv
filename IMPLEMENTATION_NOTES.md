@@ -120,14 +120,23 @@ scene still uses safe existing Civilization V art.
   - reapplies existing bonuses to current cities/units each White Room turn
   - logs `WR Captured City Learning: <old owner> lost city id <id> to <new owner> (...)`
   - tested in-game with IGE and confirmed working
+- Phase 1 in-game status UI:
+  - files: `UI/WhiteRoomStatusPanel.xml`, `UI/WhiteRoomStatusPanel.lua`
+  - separate `White Room Status Panel` InGameUIAddin
+  - adds a small in-game `White Room` button
+  - opens a text status panel showing empire learning, per-city city stacks, worked-improvement duplicate bonuses, Kiyotaka deployment/counters, and active 4th Generation Operative count
+  - reads existing saved counters through `Modding.OpenSaveData()` and recalculates worked-improvement display live from city plots
+  - intended as phase 1 test/debug UI; visual polish can come later
 
 ## Hardest To Easiest Remaining Work
 
-1. In-game art verification after rebuild
+1. In-game status panel verification after rebuild
+2. In-game art verification after rebuild
 
 ## Recommended Implementation Order
 
-1. Rebuild and verify leader/civ icons and Dawn of Man image in-game
+1. Rebuild and verify the White Room status panel appears in-game
+2. Verify leader/civ icons and Dawn of Man image in-game
 
 ## Important IDs
 
@@ -181,6 +190,8 @@ WR Unit Caps: initialized; Kiyotaka cap 1, 4th Generation Operative cap 3
 WhiteRoomLuaLoader included WhiteRoomFourthGenOperative.lua
 WhiteRoomFourthGenOperative.lua loaded
 WR 4th Generation Operative: initialized
+WhiteRoomStatusPanel.lua loaded
+WR Status Panel: initialized
 ```
 
 ## Notes

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context ID="WhiteRoomStatusPanel">
+  <Button ID="WhiteRoomStatusButton" Anchor="R,T" Offset="24,96" Size="150,34" String="White Room" ToolTip="Open White Room adaptation status" Style="BaseButton" />
+
+  <Grid ID="StatusPanel" Anchor="C,C" Size="720,560" Style="Grid9DetailFive140" Hidden="1" ConsumeMouse="1">
+    <Label ID="TitleLabel" Anchor="C,T" Offset="0,20" Font="TwCenMT24" String="White Room Status" ColorSet="Beige_Black_Alpha" />
+
+    <ScrollPanel ID="StatusScrollPanel" Anchor="C,T" Offset="0,62" Size="650,420" Vertical="1">
+      <Label ID="StatusText" Anchor="L,T" Offset="8,8" Size="610,4096" Font="TwCenMT18" WrapWidth="610" String="" ColorSet="Beige_Black_Alpha" />
+    </ScrollPanel>
+
+    <Button ID="RefreshButton" Anchor="C,B" Offset="-86,28" Size="150,36" String="Refresh" ToolTip="Refresh White Room status" Style="BaseButton" />
+    <Button ID="CloseButton" Anchor="C,B" Offset="86,28" Size="150,36" String="Close" ToolTip="Close White Room status" Style="BaseButton" />
+  </Grid>
+</Context>
