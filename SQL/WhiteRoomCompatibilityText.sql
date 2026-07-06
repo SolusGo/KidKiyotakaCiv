@@ -7,7 +7,43 @@ INSERT OR IGNORE INTO Language_en_US (Tag, Text)
 VALUES
 ('TXT_KEY_CITYVIEW_HAPPINESS_TEXT', 'Happiness'),
 ('TXT_KEY_CITYVIEW_UNHAPPINESS_TEXT', 'Unhappiness'),
-('TXT_KEY_BUILDING_WR_DUMMY_HIDDEN', 'White Room Hidden Counter');
+('TXT_KEY_BUILDING_WR_DUMMY_HIDDEN', 'White Room Hidden Counter'),
+('TXT_KEY_WR_CP_TOOLTIP_FALLBACK', 'Hidden Counter');
+
+-- CP/EUI tooltip builders assume every grouped game object has a Description.
+-- Some enabled civ mods leave hidden counter buildings/classes blank, which can
+-- abort the research panel update while CP is building tech/building tooltips.
+UPDATE Resources
+SET Description = 'TXT_KEY_WR_CP_TOOLTIP_FALLBACK'
+WHERE Description IS NULL OR Description = '';
+
+UPDATE Features
+SET Description = 'TXT_KEY_WR_CP_TOOLTIP_FALLBACK'
+WHERE Description IS NULL OR Description = '';
+
+UPDATE Terrains
+SET Description = 'TXT_KEY_WR_CP_TOOLTIP_FALLBACK'
+WHERE Description IS NULL OR Description = '';
+
+UPDATE Plots
+SET Description = 'TXT_KEY_WR_CP_TOOLTIP_FALLBACK'
+WHERE Description IS NULL OR Description = '';
+
+UPDATE Specialists
+SET Description = 'TXT_KEY_WR_CP_TOOLTIP_FALLBACK'
+WHERE Description IS NULL OR Description = '';
+
+UPDATE Improvements
+SET Description = 'TXT_KEY_WR_CP_TOOLTIP_FALLBACK'
+WHERE Description IS NULL OR Description = '';
+
+UPDATE BuildingClasses
+SET Description = 'TXT_KEY_WR_CP_TOOLTIP_FALLBACK'
+WHERE Description IS NULL OR Description = '';
+
+UPDATE Buildings
+SET Description = 'TXT_KEY_WR_CP_TOOLTIP_FALLBACK'
+WHERE Description IS NULL OR Description = '';
 
 -- Keep White Room dummy buildings out of CP/EUI CityView lists. These buildings
 -- are mechanical counters only and should not appear as city buildings,
