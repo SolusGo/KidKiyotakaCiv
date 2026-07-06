@@ -12,6 +12,7 @@ local WR_CITY_RANGED_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 0.5
 local WR_ACTIVE_TAB = "EMPIRE"
+local WR_CITY_SCREEN_OPEN = false
 
 local WR_YIELD_ORDER = {"FOOD", "PRODUCTION", "GOLD", "SCIENCE", "CULTURE", "FAITH"}
 
@@ -591,7 +592,23 @@ local function WR_HidePanel()
     Controls.StatusPanel:SetHide(true)
 end
 
+local function WR_UpdateChromeVisibility()
+    local playerID, player = WR_GetActiveWhiteRoomPlayer()
+    local shouldHide = WR_CITY_SCREEN_OPEN or player == nil
+
+    Controls.WhiteRoomStatusButton:SetHide(shouldHide)
+
+    if shouldHide then
+        WR_HidePanel()
+    end
+end
+
 local function WR_TogglePanel()
+    if WR_CITY_SCREEN_OPEN then
+        WR_HidePanel()
+        return
+    end
+
     if Controls.StatusPanel:IsHidden() then
         WR_ShowPanel()
     else
@@ -618,10 +635,28 @@ end)
 
 if Events.ActivePlayerTurnStart ~= nil then
     Events.ActivePlayerTurnStart.Add(function()
+        WR_UpdateChromeVisibility()
+
         if not Controls.StatusPanel:IsHidden() then
             WR_RefreshPanel()
         end
     end)
 end
+
+if Events.SerialEventEnterCityScreen ~= nil then
+    Events.SerialEventEnterCityScreen.Add(function()
+        WR_CITY_SCREEN_OPEN = true
+        WR_UpdateChromeVisibility()
+    end)
+end
+
+if Events.SerialEventExitCityScreen ~= nil then
+    Events.SerialEventExitCityScreen.Add(function()
+        WR_CITY_SCREEN_OPEN = false
+        WR_UpdateChromeVisibility()
+    end)
+end
+
+WR_UpdateChromeVisibility()
 
 print("WR Status Panel: initialized")
