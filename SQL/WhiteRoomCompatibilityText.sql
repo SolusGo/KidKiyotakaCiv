@@ -14,7 +14,7 @@ VALUES
 -- specialist containers, great-work buildings, or production entries.
 UPDATE BuildingClasses
 SET Description = 'TXT_KEY_BUILDING_WR_DUMMY_HIDDEN'
-WHERE Type LIKE 'BUILDINGCLASS_WR_%';
+WHERE Type GLOB 'BUILDINGCLASS_WR_*';
 
 UPDATE Buildings
 SET Description = 'TXT_KEY_BUILDING_WR_DUMMY_HIDDEN',
@@ -28,5 +28,6 @@ SET Description = 'TXT_KEY_BUILDING_WR_DUMMY_HIDDEN',
     NukeImmune = 1,
     HurryCostModifier = -1,
     ConquestProb = 0,
+    ShowInPedia = 0,
     IsDummy = 1
-WHERE Type LIKE 'BUILDING_WR_%';
+WHERE Type GLOB 'BUILDING_WR_*';
