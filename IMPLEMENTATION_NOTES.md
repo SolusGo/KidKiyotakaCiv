@@ -50,7 +50,7 @@ scene still uses safe existing Civilization V art.
   - file: `Lua/WhiteRoomDuplicateImprovements.lua`
   - SQL: `SQL/WhiteRoomDuplicateDummyBuildings.sql`
   - counts only worked, owned, unpillaged improvements
-  - each duplicate worked improvement gives +0.25% to the matching city yield
+  - each duplicate worked improvement gives +0.5% to the matching city yield
   - because Civ V building yield modifiers are integer percentages, fractional duplicate bonuses only become visible once they reach a whole percent
   - applies current dummy building counts idempotently to avoid unnecessary city updates
   - recalculates every player turn and after `BuildFinished` when available

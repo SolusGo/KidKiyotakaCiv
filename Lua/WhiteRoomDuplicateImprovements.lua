@@ -4,7 +4,7 @@
 --
 -- Mechanic:
 --   Each White Room city counts its currently worked, unpillaged improvements.
---   For each duplicate of the same improvement, the city gets +0.25% to the
+--   For each duplicate of the same improvement, the city gets +0.5% to the
 --   matching city yield through invisible dummy buildings.
 --
 -- Examples:
@@ -22,7 +22,7 @@ print("WhiteRoomDuplicateImprovements.lua loaded")
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local WR_DUP_DEBUG = false
 local WR_DUP_LOG_EVERY_TURN = false
-local WR_DUP_PERCENT_PER_DUPLICATE = 0.25
+local WR_DUP_PERCENT_PER_DUPLICATE = 0.5
 
 local PERCENT_DENOMS = {50, 25, 10, 5, 1}
 local YIELD_ORDER = {"FOOD", "PRODUCTION", "GOLD", "SCIENCE", "CULTURE", "FAITH"}
