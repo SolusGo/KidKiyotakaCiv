@@ -144,6 +144,7 @@ scene still uses safe existing Civilization V art.
   - Units tab shows unique unit active counts, caps, tech status, trainability, and deployment status
   - Phase 3 polish adds section dividers, compact dossier-style rows, and clearer stored-vs-applied bonus wording
   - Phase 4 polish adds an at-a-glance summary strip above the detailed readout and clearer active-tab labels
+  - Phase 5 polish adds color-coded status badges, stronger readout hierarchy, and sorted city cards
   - reads existing saved counters through `Modding.OpenSaveData()` and recalculates worked-improvement display live from city plots
 
 ## Hardest To Easiest Remaining Work
