@@ -145,6 +145,7 @@ scene still uses safe existing Civilization V art.
   - Phase 3 polish adds section dividers, compact dossier-style rows, and clearer stored-vs-applied bonus wording
   - Phase 4 polish adds an at-a-glance summary strip above the detailed readout and clearer active-tab labels
   - Phase 5 polish adds color-coded status badges, stronger readout hierarchy, and sorted city cards
+  - Phase 6 polish adds richer tooltips, a compact/expanded toggle, White Room-themed labels, and a stronger Kiyotaka dossier profile
   - reads existing saved counters through `Modding.OpenSaveData()` and recalculates worked-improvement display live from city plots
 
 ## Hardest To Easiest Remaining Work

@@ -13,6 +13,7 @@ local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 0.5
 local WR_ACTIVE_TAB = "EMPIRE"
 local WR_CITY_SCREEN_OPEN = false
+local WR_COMPACT_MODE = false
 
 local WR_YIELD_ORDER = {"FOOD", "PRODUCTION", "GOLD", "SCIENCE", "CULTURE", "FAITH"}
 
@@ -310,6 +311,57 @@ local function WR_CanTrainStatus(player, unitType)
     return "Cannot train right now"
 end
 
+local function WR_ClassLabel(unitCombatInfo)
+    if unitCombatInfo == nil then
+        return "Unknown"
+    end
+
+    return string.gsub(string.gsub(unitCombatInfo.Type, "UNITCOMBAT_", ""), "_", " ")
+end
+
+local function WR_GetKiyotakaProfile(playerID)
+    local keyPrefix = "WR_KIYOTAKA_" .. tostring(playerID) .. "_"
+    local profile = {
+        combat = WR_GetSavedNumber(keyPrefix .. "COMBAT"),
+        attack = WR_GetSavedNumber(keyPrefix .. "ATTACK"),
+        resistance = WR_GetSavedNumber(keyPrefix .. "RESISTANCE"),
+        healing = WR_GetSavedNumber(keyPrefix .. "HEALING"),
+        desperation = WR_GetSavedNumber(keyPrefix .. "DESPERATION"),
+        moveChance = WR_GetSavedNumber(keyPrefix .. "MOVE_CHANCE"),
+        pendingHeal = WR_GetSavedNumber(keyPrefix .. "PENDING_HEAL"),
+        bestClassLabel = "None",
+        bestClassValue = 0,
+        classParts = {}
+    }
+
+    profile.totalScore = profile.combat
+        + profile.attack
+        + profile.resistance
+        + profile.healing
+        + profile.desperation
+        + profile.moveChance
+
+    for unitCombatInfo in GameInfo.UnitCombatInfos() do
+        local suffix = string.gsub(unitCombatInfo.Type, "UNITCOMBAT_", "")
+        local value = WR_GetSavedNumber(keyPrefix .. "CLASS_" .. suffix)
+        if value > 0 then
+            profile.totalScore = profile.totalScore + value
+            local label = WR_ClassLabel(unitCombatInfo)
+            table.insert(profile.classParts, string.format("%s +%s", label, WR_FormatPercentFromHundredths(value)))
+
+            if value > profile.bestClassValue then
+                profile.bestClassValue = value
+                profile.bestClassLabel = label
+            end
+        end
+    end
+
+    table.sort(profile.classParts)
+    profile.flowRemaining = math.max(0, 10000 - profile.moveChance)
+
+    return profile
+end
+
 local function WR_AppendPanelHeader(lines, title, player)
     table.insert(lines, WR_Header(title))
     table.insert(lines, WR_Divider())
@@ -318,7 +370,9 @@ local function WR_AppendPanelHeader(lines, title, player)
 end
 
 local function WR_AppendKiyotaka(lines, playerID, player)
-    table.insert(lines, WR_Header("Deployment"))
+    local profile = WR_GetKiyotakaProfile(playerID)
+
+    table.insert(lines, WR_Header("Subject Dossier"))
     table.insert(lines, WR_Divider())
 
     local unit = WR_FindKiyotaka(player)
@@ -341,32 +395,34 @@ local function WR_AppendKiyotaka(lines, playerID, player)
         ))
     end
 
-    local keyPrefix = "WR_KIYOTAKA_" .. tostring(playerID) .. "_"
     table.insert(lines, "")
-    table.insert(lines, WR_Header("Perfect Adaptation"))
+    table.insert(lines, WR_Header("Adaptation Profile"))
     table.insert(lines, WR_Divider())
-    table.insert(lines, "  Combat       +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "COMBAT")))
-    table.insert(lines, "  Attack       +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "ATTACK")))
-    table.insert(lines, "  Resistance   +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "RESISTANCE")))
-    table.insert(lines, "  Healing      +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "HEALING")))
-    table.insert(lines, "  Low-HP power +" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "DESPERATION")))
-    table.insert(lines, "  Flow State   " .. WR_StatusTag(WR_GetSavedNumber(keyPrefix .. "MOVE_CHANCE") >= 10000) .. " " .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "MOVE_CHANCE")))
+    table.insert(lines, "  Total adaptation score +" .. WR_FormatPercentFromHundredths(profile.totalScore))
+    table.insert(lines, "  Strongest matchup      " .. (profile.bestClassValue > 0 and WR_Positive(profile.bestClassLabel .. " +" .. WR_FormatPercentFromHundredths(profile.bestClassValue)) or WR_StatusBadge("NONE", "WARN")))
+    table.insert(lines, "  Flow State             " .. WR_StatusTag(profile.moveChance >= 10000) .. " " .. WR_FormatPercentFromHundredths(profile.moveChance))
+    table.insert(lines, "  Next Flow threshold    " .. (profile.flowRemaining > 0 and ("needs +" .. WR_FormatPercentFromHundredths(profile.flowRemaining)) or WR_Positive("ready")))
+    table.insert(lines, "  Pending low-HP heal    " .. (profile.pendingHeal > 0 and WR_Positive("+" .. tostring(profile.pendingHeal) .. " HP next turn") or WR_StatusBadge("NONE", "WARN")))
 
-    local classParts = {}
-    for unitCombatInfo in GameInfo.UnitCombatInfos() do
-        local suffix = string.gsub(unitCombatInfo.Type, "UNITCOMBAT_", "")
-        local value = WR_GetSavedNumber(keyPrefix .. "CLASS_" .. suffix)
-        if value > 0 then
-            table.insert(classParts, string.format("%s +%s", string.gsub(suffix, "_", " "), WR_FormatPercentFromHundredths(value)))
-        end
+    if WR_COMPACT_MODE then
+        return
     end
-    table.sort(classParts)
 
-    if #classParts > 0 then
+    table.insert(lines, "")
+    table.insert(lines, WR_Header("Perfect Adaptation Details"))
+    table.insert(lines, WR_Divider())
+    table.insert(lines, "  Combat       +" .. WR_FormatPercentFromHundredths(profile.combat))
+    table.insert(lines, "  Attack       +" .. WR_FormatPercentFromHundredths(profile.attack))
+    table.insert(lines, "  Resistance   +" .. WR_FormatPercentFromHundredths(profile.resistance))
+    table.insert(lines, "  Healing      +" .. WR_FormatPercentFromHundredths(profile.healing))
+    table.insert(lines, "  Low-HP power +" .. WR_FormatPercentFromHundredths(profile.desperation))
+    table.insert(lines, "  Move chance  +" .. WR_FormatPercentFromHundredths(profile.moveChance))
+
+    if #profile.classParts > 0 then
         table.insert(lines, "")
         table.insert(lines, WR_Header("Class Adaptations"))
         table.insert(lines, WR_Divider())
-        for _, classLine in ipairs(classParts) do
+        for _, classLine in ipairs(profile.classParts) do
             table.insert(lines, "  " .. classLine)
         end
     else
@@ -392,6 +448,11 @@ local function WR_AppendEmpire(lines, playerID)
     table.insert(lines, "  Trade gold       " .. WR_StoredAppliedTag(tradeStored, tradeApplied) .. " " .. WR_FormatStoredApplied(tradeStored, tradeApplied))
     table.insert(lines, "  Attack vs cities " .. WR_StoredAppliedTag(cityAttackStored, cityAttackApplied) .. " " .. WR_FormatStoredApplied(cityAttackStored, cityAttackApplied))
     table.insert(lines, "  City defense     " .. WR_StoredAppliedTag(cityDefenseStored, cityDefenseApplied) .. " " .. WR_FormatStoredApplied(cityDefenseStored, cityDefenseApplied))
+
+    if WR_COMPACT_MODE then
+        return
+    end
+
     table.insert(lines, "")
     table.insert(lines, WR_Header("Learning Counters"))
     table.insert(lines, WR_Divider())
@@ -487,8 +548,12 @@ local function WR_AppendCities(lines, playerID, player)
             card.rangedStacks,
             WR_FormatStoredApplied(card.rangedStored, card.rangedApplied)
         ))
-        WR_AppendYieldLine(lines, "  Duplicate yields", card.yieldPercents)
-        WR_AppendWorkedImprovements(lines, card.improvementCounts)
+        if WR_COMPACT_MODE then
+            WR_AppendYieldLine(lines, "  Duplicate yields", card.yieldPercents)
+        else
+            WR_AppendYieldLine(lines, "  Duplicate yields", card.yieldPercents)
+            WR_AppendWorkedImprovements(lines, card.improvementCounts)
+        end
         table.insert(lines, "")
     end
 end
@@ -502,15 +567,19 @@ local function WR_AppendUnits(lines, player)
     table.insert(lines, WR_Divider())
     table.insert(lines, "  " .. WR_StatusTag(kiyotakaCount > 0) .. " Active: " .. tostring(kiyotakaCount) .. " / 1")
     table.insert(lines, "  Tech: " .. WR_TechStatus(player, UNIT_WR_KIYOTAKA))
-    table.insert(lines, "  Training: " .. WR_CanTrainStatus(player, UNIT_WR_KIYOTAKA))
-    table.insert(lines, "  Cannot be purchased; extras are removed by the cap script.")
+    if not WR_COMPACT_MODE then
+        table.insert(lines, "  Training: " .. WR_CanTrainStatus(player, UNIT_WR_KIYOTAKA))
+        table.insert(lines, "  Cannot be purchased; extras are removed by the cap script.")
+    end
     table.insert(lines, "")
     table.insert(lines, WR_Header("4th Generation Operatives"))
     table.insert(lines, WR_Divider())
     table.insert(lines, "  " .. WR_StatusTag(operativeCount > 0) .. " Active: " .. tostring(operativeCount) .. " / 3")
     table.insert(lines, "  Tech: " .. WR_TechStatus(player, operativeID))
-    table.insert(lines, "  Training: " .. WR_CanTrainStatus(player, operativeID))
-    table.insert(lines, "  Cannot be purchased or gifted to City-States.")
+    if not WR_COMPACT_MODE then
+        table.insert(lines, "  Training: " .. WR_CanTrainStatus(player, operativeID))
+        table.insert(lines, "  Cannot be purchased or gifted to City-States.")
+    end
 end
 
 local function WR_BuildStatusText()
@@ -522,17 +591,17 @@ local function WR_BuildStatusText()
     end
 
     if WR_ACTIVE_TAB == "CITIES" then
-        WR_AppendPanelHeader(lines, "Cities", player)
+        WR_AppendPanelHeader(lines, "City Adaptation Records", player)
         WR_AppendCities(lines, playerID, player)
     elseif WR_ACTIVE_TAB == "KIYOTAKA" then
-        WR_AppendPanelHeader(lines, "Kiyotaka", player)
+        WR_AppendPanelHeader(lines, "Subject Dossier: Kiyotaka", player)
         WR_AppendKiyotaka(lines, playerID, player)
     elseif WR_ACTIVE_TAB == "UNITS" then
-        WR_AppendPanelHeader(lines, "Unique Units", player)
+        WR_AppendPanelHeader(lines, "Operative Deployment", player)
         WR_AppendUnits(lines, player)
     else
-        WR_AppendPanelHeader(lines, "Empire Learning", player)
-        table.insert(lines, "Unit overview: Kiyotaka " .. tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1    4th Gen Operatives " .. tostring(WR_CountOperatives(player)) .. " / 3")
+        WR_AppendPanelHeader(lines, "Facility Readout", player)
+        table.insert(lines, "Deployment overview: Kiyotaka " .. tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1    4th Gen Operatives " .. tostring(WR_CountOperatives(player)) .. " / 3")
         table.insert(lines, "")
         WR_AppendEmpire(lines, playerID)
     end
@@ -543,6 +612,42 @@ end
 local function WR_SetLabel(control, text)
     if control ~= nil and control.SetString ~= nil then
         control:SetString(text or "")
+    end
+end
+
+local function WR_SetTooltip(control, text)
+    if control ~= nil and control.SetToolTipString ~= nil then
+        control:SetToolTipString(text or "")
+    end
+end
+
+local function WR_UpdateSummaryTooltips()
+    WR_SetTooltip(Controls.SummaryTitle, "At-a-glance White Room readout for the active tab.")
+    WR_SetTooltip(Controls.SummaryMetricOne, "")
+    WR_SetTooltip(Controls.SummaryMetricTwo, "")
+    WR_SetTooltip(Controls.SummaryMetricThree, "")
+    WR_SetTooltip(Controls.SummaryMetricFour, "")
+
+    if WR_ACTIVE_TAB == "CITIES" then
+        WR_SetTooltip(Controls.SummaryMetricOne, "Number of White Room cities currently monitored.")
+        WR_SetTooltip(Controls.SummaryMetricTwo, "City with the highest combined adaptation score.")
+        WR_SetTooltip(Controls.SummaryMetricThree, "Total city-defense stacks from taking city damage.")
+        WR_SetTooltip(Controls.SummaryMetricFour, "Total stored duplicate worked-improvement yield bonus across all cities. Each duplicate worked improvement gives +0.5% to its linked yield.")
+    elseif WR_ACTIVE_TAB == "KIYOTAKA" then
+        WR_SetTooltip(Controls.SummaryMetricOne, "Whether Kiyotaka is currently deployed.")
+        WR_SetTooltip(Controls.SummaryMetricTwo, "Kiyotaka's current hit points, if deployed.")
+        WR_SetTooltip(Controls.SummaryMetricThree, "Combined visible Perfect Adaptation score from combat, attack, resistance, healing, low-HP power, movement chance, and class matchup counters.")
+        WR_SetTooltip(Controls.SummaryMetricFour, "Movement-after-combat chance. Flow State becomes ready at 100%.")
+    elseif WR_ACTIVE_TAB == "UNITS" then
+        WR_SetTooltip(Controls.SummaryMetricOne, "Kiyotaka active count. The cap script limits this unit to one.")
+        WR_SetTooltip(Controls.SummaryMetricTwo, "4th Generation Operative active count. The cap script limits them to three.")
+        WR_SetTooltip(Controls.SummaryMetricThree, "Technology and trainability status for Kiyotaka.")
+        WR_SetTooltip(Controls.SummaryMetricFour, "Technology and trainability status for 4th Generation Operatives.")
+    else
+        WR_SetTooltip(Controls.SummaryMetricOne, "Trade-route learning. Stored fractional gold becomes applied once it reaches a full integer percent.")
+        WR_SetTooltip(Controls.SummaryMetricTwo, "Number of observed city-loss events that feed the captured-city learning mechanic.")
+        WR_SetTooltip(Controls.SummaryMetricThree, "Empire-wide attack bonus against cities from observed city losses.")
+        WR_SetTooltip(Controls.SummaryMetricFour, "Highest-scoring city by adaptation stacks and duplicate-yield progress.")
     end
 end
 
@@ -603,34 +708,36 @@ local function WR_UpdateSummaryPanel()
     local cityLossStacks = WR_GetSavedNumber(WR_PlayerSaveKey("WR_CAPTURED_CITY_LEARNING_", playerID, "CITY_LOSS_STACKS"))
     local cityCount, bestCityName, totalDefenseStacks, totalRangedStacks, totalDuplicatePercent = WR_BuildCitySummary(playerID, player)
     local kiyotaka = WR_FindKiyotaka(player)
-    local keyPrefix = "WR_KIYOTAKA_" .. tostring(playerID) .. "_"
+    local kiyotakaProfile = WR_GetKiyotakaProfile(playerID)
 
     if WR_ACTIVE_TAB == "CITIES" then
-        WR_SetLabel(Controls.SummaryTitle, "City Adaptation Overview")
+        WR_SetLabel(Controls.SummaryTitle, "City Adaptation Records")
         WR_SetLabel(Controls.SummaryMetricOne, "Cities[NEWLINE]" .. tostring(cityCount))
         WR_SetLabel(Controls.SummaryMetricTwo, "Most Adapted[NEWLINE]" .. bestCityName)
         WR_SetLabel(Controls.SummaryMetricThree, "Defense Stacks[NEWLINE]" .. tostring(totalDefenseStacks))
         WR_SetLabel(Controls.SummaryMetricFour, "Duplicate Yields[NEWLINE]+" .. string.format("%.2f%%", totalDuplicatePercent))
     elseif WR_ACTIVE_TAB == "KIYOTAKA" then
-        WR_SetLabel(Controls.SummaryTitle, "Kiyotaka Dossier")
+        WR_SetLabel(Controls.SummaryTitle, "Subject Dossier: Kiyotaka")
         WR_SetLabel(Controls.SummaryMetricOne, "Deployment[NEWLINE]" .. (kiyotaka ~= nil and "Active" or "Missing"))
         WR_SetLabel(Controls.SummaryMetricTwo, "Vitals[NEWLINE]" .. WR_UnitHpLine(kiyotaka))
-        WR_SetLabel(Controls.SummaryMetricThree, "Combat[NEWLINE]+" .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "COMBAT")))
-        WR_SetLabel(Controls.SummaryMetricFour, "Flow State[NEWLINE]" .. WR_StatusTag(WR_GetSavedNumber(keyPrefix .. "MOVE_CHANCE") >= 10000) .. " " .. WR_FormatPercentFromHundredths(WR_GetSavedNumber(keyPrefix .. "MOVE_CHANCE")))
+        WR_SetLabel(Controls.SummaryMetricThree, "Adaptation[NEWLINE]+" .. WR_FormatPercentFromHundredths(kiyotakaProfile.totalScore))
+        WR_SetLabel(Controls.SummaryMetricFour, "Flow State[NEWLINE]" .. WR_StatusTag(kiyotakaProfile.moveChance >= 10000) .. " " .. WR_FormatPercentFromHundredths(kiyotakaProfile.moveChance))
     elseif WR_ACTIVE_TAB == "UNITS" then
         local operativeCount = WR_CountOperatives(player)
-        WR_SetLabel(Controls.SummaryTitle, "Unique Unit Readiness")
+        WR_SetLabel(Controls.SummaryTitle, "Operative Deployment")
         WR_SetLabel(Controls.SummaryMetricOne, "Kiyotaka[NEWLINE]" .. tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1")
         WR_SetLabel(Controls.SummaryMetricTwo, "Operatives[NEWLINE]" .. tostring(operativeCount) .. " / 3")
         WR_SetLabel(Controls.SummaryMetricThree, "Kiyotaka Tech[NEWLINE]" .. WR_TechStatus(player, UNIT_WR_KIYOTAKA))
         WR_SetLabel(Controls.SummaryMetricFour, "Operative Tech[NEWLINE]" .. WR_TechStatus(player, GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE))
     else
-        WR_SetLabel(Controls.SummaryTitle, "Empire Learning Overview")
+        WR_SetLabel(Controls.SummaryTitle, "Facility Readout")
         WR_SetLabel(Controls.SummaryMetricOne, "Trade Gold[NEWLINE]" .. WR_FormatStoredApplied(tradeHalfStacks * 0.5, math.floor(tradeHalfStacks / 2)))
         WR_SetLabel(Controls.SummaryMetricTwo, "City Losses[NEWLINE]" .. tostring(cityLossStacks))
         WR_SetLabel(Controls.SummaryMetricThree, "Vs Cities[NEWLINE]" .. WR_FormatStoredApplied(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK, math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)))
         WR_SetLabel(Controls.SummaryMetricFour, "Best City[NEWLINE]" .. bestCityName)
     end
+
+    WR_UpdateSummaryTooltips()
 end
 
 local function WR_SetButtonDisabled(control, disabled)
@@ -656,6 +763,12 @@ local function WR_UpdateTabButtons()
     WR_SetButtonString(Controls.CitiesTabButton, WR_ACTIVE_TAB == "CITIES" and "[ Cities ]" or "Cities")
     WR_SetButtonString(Controls.KiyotakaTabButton, WR_ACTIVE_TAB == "KIYOTAKA" and "[ Kiyotaka ]" or "Kiyotaka")
     WR_SetButtonString(Controls.UnitsTabButton, WR_ACTIVE_TAB == "UNITS" and "[ Units ]" or "Units")
+    WR_SetButtonString(Controls.CompactButton, WR_COMPACT_MODE and "Expanded" or "Compact")
+    WR_SetTooltip(Controls.EmpireTabButton, "Facility-level learning from trade routes and observed city losses.")
+    WR_SetTooltip(Controls.CitiesTabButton, "Per-city adaptation records: damage defense, ranged strikes, duplicate yields, and worked improvements.")
+    WR_SetTooltip(Controls.KiyotakaTabButton, "Kiyotaka's Perfect Adaptation dossier, including Flow State and class matchups.")
+    WR_SetTooltip(Controls.UnitsTabButton, "Unique unit readiness, caps, technology requirements, and training status.")
+    WR_SetTooltip(Controls.CompactButton, WR_COMPACT_MODE and "Show full White Room status details." or "Show a shorter White Room status readout.")
 end
 
 local WR_RefreshPanel
@@ -671,9 +784,24 @@ WR_RefreshPanel = function()
     WR_UpdateSummaryPanel()
     Controls.StatusText:SetString(WR_BuildStatusText())
 
+    if WR_ACTIVE_TAB == "CITIES" then
+        WR_SetTooltip(Controls.StatusText, "City records are sorted by adaptation score. Duplicate worked improvements give +0.5% per duplicate to their linked yield; whole-percent values are applied through hidden buildings.")
+    elseif WR_ACTIVE_TAB == "KIYOTAKA" then
+        WR_SetTooltip(Controls.StatusText, "Subject Dossier tracks Perfect Adaptation: kills, damage dealt, damage taken, low-HP survival, Flow State chance, and class-specific matchups.")
+    elseif WR_ACTIVE_TAB == "UNITS" then
+        WR_SetTooltip(Controls.StatusText, "Operative Deployment shows White Room unique unit counts, caps, tech requirements, and training availability.")
+    else
+        WR_SetTooltip(Controls.StatusText, "Facility Readout tracks empire-wide White Room learning from trade routes and observed city losses.")
+    end
+
     if Controls.StatusScrollPanel ~= nil and Controls.StatusScrollPanel.CalculateInternalSize ~= nil then
         Controls.StatusScrollPanel:CalculateInternalSize()
     end
+end
+
+local function WR_ToggleCompactMode()
+    WR_COMPACT_MODE = not WR_COMPACT_MODE
+    WR_RefreshPanel()
 end
 
 local function WR_ShowPanel()
@@ -715,6 +843,7 @@ Controls.CitiesTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActive
 Controls.KiyotakaTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("KIYOTAKA") end)
 Controls.UnitsTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("UNITS") end)
 Controls.RefreshButton:RegisterCallback(Mouse.eLClick, WR_RefreshPanel)
+Controls.CompactButton:RegisterCallback(Mouse.eLClick, WR_ToggleCompactMode)
 Controls.CloseButton:RegisterCallback(Mouse.eLClick, WR_HidePanel)
 
 ContextPtr:SetInputHandler(function(uiMsg, wParam)
