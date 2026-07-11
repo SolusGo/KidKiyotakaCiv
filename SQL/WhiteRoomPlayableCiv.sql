@@ -144,7 +144,7 @@ VALUES ('CIVILIZATION_WHITE_ROOM_KID', 'LEADER_WR_KID_KIYOTAKA');
 
 UPDATE Civilizations
 SET IconAtlas = 'WR_WHITE_ROOM_ICON_ATLAS',
-    AlphaIconAtlas = 'WR_WHITE_ROOM_ALPHA_ATLAS',
+    AlphaIconAtlas = 'WR_WHITE_ROOM_ICON_ATLAS',
     PortraitIndex = 0,
     MapImage = 'WR_WhiteRoom_Map.dds',
     DawnOfManImage = 'WR_Kiyotaka_DOM.dds'
