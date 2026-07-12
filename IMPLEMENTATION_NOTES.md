@@ -131,7 +131,7 @@ scene still uses safe existing Civilization V art.
   - city defense uses repeatable invisible dummy buildings in 1/5/10/25/50 denominations
   - attack vs cities uses hidden city-attack promotions applied to White Room combat units
   - reapplies existing bonuses to current cities/units each White Room turn
-  - logs `WR Captured City Learning: <old owner> lost city id <id> to <new owner> (...)`
+  - debug logs `WR Captured City Learning: <old owner> lost city id <id> to <new owner> (...)` when `WR_CITY_LOSS_DEBUG` is enabled
   - tested in-game with IGE and confirmed working
 - Phase 4 in-game status UI:
   - files: `UI/WhiteRoomStatusPanel.xml`, `UI/WhiteRoomStatusPanel.lua`

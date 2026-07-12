@@ -6,7 +6,7 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 
 local WR_CITY_LOSS_SAVE = Modding.OpenSaveData()
 local WR_CITY_LOSS_RECENT_EVENTS = {}
-local WR_CITY_LOSS_DEBUG = true
+local WR_CITY_LOSS_DEBUG = false
 local WR_CITY_LOSS_LAST_APPLY_LOG = {}
 local WR_PlayerName
 local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.25
