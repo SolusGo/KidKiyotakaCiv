@@ -6,7 +6,9 @@ local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 
 local WR_CITY_LOSS_SAVE = Modding.OpenSaveData()
 local WR_CITY_LOSS_RECENT_EVENTS = {}
-local WR_CITY_LOSS_DEBUG = false
+local WR_CITY_LOSS_DEBUG = true
+local WR_CITY_LOSS_LAST_APPLY_LOG = {}
+local WR_PlayerName
 local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 0.5
 
@@ -84,17 +86,25 @@ end
 
 local function WR_ApplyCityLossAttackToUnit(unit, cityAttackPercent)
     local remaining = math.max(0, cityAttackPercent)
+    local applied = 0
+    local activePromotions = {}
 
     for _, entry in ipairs(WR_CITY_LOSS_ATTACK_PROMOTIONS) do
         if entry.id ~= nil then
             if remaining >= entry.percent then
                 unit:SetHasPromotion(entry.id, true)
                 remaining = remaining - entry.percent
+                applied = applied + entry.percent
+                table.insert(activePromotions, "+" .. tostring(entry.percent))
             else
                 unit:SetHasPromotion(entry.id, false)
             end
+        elseif remaining >= entry.percent then
+            WR_Debug("WR Captured City Learning: missing promotion " .. tostring(entry.type) .. " while trying to apply +" .. tostring(entry.percent) .. "% vs cities")
         end
     end
+
+    return applied, remaining, activePromotions
 end
 
 local function WR_ShouldApplyToUnit(unit)
@@ -117,20 +127,75 @@ local function WR_ApplyCapturedCityLearningForPlayer(playerID)
     end
 
     local cityLossStacks = WR_GetSavedNumber(playerID, "CITY_LOSS_STACKS")
+    local cityDefenseStored = cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK
+    local cityDefenseApplied = math.floor(cityDefenseStored)
+    local cityAttackStored = cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK
     local cityAttackPercent = math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)
+    local cityCount = 0
+    local eligibleUnitCount = 0
+    local representedAttackPercent = 0
+    local attackRemainder = cityAttackPercent
+    local activePromotions = {}
 
     for city in player:Cities() do
+        cityCount = cityCount + 1
         WR_ApplyCityLossDefenseToCity(city, cityLossStacks)
     end
 
     for unit in player:Units() do
         if WR_ShouldApplyToUnit(unit) then
-            WR_ApplyCityLossAttackToUnit(unit, cityAttackPercent)
+            eligibleUnitCount = eligibleUnitCount + 1
+            local applied, remaining, promotions = WR_ApplyCityLossAttackToUnit(unit, cityAttackPercent)
+            representedAttackPercent = applied
+            attackRemainder = remaining
+            activePromotions = promotions
+        end
+    end
+
+    local applyLogKey = table.concat({
+        tostring(cityLossStacks),
+        tostring(cityAttackPercent),
+        tostring(representedAttackPercent),
+        tostring(attackRemainder),
+        tostring(cityDefenseApplied),
+        tostring(cityCount),
+        tostring(eligibleUnitCount)
+    }, ":")
+
+    if WR_CITY_LOSS_LAST_APPLY_LOG[playerID] ~= applyLogKey then
+        WR_CITY_LOSS_LAST_APPLY_LOG[playerID] = applyLogKey
+
+        local promotionText = table.concat(activePromotions, ", ")
+        if promotionText == "" then
+            promotionText = "none"
+        end
+
+        WR_Debug(string.format(
+            "WR Captured City Learning: applying to %s; stacks=%d, cities=%d, eligible units=%d, vs cities stored +%.2f%%, whole +%d%%, represented +%d%% [%s], unrepresented +%d%%, city defense stored +%.2f%%, applied +%d%%",
+            WR_PlayerName(playerID),
+            cityLossStacks,
+            cityCount,
+            eligibleUnitCount,
+            cityAttackStored,
+            cityAttackPercent,
+            representedAttackPercent,
+            promotionText,
+            attackRemainder,
+            cityDefenseStored,
+            cityDefenseApplied
+        ))
+
+        if attackRemainder > 0 then
+            WR_Debug(string.format(
+                "WR Captured City Learning: warning - +%d%% vs cities could not be represented by available promotions for %s",
+                attackRemainder,
+                WR_PlayerName(playerID)
+            ))
         end
     end
 end
 
-local function WR_PlayerName(playerID)
+function WR_PlayerName(playerID)
     local player = Players[playerID]
     if player == nil then
         return tostring(playerID)
