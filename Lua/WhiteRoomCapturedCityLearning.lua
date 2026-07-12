@@ -27,35 +27,17 @@ local WR_CITY_LOSS_DEF_DUMMY_BUILDINGS = {
 }
 
 local WR_CITY_LOSS_ATTACK_PROMOTIONS = {
-    { percent = 16384, type = "PROMOTION_WR_CITY_LOSS_ATTACK_16384", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_16384 },
-    { percent = 8192, type = "PROMOTION_WR_CITY_LOSS_ATTACK_8192", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_8192 },
-    { percent = 4096, type = "PROMOTION_WR_CITY_LOSS_ATTACK_4096", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_4096 },
-    { percent = 2048, type = "PROMOTION_WR_CITY_LOSS_ATTACK_2048", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_2048 },
-    { percent = 1024, type = "PROMOTION_WR_CITY_LOSS_ATTACK_1024", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_1024 },
-    { percent = 512, type = "PROMOTION_WR_CITY_LOSS_ATTACK_512", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_512 },
-    { percent = 256, type = "PROMOTION_WR_CITY_LOSS_ATTACK_256", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_256 },
-    { percent = 128, type = "PROMOTION_WR_CITY_LOSS_ATTACK_128", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_128 },
-    { percent = 64, type = "PROMOTION_WR_CITY_LOSS_ATTACK_64", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_64 },
-    { percent = 32, type = "PROMOTION_WR_CITY_LOSS_ATTACK_32", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_32 },
-    { percent = 16, type = "PROMOTION_WR_CITY_LOSS_ATTACK_16", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_16 },
-    { percent = 8, type = "PROMOTION_WR_CITY_LOSS_ATTACK_8", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_8 },
-    { percent = 4, type = "PROMOTION_WR_CITY_LOSS_ATTACK_4", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_4 },
+    { percent = 1024, type = "PROMOTION_WR_CITY_LOSS_ATTACK_5000", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_5000 },
+    { percent = 512, type = "PROMOTION_WR_CITY_LOSS_ATTACK_2000", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_2000 },
+    { percent = 256, type = "PROMOTION_WR_CITY_LOSS_ATTACK_1000", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_1000 },
+    { percent = 128, type = "PROMOTION_WR_CITY_LOSS_ATTACK_500", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_500 },
+    { percent = 64, type = "PROMOTION_WR_CITY_LOSS_ATTACK_200", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_200 },
+    { percent = 32, type = "PROMOTION_WR_CITY_LOSS_ATTACK_100", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_100 },
+    { percent = 16, type = "PROMOTION_WR_CITY_LOSS_ATTACK_50", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_50 },
+    { percent = 8, type = "PROMOTION_WR_CITY_LOSS_ATTACK_20", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_20 },
+    { percent = 4, type = "PROMOTION_WR_CITY_LOSS_ATTACK_10", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_10 },
     { percent = 2, type = "PROMOTION_WR_CITY_LOSS_ATTACK_2", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_2 },
     { percent = 1, type = "PROMOTION_WR_CITY_LOSS_ATTACK_1", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_1 }
-}
-
--- These denominations were used before exact binary encoding. Clear them so
--- units loaded from an existing save cannot retain duplicate city-attack power.
-local WR_CITY_LOSS_LEGACY_ATTACK_PROMOTIONS = {
-    { type = "PROMOTION_WR_CITY_LOSS_ATTACK_5000", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_5000 },
-    { type = "PROMOTION_WR_CITY_LOSS_ATTACK_2000", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_2000 },
-    { type = "PROMOTION_WR_CITY_LOSS_ATTACK_1000", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_1000 },
-    { type = "PROMOTION_WR_CITY_LOSS_ATTACK_500", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_500 },
-    { type = "PROMOTION_WR_CITY_LOSS_ATTACK_200", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_200 },
-    { type = "PROMOTION_WR_CITY_LOSS_ATTACK_100", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_100 },
-    { type = "PROMOTION_WR_CITY_LOSS_ATTACK_50", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_50 },
-    { type = "PROMOTION_WR_CITY_LOSS_ATTACK_20", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_20 },
-    { type = "PROMOTION_WR_CITY_LOSS_ATTACK_10", id = GameInfoTypes.PROMOTION_WR_CITY_LOSS_ATTACK_10 }
 }
 
 local function WR_IsWhiteRoomPlayer(player)
@@ -106,12 +88,6 @@ local function WR_ApplyCityLossAttackToUnit(unit, cityAttackPercent)
     local remaining = math.max(0, cityAttackPercent)
     local applied = 0
     local activePromotions = {}
-
-    for _, entry in ipairs(WR_CITY_LOSS_LEGACY_ATTACK_PROMOTIONS) do
-        if entry.id ~= nil and unit:IsHasPromotion(entry.id) then
-            unit:SetHasPromotion(entry.id, false)
-        end
-    end
 
     for _, entry in ipairs(WR_CITY_LOSS_ATTACK_PROMOTIONS) do
         if entry.id ~= nil then

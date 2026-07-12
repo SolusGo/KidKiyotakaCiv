@@ -130,6 +130,7 @@ scene still uses safe existing Civilization V art.
   - each city-loss event gives White Room +0.5% attack vs cities and +0.25% city defense learning
   - city defense uses repeatable invisible dummy buildings in 1/5/10/25/50 denominations
   - attack vs cities uses hidden city-attack promotions applied to White Room combat units
+  - the original eleven promotion rows are retained in their original order for old-save compatibility; their values form a 1-1024 binary ladder for exact bonuses up to +2047%
   - reapplies existing bonuses to current cities/units each White Room turn
   - debug logs `WR Captured City Learning: <old owner> lost city id <id> to <new owner> (...)` when `WR_CITY_LOSS_DEBUG` is enabled
   - tested in-game with IGE and confirmed working
