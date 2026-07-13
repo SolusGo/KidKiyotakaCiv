@@ -11,8 +11,8 @@
 
 INSERT OR REPLACE INTO Colors (Type, Red, Green, Blue, Alpha)
 VALUES
-('COLOR_WR_WHITE_ROOM_PRIMARY',   0.88, 0.88, 0.92, 1),
-('COLOR_WR_WHITE_ROOM_SECONDARY', 0.08, 0.10, 0.12, 1);
+('COLOR_WR_WHITE_ROOM_PRIMARY',   0.98, 0.99, 1.00, 1),
+('COLOR_WR_WHITE_ROOM_SECONDARY', 0.16, 0.21, 0.25, 1);
 
 INSERT OR REPLACE INTO PlayerColors (Type, PrimaryColor, SecondaryColor, TextColor)
 VALUES
