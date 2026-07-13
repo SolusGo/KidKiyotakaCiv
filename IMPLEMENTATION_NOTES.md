@@ -134,6 +134,10 @@ scene still uses safe existing Civilization V art.
   - reapplies existing bonuses to current cities/units each White Room turn
   - debug logs `WR Captured City Learning: <old owner> lost city id <id> to <new owner> (...)` when `WR_CITY_LOSS_DEBUG` is enabled
   - tested in-game with IGE and confirmed working
+
+- CP research tooltip compatibility:
+  - repairs the malformed `AURONTRAIT` building references from Arendelle's United Republic of Nations to `BUILDING_AURONTRAIT`
+  - removes remaining orphaned `BuildingType` rows from `Building_BuildingClassYieldChanges` before CP builds technology tooltips
 - Phase 4 in-game status UI:
   - files: `UI/WhiteRoomStatusPanel.xml`, `UI/WhiteRoomStatusPanel.lua`
   - separate `White Room Status Panel` InGameUIAddin

@@ -45,6 +45,29 @@ UPDATE Buildings
 SET Description = 'TXT_KEY_WR_CP_TOOLTIP_FALLBACK'
 WHERE Description IS NULL OR Description = '';
 
+-- Arendelle's United Republic of Nations writes AURONTRAIT instead of its
+-- actual dummy building type. CP's research tooltip resolves BuildingType
+-- values as building IDs, so the malformed rows abort the entire tech panel.
+-- Repair the known typo first so that mod keeps its intended yield effects.
+UPDATE Building_BuildingClassYieldChanges
+SET BuildingType = 'BUILDING_AURONTRAIT'
+WHERE BuildingType = 'AURONTRAIT'
+  AND EXISTS (
+      SELECT 1
+      FROM Buildings
+      WHERE Type = 'BUILDING_AURONTRAIT'
+  );
+
+-- CP assumes every BuildingType in this base-game table resolves to a real
+-- building. Discard only orphaned references left by enabled content mods.
+DELETE FROM Building_BuildingClassYieldChanges
+WHERE BuildingType IS NULL
+   OR NOT EXISTS (
+       SELECT 1
+       FROM Buildings
+       WHERE Buildings.Type = Building_BuildingClassYieldChanges.BuildingType
+   );
+
 -- Keep White Room dummy buildings out of CP/EUI CityView lists. These buildings
 -- are mechanical counters only and should not appear as city buildings,
 -- specialist containers, great-work buildings, or production entries.
