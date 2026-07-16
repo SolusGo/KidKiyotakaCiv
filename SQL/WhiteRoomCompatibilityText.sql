@@ -68,6 +68,17 @@ WHERE BuildingType IS NULL
        WHERE Buildings.Type = Building_BuildingClassYieldChanges.BuildingType
    );
 
+-- CP's unit and technology tooltips assume every free-promotion reference
+-- resolves to a real promotion. Invalid links cannot grant any gameplay effect,
+-- but they can abort the research-panel refresh and leave stale technology UI.
+DELETE FROM Unit_FreePromotions
+WHERE PromotionType IS NULL
+   OR NOT EXISTS (
+       SELECT 1
+       FROM UnitPromotions
+       WHERE UnitPromotions.Type = Unit_FreePromotions.PromotionType
+   );
+
 -- Keep White Room dummy buildings out of CP/EUI CityView lists. These buildings
 -- are mechanical counters only and should not appear as city buildings,
 -- specialist containers, great-work buildings, or production entries.

@@ -138,10 +138,12 @@ scene still uses safe existing Civilization V art.
 - CP research tooltip compatibility:
   - repairs the malformed `AURONTRAIT` building references from Arendelle's United Republic of Nations to `BUILDING_AURONTRAIT`
   - removes remaining orphaned `BuildingType` rows from `Building_BuildingClassYieldChanges` before CP builds technology tooltips
+  - removes orphaned `Unit_FreePromotions` links that would abort CP's research-panel refresh and leave stale technology text
 - Phase 4 in-game status UI:
   - files: `UI/WhiteRoomStatusPanel.xml`, `UI/WhiteRoomStatusPanel.lua`
   - separate `White Room Status Panel` InGameUIAddin
   - adds a small in-game `White Room` button
+  - hides and closes the status UI while a leader-diplomacy screen is active
   - opens a tabbed status panel with Empire, Cities, Kiyotaka, and Units views
   - Empire tab shows trade-route learning, captured-city learning, stored/applied global bonuses, and ready/pending labels
   - Cities tab shows per-city damage defense stacks, ranged-strike stacks, stored/applied city bonuses, duplicate yield bonuses, worked improvements, and the currently most-adapted city

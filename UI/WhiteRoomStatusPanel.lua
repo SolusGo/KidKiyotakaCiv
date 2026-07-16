@@ -13,6 +13,7 @@ local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 0.5
 local WR_ACTIVE_TAB = "EMPIRE"
 local WR_CITY_SCREEN_OPEN = false
+local WR_DIPLOMACY_OPEN = false
 local WR_COMPACT_MODE = false
 
 local WR_YIELD_ORDER = {"FOOD", "PRODUCTION", "GOLD", "SCIENCE", "CULTURE", "FAITH"}
@@ -813,9 +814,19 @@ local function WR_HidePanel()
     Controls.StatusPanel:SetHide(true)
 end
 
+local function WR_IsDiplomacyOpen()
+    if WR_DIPLOMACY_OPEN then
+        return true
+    end
+
+    return UI ~= nil
+        and UI.GetLeaderHeadRootUp ~= nil
+        and UI.GetLeaderHeadRootUp()
+end
+
 local function WR_UpdateChromeVisibility()
     local playerID, player = WR_GetActiveWhiteRoomPlayer()
-    local shouldHide = WR_CITY_SCREEN_OPEN or player == nil
+    local shouldHide = WR_CITY_SCREEN_OPEN or WR_IsDiplomacyOpen() or player == nil
 
     Controls.WhiteRoomStatusButton:SetHide(shouldHide)
 
@@ -825,7 +836,7 @@ local function WR_UpdateChromeVisibility()
 end
 
 local function WR_TogglePanel()
-    if WR_CITY_SCREEN_OPEN then
+    if WR_CITY_SCREEN_OPEN or WR_IsDiplomacyOpen() then
         WR_HidePanel()
         return
     end
@@ -875,6 +886,20 @@ end
 if Events.SerialEventExitCityScreen ~= nil then
     Events.SerialEventExitCityScreen.Add(function()
         WR_CITY_SCREEN_OPEN = false
+        WR_UpdateChromeVisibility()
+    end)
+end
+
+if Events.AILeaderMessage ~= nil then
+    Events.AILeaderMessage.Add(function()
+        WR_DIPLOMACY_OPEN = true
+        WR_UpdateChromeVisibility()
+    end)
+end
+
+if Events.LeavingLeaderViewMode ~= nil then
+    Events.LeavingLeaderViewMode.Add(function()
+        WR_DIPLOMACY_OPEN = false
         WR_UpdateChromeVisibility()
     end)
 end
