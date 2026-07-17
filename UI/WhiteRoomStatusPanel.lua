@@ -15,7 +15,22 @@ local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 0.5
 local WR_ACTIVE_TAB = "EMPIRE"
 local WR_CITY_SCREEN_OPEN = false
 local WR_DIPLOMACY_OPEN = false
+local WR_OPEN_BLOCKING_POPUPS = {}
 local WR_COMPACT_MODE = false
+
+local WR_BLOCKING_POPUP_TYPES = {}
+
+local function WR_RegisterBlockingPopup(popupType)
+    if popupType ~= nil then
+        WR_BLOCKING_POPUP_TYPES[popupType] = true
+    end
+end
+
+if ButtonPopupTypes ~= nil then
+    WR_RegisterBlockingPopup(ButtonPopupTypes.BUTTONPOPUP_CHOOSEPOLICY)
+    WR_RegisterBlockingPopup(ButtonPopupTypes.BUTTONPOPUP_DIPLOMATIC_OVERVIEW)
+    WR_RegisterBlockingPopup(ButtonPopupTypes.BUTTONPOPUP_CULTURE_OVERVIEW)
+end
 
 local WR_YIELD_ORDER = {"FOOD", "PRODUCTION", "GOLD", "SCIENCE", "CULTURE", "FAITH"}
 
@@ -844,9 +859,16 @@ local function WR_IsDiplomacyOpen()
         and UI.GetLeaderHeadRootUp()
 end
 
+local function WR_IsBlockingPopupOpen()
+    return next(WR_OPEN_BLOCKING_POPUPS) ~= nil
+end
+
 local function WR_UpdateChromeVisibility()
     local playerID, player = WR_GetActiveWhiteRoomPlayer()
-    local shouldHide = WR_CITY_SCREEN_OPEN or WR_IsDiplomacyOpen() or player == nil
+    local shouldHide = WR_CITY_SCREEN_OPEN
+        or WR_IsDiplomacyOpen()
+        or WR_IsBlockingPopupOpen()
+        or player == nil
 
     Controls.WhiteRoomStatusButton:SetHide(shouldHide)
 
@@ -856,7 +878,7 @@ local function WR_UpdateChromeVisibility()
 end
 
 local function WR_TogglePanel()
-    if WR_CITY_SCREEN_OPEN or WR_IsDiplomacyOpen() then
+    if WR_CITY_SCREEN_OPEN or WR_IsDiplomacyOpen() or WR_IsBlockingPopupOpen() then
         WR_HidePanel()
         return
     end
@@ -925,6 +947,26 @@ if Events.LeavingLeaderViewMode ~= nil then
     Events.LeavingLeaderViewMode.Add(function()
         WR_DIPLOMACY_OPEN = false
         WR_UpdateChromeVisibility()
+    end)
+end
+
+if Events.SerialEventGameMessagePopupShown ~= nil then
+    Events.SerialEventGameMessagePopupShown.Add(function(popupInfo)
+        local popupType = popupInfo ~= nil and popupInfo.Type or nil
+
+        if popupType ~= nil and WR_BLOCKING_POPUP_TYPES[popupType] then
+            WR_OPEN_BLOCKING_POPUPS[popupType] = true
+            WR_UpdateChromeVisibility()
+        end
+    end)
+end
+
+if Events.SerialEventGameMessagePopupProcessed ~= nil then
+    Events.SerialEventGameMessagePopupProcessed.Add(function(popupType)
+        if popupType ~= nil and WR_BLOCKING_POPUP_TYPES[popupType] then
+            WR_OPEN_BLOCKING_POPUPS[popupType] = nil
+            WR_UpdateChromeVisibility()
+        end
     end)
 end
 
