@@ -17,6 +17,9 @@ local WR_CITY_SCREEN_OPEN = false
 local WR_DIPLOMACY_OPEN = false
 local WR_OPEN_BLOCKING_POPUPS = {}
 local WR_COMPACT_MODE = false
+local WR_DIPLO_LIST_CONTEXT = nil
+local WR_DIPLO_LIST_WAS_OPEN = false
+local WR_DIPLO_LIST_POLL_ELAPSED = 0
 
 local WR_BLOCKING_POPUP_TYPES = {}
 
@@ -859,6 +862,14 @@ local function WR_IsDiplomacyOpen()
         and UI.GetLeaderHeadRootUp()
 end
 
+local function WR_IsDiploListOpen()
+    if WR_DIPLO_LIST_CONTEXT == nil and ContextPtr.LookUpControl ~= nil then
+        WR_DIPLO_LIST_CONTEXT = ContextPtr:LookUpControl("/InGame/WorldView/DiploCorner/DiploList")
+    end
+
+    return WR_DIPLO_LIST_CONTEXT ~= nil and not WR_DIPLO_LIST_CONTEXT:IsHidden()
+end
+
 local function WR_IsBlockingPopupOpen()
     return next(WR_OPEN_BLOCKING_POPUPS) ~= nil
 end
@@ -867,6 +878,7 @@ local function WR_UpdateChromeVisibility()
     local playerID, player = WR_GetActiveWhiteRoomPlayer()
     local shouldHide = WR_CITY_SCREEN_OPEN
         or WR_IsDiplomacyOpen()
+        or WR_IsDiploListOpen()
         or WR_IsBlockingPopupOpen()
         or player == nil
 
@@ -878,7 +890,10 @@ local function WR_UpdateChromeVisibility()
 end
 
 local function WR_TogglePanel()
-    if WR_CITY_SCREEN_OPEN or WR_IsDiplomacyOpen() or WR_IsBlockingPopupOpen() then
+    if WR_CITY_SCREEN_OPEN
+        or WR_IsDiplomacyOpen()
+        or WR_IsDiploListOpen()
+        or WR_IsBlockingPopupOpen() then
         WR_HidePanel()
         return
     end
@@ -969,6 +984,22 @@ if Events.SerialEventGameMessagePopupProcessed ~= nil then
         end
     end)
 end
+
+ContextPtr:SetUpdate(function(deltaTime)
+    WR_DIPLO_LIST_POLL_ELAPSED = WR_DIPLO_LIST_POLL_ELAPSED + deltaTime
+
+    if WR_DIPLO_LIST_POLL_ELAPSED < 0.1 then
+        return
+    end
+
+    WR_DIPLO_LIST_POLL_ELAPSED = 0
+
+    local isOpen = WR_IsDiploListOpen()
+    if isOpen ~= WR_DIPLO_LIST_WAS_OPEN then
+        WR_DIPLO_LIST_WAS_OPEN = isOpen
+        WR_UpdateChromeVisibility()
+    end
+end)
 
 WR_UpdateChromeVisibility()
 
