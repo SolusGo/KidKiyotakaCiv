@@ -3,6 +3,7 @@
   <GridButton ID="WhiteRoomStatusButton" Anchor="R,T" Offset="24,96" Size="184,42" ToolTip="Open White Room adaptation status" Style="BaseButton">
     <Image ID="WhiteRoomButtonIcon" Anchor="L,C" Offset="12,0" Size="32,32" />
     <Label Anchor="L,C" Offset="54,0" Font="TwCenMT18" FontStyle="Shadow" String="WHITE ROOM" ColorSet="Beige_Black_Alpha" />
+    <Box Anchor="R,C" Offset="10,0" Size="4,22" Color="210,185,105,220" />
   </GridButton>
 
   <Grid ID="StatusPanel" Anchor="C,C" Size="900,650" Style="Grid9DetailFive140" Hidden="1" ConsumeMouse="1">
@@ -17,6 +18,10 @@
 
     <Label ID="TitleLabel" Anchor="C,T" Offset="0,18" Font="TwCenMT24" FontStyle="Shadow" String="WHITE ROOM CONTROL" ColorSet="Beige_Black_Alpha" />
     <Label Anchor="C,T" Offset="0,50" Font="TwCenMT14" FontStyle="Shadow" String="ADAPTATION ARCHIVE // LIVE FACILITY READOUT" ColorSet="Beige_Black_Alpha" />
+    <Grid Anchor="R,T" Offset="48,22" Size="112,28" Style="GridBlackIndent8">
+      <Box Anchor="L,C" Offset="10,0" Size="5,5" Color="110,225,170,255" />
+      <Label ID="SystemStateLabel" Anchor="C,C" Offset="7,0" Size="82,18" Font="TwCenMT14" FontStyle="Shadow" String="LIVE // E-01" ColorSet="Beige_Black_Alpha" />
+    </Grid>
     <Grid Anchor="C,T" Offset="0,78" Size="810,1" Style="Grid9Bar" />
 
     <GridButton ID="EmpireTabButton" Anchor="C,T" Offset="-240,94" Size="148,32" String="[ICON_GOLD] Empire" ToolTip="Show empire-wide White Room learning" Style="BaseButton" />
@@ -33,27 +38,40 @@
 
     <Grid Anchor="C,T" Offset="-300,172" Size="180,78" Style="GridBlackIndent8">
       <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
-        <Label ID="SummaryMetricOne" Anchor="C,C" Offset="0,0" Size="164,62" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="164" String="" ColorSet="Beige_Black_Alpha" />
+        <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
+        <Label ID="SummaryMetricOneCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
+        <Label ID="SummaryMetricOne" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
+        <Label Anchor="R,T" Offset="9,7" Size="18,14" Font="TwCenMT12" FontStyle="Shadow" String="01" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
     <Grid Anchor="C,T" Offset="-100,172" Size="180,78" Style="GridBlackIndent8">
       <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
-        <Label ID="SummaryMetricTwo" Anchor="C,C" Offset="0,0" Size="164,62" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="164" String="" ColorSet="Beige_Black_Alpha" />
+        <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
+        <Label ID="SummaryMetricTwoCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
+        <Label ID="SummaryMetricTwo" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
+        <Label Anchor="R,T" Offset="9,7" Size="18,14" Font="TwCenMT12" FontStyle="Shadow" String="02" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
     <Grid Anchor="C,T" Offset="100,172" Size="180,78" Style="GridBlackIndent8">
       <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
-        <Label ID="SummaryMetricThree" Anchor="C,C" Offset="0,0" Size="164,62" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="164" String="" ColorSet="Beige_Black_Alpha" />
+        <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
+        <Label ID="SummaryMetricThreeCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
+        <Label ID="SummaryMetricThree" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
+        <Label Anchor="R,T" Offset="9,7" Size="18,14" Font="TwCenMT12" FontStyle="Shadow" String="03" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
     <Grid Anchor="C,T" Offset="300,172" Size="180,78" Style="GridBlackIndent8">
       <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
-        <Label ID="SummaryMetricFour" Anchor="C,C" Offset="0,0" Size="164,62" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="164" String="" ColorSet="Beige_Black_Alpha" />
+        <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
+        <Label ID="SummaryMetricFourCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
+        <Label ID="SummaryMetricFour" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
+        <Label Anchor="R,T" Offset="9,7" Size="18,14" Font="TwCenMT12" FontStyle="Shadow" String="04" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
 
     <Grid Anchor="C,T" Offset="0,282" Size="820,288" Style="GridBlackIndent8">
       <Label Anchor="L,T" AnchorSide="I.O" Offset="12,-18" Font="TwCenMT18" FontStyle="Shadow" String="DETAILED FACILITY RECORD" ColorSet="Beige_Black_Alpha" />
+      <Label ID="RecordStreamLabel" Anchor="R,T" AnchorSide="I.O" Offset="12,-17" Size="190,18" Font="TwCenMT14" FontStyle="Shadow" String="STREAM // EMPIRE" ColorSet="Beige_Black_Alpha" />
       <Grid Anchor="C,C" Offset="0,0" Size="824,292" Style="Grid9Frame">
         <ScrollPanel ID="StatusScrollPanel" Anchor="C,C" Offset="0,0" Size="790,262" Vertical="1">
           <Label ID="StatusText" Anchor="L,T" Offset="8,8" Size="748,4096" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="748" String="" ColorSet="Beige_Black_Alpha" />
@@ -62,6 +80,7 @@
     </Grid>
 
     <Grid Anchor="C,B" Offset="0,76" Size="810,1" Style="Grid9Bar" />
+    <Label ID="FooterStatusLabel" Anchor="L,B" Offset="48,51" Size="160,18" Font="TwCenMT12" FontStyle="Shadow" String="FACILITY LINK: STABLE" ColorSet="Beige_Black_Alpha" />
     <GridButton ID="RefreshButton" Anchor="C,B" Offset="-180,42" Size="160,36" String="[ICON_RESEARCH] Refresh" ToolTip="Refresh White Room status" Style="BaseButton" />
     <GridButton ID="CompactButton" Anchor="C,B" Offset="0,42" Size="160,36" String="[ICON_BULLET] Compact" ToolTip="Toggle compact or expanded White Room status details" Style="BaseButton" />
     <GridButton ID="CloseButton" Anchor="C,B" Offset="180,42" Size="160,36" String="Close" ToolTip="Close White Room status" Style="BaseButton" />

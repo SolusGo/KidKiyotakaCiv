@@ -23,6 +23,13 @@ local WR_DIPLO_LIST_POLL_ELAPSED = 0
 
 local WR_BLOCKING_POPUP_TYPES = {}
 
+local WR_TAB_PRESENTATION = {
+    EMPIRE = {state = "LIVE // E-01", stream = "STREAM // EMPIRE"},
+    CITIES = {state = "LIVE // C-02", stream = "STREAM // CITY NETWORK"},
+    KIYOTAKA = {state = "LIVE // S-04", stream = "STREAM // SUBJECT 004"},
+    UNITS = {state = "LIVE // U-04", stream = "STREAM // GEN-4 OPERATIVES"}
+}
+
 local function WR_RegisterBlockingPopup(popupType)
     if popupType ~= nil then
         WR_BLOCKING_POPUP_TYPES[popupType] = true
@@ -641,6 +648,16 @@ local function WR_SetTooltip(control, text)
     end
 end
 
+local function WR_SetSummaryMetric(captionControl, valueControl, caption, value)
+    WR_SetLabel(captionControl, caption)
+    WR_SetLabel(valueControl, value)
+end
+
+local function WR_SetMetricTooltip(captionControl, valueControl, text)
+    WR_SetTooltip(captionControl, text)
+    WR_SetTooltip(valueControl, text)
+end
+
 local function WR_TryIncludeIconSupport()
     local ok, err = pcall(function()
         include("IconSupport")
@@ -668,31 +685,31 @@ end
 
 local function WR_UpdateSummaryTooltips()
     WR_SetTooltip(Controls.SummaryTitle, "At-a-glance White Room readout for the active tab.")
-    WR_SetTooltip(Controls.SummaryMetricOne, "")
-    WR_SetTooltip(Controls.SummaryMetricTwo, "")
-    WR_SetTooltip(Controls.SummaryMetricThree, "")
-    WR_SetTooltip(Controls.SummaryMetricFour, "")
+    WR_SetMetricTooltip(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "")
+    WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "")
+    WR_SetMetricTooltip(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "")
+    WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "")
 
     if WR_ACTIVE_TAB == "CITIES" then
-        WR_SetTooltip(Controls.SummaryMetricOne, "Number of White Room cities currently monitored.")
-        WR_SetTooltip(Controls.SummaryMetricTwo, "City with the highest combined adaptation score.")
-        WR_SetTooltip(Controls.SummaryMetricThree, "Total city-defense stacks from taking city damage.")
-        WR_SetTooltip(Controls.SummaryMetricFour, "Total stored duplicate worked-improvement yield bonus across all cities. Each duplicate worked improvement gives +0.5% to its linked yield.")
+        WR_SetMetricTooltip(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "Number of White Room cities currently monitored.")
+        WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "City with the highest combined adaptation score.")
+        WR_SetMetricTooltip(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "Total city-defense stacks from taking city damage.")
+        WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "Total stored duplicate worked-improvement yield bonus across all cities. Each duplicate worked improvement gives +0.5% to its linked yield.")
     elseif WR_ACTIVE_TAB == "KIYOTAKA" then
-        WR_SetTooltip(Controls.SummaryMetricOne, "Whether Kiyotaka is currently deployed.")
-        WR_SetTooltip(Controls.SummaryMetricTwo, "Kiyotaka's current hit points, if deployed.")
-        WR_SetTooltip(Controls.SummaryMetricThree, "Combined visible Perfect Adaptation score from combat, attack, resistance, healing, low-HP power, movement chance, and class matchup counters.")
-        WR_SetTooltip(Controls.SummaryMetricFour, "Movement-after-combat chance. Flow State becomes ready at 100%.")
+        WR_SetMetricTooltip(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "Whether Kiyotaka is currently deployed.")
+        WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "Kiyotaka's current hit points, if deployed.")
+        WR_SetMetricTooltip(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "Combined visible Perfect Adaptation score from combat, attack, resistance, healing, low-HP power, movement chance, and class matchup counters.")
+        WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "Movement-after-combat chance. Flow State becomes ready at 100%.")
     elseif WR_ACTIVE_TAB == "UNITS" then
-        WR_SetTooltip(Controls.SummaryMetricOne, "Kiyotaka active count. The cap script limits this unit to one.")
-        WR_SetTooltip(Controls.SummaryMetricTwo, "4th Generation Operative active count. The cap script limits them to three.")
-        WR_SetTooltip(Controls.SummaryMetricThree, "Technology and trainability status for Kiyotaka.")
-        WR_SetTooltip(Controls.SummaryMetricFour, "Technology and trainability status for 4th Generation Operatives.")
+        WR_SetMetricTooltip(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "Kiyotaka active count. The cap script limits this unit to one.")
+        WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "4th Generation Operative active count. The cap script limits them to three.")
+        WR_SetMetricTooltip(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "Technology and trainability status for Kiyotaka.")
+        WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "Technology and trainability status for 4th Generation Operatives.")
     else
-        WR_SetTooltip(Controls.SummaryMetricOne, "Trade-route learning. Stored fractional gold becomes applied once it reaches a full integer percent.")
-        WR_SetTooltip(Controls.SummaryMetricTwo, "Number of observed city-loss events that feed the captured-city learning mechanic.")
-        WR_SetTooltip(Controls.SummaryMetricThree, "Empire-wide attack bonus against cities from observed city losses.")
-        WR_SetTooltip(Controls.SummaryMetricFour, "Highest-scoring city by adaptation stacks and duplicate-yield progress.")
+        WR_SetMetricTooltip(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "Trade-route learning. Stored fractional gold becomes applied once it reaches a full integer percent.")
+        WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "Number of observed city-loss events that feed the captured-city learning mechanic.")
+        WR_SetMetricTooltip(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "Empire-wide attack bonus against cities from observed city losses.")
+        WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "Highest-scoring city by adaptation stacks and duplicate-yield progress.")
     end
 end
 
@@ -742,10 +759,10 @@ local function WR_UpdateSummaryPanel()
     local playerID, player = WR_GetActiveWhiteRoomPlayer()
     if player == nil then
         WR_SetLabel(Controls.SummaryTitle, "No White Room civilization found")
-        WR_SetLabel(Controls.SummaryMetricOne, "")
-        WR_SetLabel(Controls.SummaryMetricTwo, "")
-        WR_SetLabel(Controls.SummaryMetricThree, "")
-        WR_SetLabel(Controls.SummaryMetricFour, "")
+        WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "", "")
+        WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "", "")
+        WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "", "")
+        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "", "")
         return
     end
 
@@ -757,29 +774,29 @@ local function WR_UpdateSummaryPanel()
 
     if WR_ACTIVE_TAB == "CITIES" then
         WR_SetLabel(Controls.SummaryTitle, "City Adaptation Records")
-        WR_SetLabel(Controls.SummaryMetricOne, "[ICON_CAPITAL] Cities[NEWLINE]" .. tostring(cityCount))
-        WR_SetLabel(Controls.SummaryMetricTwo, "[ICON_RESEARCH] Most Adapted[NEWLINE]" .. bestCityName)
-        WR_SetLabel(Controls.SummaryMetricThree, "[ICON_STRENGTH] Defense Stacks[NEWLINE]" .. tostring(totalDefenseStacks))
-        WR_SetLabel(Controls.SummaryMetricFour, "[ICON_GOLD] Duplicate Yields[NEWLINE]+" .. string.format("%.2f%%", totalDuplicatePercent))
+        WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_CAPITAL] CITIES", tostring(cityCount))
+        WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "[ICON_RESEARCH] MOST ADAPTED", bestCityName)
+        WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_STRENGTH] DEFENSE STACKS", tostring(totalDefenseStacks))
+        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_GOLD] DUPLICATE YIELDS", "+" .. string.format("%.2f%%", totalDuplicatePercent))
     elseif WR_ACTIVE_TAB == "KIYOTAKA" then
         WR_SetLabel(Controls.SummaryTitle, "Subject Dossier: Kiyotaka")
-        WR_SetLabel(Controls.SummaryMetricOne, "[ICON_STRENGTH] Deployment[NEWLINE]" .. (kiyotaka ~= nil and "Active" or "Missing"))
-        WR_SetLabel(Controls.SummaryMetricTwo, "[ICON_BULLET] Vitals[NEWLINE]" .. WR_UnitHpLine(kiyotaka))
-        WR_SetLabel(Controls.SummaryMetricThree, "[ICON_RESEARCH] Adaptation[NEWLINE]+" .. WR_FormatPercentFromHundredths(kiyotakaProfile.totalScore))
-        WR_SetLabel(Controls.SummaryMetricFour, "[ICON_MOVES] Flow State[NEWLINE]" .. WR_StatusTag(kiyotakaProfile.moveChance >= 10000) .. " " .. WR_FormatPercentFromHundredths(kiyotakaProfile.moveChance))
+        WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_STRENGTH] DEPLOYMENT", kiyotaka ~= nil and "ACTIVE" or "MISSING")
+        WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "[ICON_BULLET] VITALS", WR_UnitHpLine(kiyotaka))
+        WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_RESEARCH] ADAPTATION", "+" .. WR_FormatPercentFromHundredths(kiyotakaProfile.totalScore))
+        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_MOVES] FLOW STATE", WR_StatusTag(kiyotakaProfile.moveChance >= 10000) .. " " .. WR_FormatPercentFromHundredths(kiyotakaProfile.moveChance))
     elseif WR_ACTIVE_TAB == "UNITS" then
         local operativeCount = WR_CountOperatives(player)
         WR_SetLabel(Controls.SummaryTitle, "Operative Deployment")
-        WR_SetLabel(Controls.SummaryMetricOne, "[ICON_STRENGTH] Kiyotaka[NEWLINE]" .. tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1")
-        WR_SetLabel(Controls.SummaryMetricTwo, "[ICON_STRENGTH] Operatives[NEWLINE]" .. tostring(operativeCount) .. " / 3")
-        WR_SetLabel(Controls.SummaryMetricThree, "[ICON_RESEARCH] Kiyotaka Tech[NEWLINE]" .. WR_TechStatus(player, UNIT_WR_KIYOTAKA))
-        WR_SetLabel(Controls.SummaryMetricFour, "[ICON_RESEARCH] Operative Tech[NEWLINE]" .. WR_TechStatus(player, GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE))
+        WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_STRENGTH] KIYOTAKA", tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1")
+        WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "[ICON_STRENGTH] OPERATIVES", tostring(operativeCount) .. " / 3")
+        WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_RESEARCH] KIYOTAKA TECH", WR_TechStatus(player, UNIT_WR_KIYOTAKA))
+        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_RESEARCH] OPERATIVE TECH", WR_TechStatus(player, GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE))
     else
         WR_SetLabel(Controls.SummaryTitle, "Facility Readout")
-        WR_SetLabel(Controls.SummaryMetricOne, "[ICON_GOLD] Trade Gold[NEWLINE]" .. WR_FormatStoredApplied(tradeHalfStacks * 0.5, math.floor(tradeHalfStacks / 2)))
-        WR_SetLabel(Controls.SummaryMetricTwo, "[ICON_CAPITAL] City Losses[NEWLINE]" .. tostring(cityLossStacks))
-        WR_SetLabel(Controls.SummaryMetricThree, "[ICON_STRENGTH] Vs Cities[NEWLINE]" .. WR_FormatStoredApplied(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK, math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)))
-        WR_SetLabel(Controls.SummaryMetricFour, "[ICON_RESEARCH] Best City[NEWLINE]" .. bestCityName)
+        WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_GOLD] TRADE GOLD", WR_FormatStoredApplied(tradeHalfStacks * 0.5, math.floor(tradeHalfStacks / 2)))
+        WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "[ICON_CAPITAL] CITY LOSSES", tostring(cityLossStacks))
+        WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_STRENGTH] VS CITIES", WR_FormatStoredApplied(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK, math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)))
+        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_RESEARCH] BEST CITY", bestCityName)
     end
 
     WR_UpdateSummaryTooltips()
@@ -794,6 +811,8 @@ local function WR_SetButtonString(control, text)
 end
 
 local function WR_UpdateTabButtons()
+    local presentation = WR_TAB_PRESENTATION[WR_ACTIVE_TAB] or WR_TAB_PRESENTATION.EMPIRE
+
     WR_SetButtonString(Controls.EmpireTabButton, "[ICON_GOLD] " .. (WR_ACTIVE_TAB == "EMPIRE" and "EMPIRE" or "Empire"))
     WR_SetButtonString(Controls.CitiesTabButton, "[ICON_CAPITAL] " .. (WR_ACTIVE_TAB == "CITIES" and "CITIES" or "Cities"))
     WR_SetButtonString(Controls.KiyotakaTabButton, "[ICON_RESEARCH] " .. (WR_ACTIVE_TAB == "KIYOTAKA" and "KIYOTAKA" or "Kiyotaka"))
@@ -802,6 +821,8 @@ local function WR_UpdateTabButtons()
     Controls.CitiesTabSelection:SetHide(WR_ACTIVE_TAB ~= "CITIES")
     Controls.KiyotakaTabSelection:SetHide(WR_ACTIVE_TAB ~= "KIYOTAKA")
     Controls.UnitsTabSelection:SetHide(WR_ACTIVE_TAB ~= "UNITS")
+    WR_SetLabel(Controls.SystemStateLabel, presentation.state)
+    WR_SetLabel(Controls.RecordStreamLabel, presentation.stream)
     WR_SetButtonString(Controls.CompactButton, "[ICON_BULLET] " .. (WR_COMPACT_MODE and "Expanded" or "Compact"))
     WR_SetTooltip(Controls.EmpireTabButton, "Facility-level learning from trade routes and observed city losses.")
     WR_SetTooltip(Controls.CitiesTabButton, "Per-city adaptation records: damage defense, ranged strikes, duplicate yields, and worked improvements.")
