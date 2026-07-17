@@ -235,6 +235,22 @@ local function WR_RecordCityLossForWhiteRoom(playerID, oldOwnerID, cityID, newOw
         math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK),
         cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK
     ))
+
+    if WR_RecordTelemetry ~= nil then
+        WR_RecordTelemetry(
+            playerID,
+            "SURVEILLANCE",
+            "FOREIGN CITY COLLAPSE OBSERVED",
+            string.format(
+                "%s -> %s // City record %s // Vs cities +%d%% // Defense stored +%.2f%%",
+                WR_PlayerName(oldOwnerID),
+                WR_PlayerName(newOwnerID),
+                tostring(cityID),
+                math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK),
+                cityLossStacks * WR_CITY_LOSS_DEF_PERCENT_PER_STACK
+            )
+        )
+    end
 end
 
 local function WR_RecordOtherPlayerCityLoss(oldOwnerID, cityID, newOwnerID)

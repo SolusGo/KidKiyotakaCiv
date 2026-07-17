@@ -87,6 +87,20 @@ local function WR_RecordRangedStrike(playerID, city, reason)
         stacks * WR_CITY_RANGED_PERCENT_PER_STACK,
         math.floor(stacks * WR_CITY_RANGED_PERCENT_PER_STACK)
     ))
+
+    if WR_RecordTelemetry ~= nil then
+        WR_RecordTelemetry(
+            playerID,
+            "CITY",
+            "RANGED DOCTRINE UPDATED // " .. city:GetName(),
+            string.format(
+                "Strike confirmed // Stack %d // Stored +%.2f%% // Applied +%d%%",
+                stacks,
+                stacks * WR_CITY_RANGED_PERCENT_PER_STACK,
+                math.floor(stacks * WR_CITY_RANGED_PERCENT_PER_STACK)
+            )
+        )
+    end
 end
 
 local function WR_GetHasPerformedRangedStrike(city)

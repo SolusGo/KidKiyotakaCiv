@@ -231,6 +231,15 @@ local function WR_RecordLowHpSurvival(playerID, unit, reason)
     WR_ChangeSavedNumber(playerID, "PENDING_HEAL", 3)
     WR_ApplyPerfectAdaptation(playerID, unit)
     WR_LogCounters(playerID, "survived below 25 HP (" .. reason .. ")")
+
+    if WR_RecordTelemetry ~= nil then
+        WR_RecordTelemetry(
+            playerID,
+            "SUBJECT",
+            "CRITICAL SURVIVAL // SUBJECT 004",
+            "Below 25 HP // Combat +0.75% // Resistance +0.75% // Recovery queued +3 HP"
+        )
+    end
 end
 
 local function WR_RecordDamageTaken(playerID, unit, oldDamage, newDamage)
@@ -248,6 +257,19 @@ local function WR_RecordDamageTaken(playerID, unit, oldDamage, newDamage)
 
     WR_ApplyPerfectAdaptation(playerID, unit)
     WR_LogCounters(playerID, "took damage")
+
+    if WR_RecordTelemetry ~= nil then
+        WR_RecordTelemetry(
+            playerID,
+            "SUBJECT",
+            "DAMAGE ASSIMILATED // SUBJECT 004",
+            string.format(
+                "HP %d -> %d // Resistance +0.19%% // Healing +0.13%% // Low-HP power +0.13%%",
+                100 - oldDamage,
+                100 - newDamage
+            )
+        )
+    end
 end
 
 local function WR_RecordDamageDealt(playerID, unit, targetLabel)
@@ -256,6 +278,15 @@ local function WR_RecordDamageDealt(playerID, unit, targetLabel)
     WR_ChangeSavedNumber(playerID, "MOVE_CHANCE", 7)
     WR_ApplyPerfectAdaptation(playerID, unit)
     WR_LogCounters(playerID, "dealt damage to " .. targetLabel)
+
+    if WR_RecordTelemetry ~= nil then
+        WR_RecordTelemetry(
+            playerID,
+            "SUBJECT",
+            "COMBAT PATTERN ACQUIRED // SUBJECT 004",
+            "Target " .. tostring(targetLabel) .. " // Combat +0.13% // Attack +0.13% // Flow +0.07%"
+        )
+    end
 end
 
 local function WR_RecordKill(playerID, unit, killedUnitType)
@@ -274,6 +305,24 @@ local function WR_RecordKill(playerID, unit, killedUnitType)
 
     WR_ApplyPerfectAdaptation(playerID, unit)
     WR_LogCounters(playerID, "kill")
+
+    if WR_RecordTelemetry ~= nil then
+        local killedUnitLabel = killedUnitInfo and killedUnitInfo.Description or "UNKNOWN TARGET"
+        if killedUnitInfo ~= nil and killedUnitInfo.Description ~= nil then
+            killedUnitLabel = Locale.ConvertTextKey(killedUnitInfo.Description)
+        end
+
+        local classLabel = killedClass or "UNKNOWN CLASS"
+        classLabel = string.gsub(classLabel, "UNITCOMBAT_", "")
+        classLabel = string.gsub(classLabel, "_", " ")
+
+        WR_RecordTelemetry(
+            playerID,
+            "SUBJECT",
+            "TARGET NEUTRALIZED // SUBJECT 004",
+            tostring(killedUnitLabel) .. " // " .. classLabel .. " // Combat +0.25% // Class adaptation +0.25% // XP +1"
+        )
+    end
 end
 
 local function WR_IsKiyotakaNearPlot(unit, x, y)
@@ -314,6 +363,15 @@ local function WR_ApplyPendingHeal(playerID, unit)
         "WR Perfect Adaptation: healed Kiyotaka for %d HP at start of turn",
         totalHeal
     ))
+
+    if WR_RecordTelemetry ~= nil then
+        WR_RecordTelemetry(
+            playerID,
+            "SUBJECT",
+            "RECOVERY PROTOCOL COMPLETE // SUBJECT 004",
+            "Queued critical-survival recovery restored " .. tostring(totalHeal) .. " HP"
+        )
+    end
 end
 
 function WR_KiyotakaScaling_DoTurn(playerID)

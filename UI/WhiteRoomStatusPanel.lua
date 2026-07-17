@@ -12,6 +12,7 @@ local WR_CITY_DEF_PERCENT_PER_STACK = 0.25
 local WR_CITY_RANGED_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 0.5
+local WR_TELEMETRY_MAX_EVENTS = 32
 local WR_ACTIVE_TAB = "EMPIRE"
 local WR_CITY_SCREEN_OPEN = false
 local WR_DIPLOMACY_OPEN = false
@@ -20,6 +21,8 @@ local WR_COMPACT_MODE = false
 local WR_DIPLO_LIST_CONTEXT = nil
 local WR_DIPLO_LIST_WAS_OPEN = false
 local WR_DIPLO_LIST_POLL_ELAPSED = 0
+local WR_TELEMETRY_POLL_ELAPSED = 0
+local WR_LAST_TELEMETRY_SEQUENCE = -1
 
 local WR_BLOCKING_POPUP_TYPES = {}
 
@@ -27,7 +30,8 @@ local WR_TAB_PRESENTATION = {
     EMPIRE = {state = "LIVE // E-01", stream = "STREAM // EMPIRE"},
     CITIES = {state = "LIVE // C-02", stream = "STREAM // CITY NETWORK"},
     KIYOTAKA = {state = "LIVE // S-04", stream = "STREAM // SUBJECT 004"},
-    UNITS = {state = "LIVE // U-04", stream = "STREAM // GEN-4 OPERATIVES"}
+    UNITS = {state = "LIVE // U-04", stream = "STREAM // GEN-4 OPERATIVES"},
+    TELEMETRY = {state = "REC // T-05", stream = "STREAM // ADAPTATION FEED"}
 }
 
 local function WR_RegisterBlockingPopup(popupType)
@@ -119,6 +123,74 @@ end
 
 local function WR_PlayerSaveKey(prefix, playerID, suffix)
     return prefix .. tostring(playerID) .. "_" .. suffix
+end
+
+local function WR_TelemetryPrefix(playerID)
+    return "WR_TELEMETRY_" .. tostring(playerID) .. "_"
+end
+
+local function WR_TelemetrySlotKey(playerID, slot, suffix)
+    return WR_TelemetryPrefix(playerID) .. "SLOT_" .. tostring(slot) .. "_" .. suffix
+end
+
+local function WR_GetTelemetrySequence(playerID)
+    return WR_GetSavedNumber(WR_TelemetryPrefix(playerID) .. "SEQUENCE")
+end
+
+local function WR_GetTelemetryEvents(playerID)
+    local events = {}
+    local sequence = WR_GetTelemetrySequence(playerID)
+    local retained = math.min(sequence, WR_TELEMETRY_MAX_EVENTS)
+
+    for offset = 0, retained - 1 do
+        local eventSequence = sequence - offset
+        local slot = ((eventSequence - 1) % WR_TELEMETRY_MAX_EVENTS) + 1
+        local storedSequence = WR_GetSavedNumber(WR_TelemetrySlotKey(playerID, slot, "SEQUENCE"))
+
+        if storedSequence == eventSequence then
+            table.insert(events, {
+                sequence = eventSequence,
+                turn = WR_GetSavedNumber(WR_TelemetrySlotKey(playerID, slot, "TURN")),
+                category = tostring(WR_SaveValue(WR_TelemetrySlotKey(playerID, slot, "CATEGORY")) or "SYSTEM"),
+                headline = tostring(WR_SaveValue(WR_TelemetrySlotKey(playerID, slot, "HEADLINE")) or "ADAPTATION RECORDED"),
+                detail = tostring(WR_SaveValue(WR_TelemetrySlotKey(playerID, slot, "DETAIL")) or "No additional data.")
+            })
+        end
+    end
+
+    return events, sequence
+end
+
+local function WR_GetTelemetrySummary(playerID)
+    local events, sequence = WR_GetTelemetryEvents(playerID)
+    local summary = {
+        events = events,
+        sequence = sequence,
+        retained = #events,
+        latestTurn = nil,
+        subject = 0,
+        city = 0,
+        empire = 0,
+        surveillance = 0
+    }
+
+    if #events > 0 then
+        summary.latestTurn = events[1].turn
+    end
+
+    for _, event in ipairs(events) do
+        if event.category == "SUBJECT" then
+            summary.subject = summary.subject + 1
+        elseif event.category == "CITY" then
+            summary.city = summary.city + 1
+        elseif event.category == "SURVEILLANCE" then
+            summary.surveillance = summary.surveillance + 1
+        else
+            summary.empire = summary.empire + 1
+        end
+    end
+
+    return summary
 end
 
 local function WR_IsPlotWorkedByCity(city, plot)
@@ -396,6 +468,73 @@ local function WR_AppendPanelHeader(lines, title, player)
     table.insert(lines, "")
 end
 
+local function WR_TelemetryBadge(category)
+    if category == "SUBJECT" then
+        return WR_StatusBadge("SUBJECT", "GOOD")
+    elseif category == "CITY" then
+        return WR_StatusBadge("CITY", "WARN")
+    elseif category == "SURVEILLANCE" then
+        return WR_StatusBadge("SURVEILLANCE", "BAD")
+    elseif category == "EMPIRE" then
+        return WR_StatusBadge("EMPIRE", "GOOD")
+    end
+
+    return WR_StatusBadge("SYSTEM", "WARN")
+end
+
+local function WR_AppendTelemetry(lines, playerID)
+    local summary = WR_GetTelemetrySummary(playerID)
+
+    table.insert(lines, WR_Header("Live Adaptation Telemetry"))
+    table.insert(lines, WR_Divider())
+    table.insert(lines, string.format(
+        "  %s Newest %d of %d retained records // %d lifetime events",
+        WR_StatusBadge("RECORDING", "GOOD"),
+        summary.retained,
+        WR_TELEMETRY_MAX_EVENTS,
+        summary.sequence
+    ))
+    table.insert(lines, "  Subject " .. tostring(summary.subject)
+        .. "    City " .. tostring(summary.city)
+        .. "    Empire " .. tostring(summary.empire)
+        .. "    Surveillance " .. tostring(summary.surveillance))
+    table.insert(lines, "")
+
+    if summary.retained == 0 then
+        table.insert(lines, "  " .. WR_StatusBadge("AWAITING DATA", "WARN") .. " No adaptation events have been recorded yet.")
+        table.insert(lines, "  Combat, city pressure, trade analysis, and observed city losses will appear here.")
+        return
+    end
+
+    local displayCount = summary.retained
+    if WR_COMPACT_MODE then
+        displayCount = math.min(displayCount, 12)
+    end
+
+    for index = 1, displayCount do
+        local event = summary.events[index]
+        table.insert(lines, string.format(
+            "  %s  TURN %d // %s",
+            WR_TelemetryBadge(event.category),
+            event.turn,
+            event.headline
+        ))
+
+        if WR_COMPACT_MODE then
+            table.insert(lines, "     " .. event.detail)
+        else
+            table.insert(lines, "     " .. WR_Positive("DATA") .. " // " .. event.detail)
+            table.insert(lines, "     RECORD " .. string.format("%04d", event.sequence))
+        end
+
+        table.insert(lines, "")
+    end
+
+    if WR_COMPACT_MODE and summary.retained > displayCount then
+        table.insert(lines, "  " .. tostring(summary.retained - displayCount) .. " older retained records hidden in compact mode.")
+    end
+end
+
 local function WR_AppendKiyotaka(lines, playerID, player)
     local profile = WR_GetKiyotakaProfile(playerID)
 
@@ -626,6 +765,9 @@ local function WR_BuildStatusText()
     elseif WR_ACTIVE_TAB == "UNITS" then
         WR_AppendPanelHeader(lines, "Operative Deployment", player)
         WR_AppendUnits(lines, player)
+    elseif WR_ACTIVE_TAB == "TELEMETRY" then
+        WR_AppendPanelHeader(lines, "Adaptation Telemetry", player)
+        WR_AppendTelemetry(lines, playerID)
     else
         WR_AppendPanelHeader(lines, "Facility Readout", player)
         table.insert(lines, "Deployment overview: Kiyotaka " .. tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1    4th Gen Operatives " .. tostring(WR_CountOperatives(player)) .. " / 3")
@@ -705,6 +847,11 @@ local function WR_UpdateSummaryTooltips()
         WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "4th Generation Operative active count. The cap script limits them to three.")
         WR_SetMetricTooltip(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "Technology and trainability status for Kiyotaka.")
         WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "Technology and trainability status for 4th Generation Operatives.")
+    elseif WR_ACTIVE_TAB == "TELEMETRY" then
+        WR_SetMetricTooltip(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "Total number of adaptation telemetry events recorded during this game.")
+        WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "Newest records currently retained in the rotating telemetry buffer.")
+        WR_SetMetricTooltip(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "Kiyotaka combat and survival records retained in the current feed.")
+        WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "City, empire, and foreign-surveillance records retained in the current feed.")
     else
         WR_SetMetricTooltip(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "Trade-route learning. Stored fractional gold becomes applied once it reaches a full integer percent.")
         WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "Number of observed city-loss events that feed the captured-city learning mechanic.")
@@ -791,6 +938,13 @@ local function WR_UpdateSummaryPanel()
         WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "[ICON_STRENGTH] OPERATIVES", tostring(operativeCount) .. " / 3")
         WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_RESEARCH] KIYOTAKA TECH", WR_TechStatus(player, UNIT_WR_KIYOTAKA))
         WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_RESEARCH] OPERATIVE TECH", WR_TechStatus(player, GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE))
+    elseif WR_ACTIVE_TAB == "TELEMETRY" then
+        local telemetry = WR_GetTelemetrySummary(playerID)
+        WR_SetLabel(Controls.SummaryTitle, "Live Adaptation Telemetry")
+        WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_RESEARCH] LIFETIME EVENTS", tostring(telemetry.sequence))
+        WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "[ICON_BULLET] RETAINED", tostring(telemetry.retained) .. " / " .. tostring(WR_TELEMETRY_MAX_EVENTS))
+        WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_STRENGTH] SUBJECT DATA", tostring(telemetry.subject))
+        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_CAPITAL] NETWORK DATA", tostring(telemetry.city + telemetry.empire + telemetry.surveillance))
     else
         WR_SetLabel(Controls.SummaryTitle, "Facility Readout")
         WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_GOLD] TRADE GOLD", WR_FormatStoredApplied(tradeHalfStacks * 0.5, math.floor(tradeHalfStacks / 2)))
@@ -817,17 +971,21 @@ local function WR_UpdateTabButtons()
     WR_SetButtonString(Controls.CitiesTabButton, "[ICON_CAPITAL] " .. (WR_ACTIVE_TAB == "CITIES" and "CITIES" or "Cities"))
     WR_SetButtonString(Controls.KiyotakaTabButton, "[ICON_RESEARCH] " .. (WR_ACTIVE_TAB == "KIYOTAKA" and "KIYOTAKA" or "Kiyotaka"))
     WR_SetButtonString(Controls.UnitsTabButton, "[ICON_STRENGTH] " .. (WR_ACTIVE_TAB == "UNITS" and "UNITS" or "Units"))
+    WR_SetButtonString(Controls.TelemetryTabButton, "[ICON_RESEARCH] " .. (WR_ACTIVE_TAB == "TELEMETRY" and "TELEMETRY" or "Telemetry"))
     Controls.EmpireTabSelection:SetHide(WR_ACTIVE_TAB ~= "EMPIRE")
     Controls.CitiesTabSelection:SetHide(WR_ACTIVE_TAB ~= "CITIES")
     Controls.KiyotakaTabSelection:SetHide(WR_ACTIVE_TAB ~= "KIYOTAKA")
     Controls.UnitsTabSelection:SetHide(WR_ACTIVE_TAB ~= "UNITS")
+    Controls.TelemetryTabSelection:SetHide(WR_ACTIVE_TAB ~= "TELEMETRY")
     WR_SetLabel(Controls.SystemStateLabel, presentation.state)
     WR_SetLabel(Controls.RecordStreamLabel, presentation.stream)
+    WR_SetLabel(Controls.FooterStatusLabel, WR_ACTIVE_TAB == "TELEMETRY" and "FACILITY LINK: RECORDING" or "FACILITY LINK: STABLE")
     WR_SetButtonString(Controls.CompactButton, "[ICON_BULLET] " .. (WR_COMPACT_MODE and "Expanded" or "Compact"))
     WR_SetTooltip(Controls.EmpireTabButton, "Facility-level learning from trade routes and observed city losses.")
     WR_SetTooltip(Controls.CitiesTabButton, "Per-city adaptation records: damage defense, ranged strikes, duplicate yields, and worked improvements.")
     WR_SetTooltip(Controls.KiyotakaTabButton, "Kiyotaka's Perfect Adaptation dossier, including Flow State and class matchups.")
     WR_SetTooltip(Controls.UnitsTabButton, "Unique unit readiness, caps, technology requirements, and training status.")
+    WR_SetTooltip(Controls.TelemetryTabButton, "Persistent turn-stamped records from White Room adaptation systems.")
     WR_SetTooltip(Controls.CompactButton, WR_COMPACT_MODE and "Show full White Room status details." or "Show a shorter White Room status readout.")
 end
 
@@ -850,12 +1008,21 @@ WR_RefreshPanel = function()
         WR_SetTooltip(Controls.StatusText, "Subject Dossier tracks Perfect Adaptation: kills, damage dealt, damage taken, low-HP survival, Flow State chance, and class-specific matchups.")
     elseif WR_ACTIVE_TAB == "UNITS" then
         WR_SetTooltip(Controls.StatusText, "Operative Deployment shows White Room unique unit counts, caps, tech requirements, and training availability.")
+    elseif WR_ACTIVE_TAB == "TELEMETRY" then
+        WR_SetTooltip(Controls.StatusText, "Adaptation Telemetry retains the newest 32 subject, city, empire, and surveillance records. Newest events appear first.")
     else
         WR_SetTooltip(Controls.StatusText, "Facility Readout tracks empire-wide White Room learning from trade routes and observed city losses.")
     end
 
     if Controls.StatusScrollPanel ~= nil and Controls.StatusScrollPanel.CalculateInternalSize ~= nil then
         Controls.StatusScrollPanel:CalculateInternalSize()
+    end
+
+    if WR_ACTIVE_TAB == "TELEMETRY" then
+        local playerID = WR_GetActiveWhiteRoomPlayer()
+        if playerID ~= nil then
+            WR_LAST_TELEMETRY_SEQUENCE = WR_GetTelemetrySequence(playerID)
+        end
     end
 end
 
@@ -935,6 +1102,7 @@ Controls.EmpireTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActive
 Controls.CitiesTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("CITIES") end)
 Controls.KiyotakaTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("KIYOTAKA") end)
 Controls.UnitsTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("UNITS") end)
+Controls.TelemetryTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("TELEMETRY") end)
 Controls.RefreshButton:RegisterCallback(Mouse.eLClick, WR_RefreshPanel)
 Controls.CompactButton:RegisterCallback(Mouse.eLClick, WR_ToggleCompactMode)
 Controls.CloseButton:RegisterCallback(Mouse.eLClick, WR_HidePanel)
@@ -1008,6 +1176,7 @@ end
 
 ContextPtr:SetUpdate(function(deltaTime)
     WR_DIPLO_LIST_POLL_ELAPSED = WR_DIPLO_LIST_POLL_ELAPSED + deltaTime
+    WR_TELEMETRY_POLL_ELAPSED = WR_TELEMETRY_POLL_ELAPSED + deltaTime
 
     if WR_DIPLO_LIST_POLL_ELAPSED < 0.1 then
         return
@@ -1019,6 +1188,20 @@ ContextPtr:SetUpdate(function(deltaTime)
     if isOpen ~= WR_DIPLO_LIST_WAS_OPEN then
         WR_DIPLO_LIST_WAS_OPEN = isOpen
         WR_UpdateChromeVisibility()
+    end
+
+    if WR_TELEMETRY_POLL_ELAPSED >= 0.5 then
+        WR_TELEMETRY_POLL_ELAPSED = 0
+
+        if WR_ACTIVE_TAB == "TELEMETRY" and not Controls.StatusPanel:IsHidden() then
+            local playerID = WR_GetActiveWhiteRoomPlayer()
+            if playerID ~= nil then
+                local sequence = WR_GetTelemetrySequence(playerID)
+                if sequence ~= WR_LAST_TELEMETRY_SEQUENCE then
+                    WR_RefreshPanel()
+                end
+            end
+        end
     end
 end)
 

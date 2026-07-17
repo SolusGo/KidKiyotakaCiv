@@ -154,6 +154,9 @@ scene still uses safe existing Civilization V art.
   - Phase 4 polish adds an at-a-glance summary strip above the detailed readout and clearer active-tab labels
   - Phase 5 polish adds color-coded status badges, stronger readout hierarchy, and sorted city cards
   - Phase 6 polish adds richer tooltips, a compact/expanded toggle, White Room-themed labels, and a stronger Kiyotaka dossier profile
+  - adaptation telemetry adds a fifth tab backed by a persistent 32-record rotating buffer
+  - telemetry records actual Kiyotaka combat/survival/recovery, city damage and ranged strikes, worked-improvement pattern changes, trade-route learning, and observed foreign city losses
+  - the telemetry feed is newest-first, turn-stamped, category-coded, save-persistent, compact-mode aware, and live-refreshes while open
   - reads existing saved counters through `Modding.OpenSaveData()` and recalculates worked-improvement display live from city plots
 - Unique-unit unlock dossiers:
   - separate `WhiteRoomUnitUnlock` UI add-in; it does not replace CP or base-game research and notification contexts
@@ -194,6 +197,9 @@ GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE
 
 ```text
 WhiteRoomLuaLoader.lua loaded
+WhiteRoomLuaLoader included WhiteRoomTelemetry.lua
+WhiteRoomTelemetry.lua loaded
+WR Adaptation Telemetry: initialized; retaining newest 32 records
 WhiteRoomLuaLoader included WhiteRoomDuplicateImprovements.lua
 WhiteRoomDuplicateImprovements.lua loaded
 WR Duplicate Improvements: initialized

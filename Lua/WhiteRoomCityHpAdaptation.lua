@@ -97,6 +97,22 @@ local function WR_RecordCityHpLoss(playerID, city, oldDamage, newDamage)
         stacks * WR_CITY_DEF_PERCENT_PER_STACK,
         math.floor(stacks * WR_CITY_DEF_PERCENT_PER_STACK)
     ))
+
+    if WR_RecordTelemetry ~= nil then
+        WR_RecordTelemetry(
+            playerID,
+            "CITY",
+            "DEFENSE ADAPTATION // " .. city:GetName(),
+            string.format(
+                "Damage %d -> %d // Stack %d // Stored +%.2f%% // Applied +%d%%",
+                oldDamage,
+                newDamage,
+                stacks,
+                stacks * WR_CITY_DEF_PERCENT_PER_STACK,
+                math.floor(stacks * WR_CITY_DEF_PERCENT_PER_STACK)
+            )
+        )
+    end
 end
 
 local function WR_PrimeCityDamageCacheForPlayer(playerID, player)

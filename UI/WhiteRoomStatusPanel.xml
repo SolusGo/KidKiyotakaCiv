@@ -24,15 +24,17 @@
     </Grid>
     <Grid Anchor="C,T" Offset="0,78" Size="810,1" Style="Grid9Bar" />
 
-    <GridButton ID="EmpireTabButton" Anchor="C,T" Offset="-240,94" Size="148,32" String="[ICON_GOLD] Empire" ToolTip="Show empire-wide White Room learning" Style="BaseButton" />
-    <GridButton ID="CitiesTabButton" Anchor="C,T" Offset="-80,94" Size="148,32" String="[ICON_CAPITAL] Cities" ToolTip="Show per-city adaptation and worked improvements" Style="BaseButton" />
-    <GridButton ID="KiyotakaTabButton" Anchor="C,T" Offset="80,94" Size="148,32" String="[ICON_RESEARCH] Kiyotaka" ToolTip="Show Kiyotaka Perfect Adaptation counters" Style="BaseButton" />
-    <GridButton ID="UnitsTabButton" Anchor="C,T" Offset="240,94" Size="148,32" String="[ICON_STRENGTH] Units" ToolTip="Show unique unit deployment and caps" Style="BaseButton" />
+    <GridButton ID="EmpireTabButton" Anchor="C,T" Offset="-288,94" Size="136,32" String="[ICON_GOLD] Empire" ToolTip="Show empire-wide White Room learning" Style="BaseButton" />
+    <GridButton ID="CitiesTabButton" Anchor="C,T" Offset="-144,94" Size="136,32" String="[ICON_CAPITAL] Cities" ToolTip="Show per-city adaptation and worked improvements" Style="BaseButton" />
+    <GridButton ID="KiyotakaTabButton" Anchor="C,T" Offset="0,94" Size="136,32" String="[ICON_RESEARCH] Kiyotaka" ToolTip="Show Kiyotaka Perfect Adaptation counters" Style="BaseButton" />
+    <GridButton ID="UnitsTabButton" Anchor="C,T" Offset="144,94" Size="136,32" String="[ICON_STRENGTH] Units" ToolTip="Show unique unit deployment and caps" Style="BaseButton" />
+    <GridButton ID="TelemetryTabButton" Anchor="C,T" Offset="288,94" Size="136,32" String="[ICON_RESEARCH] Telemetry" ToolTip="Show live adaptation telemetry" Style="BaseButton" />
 
-    <Grid ID="EmpireTabSelection" Anchor="C,T" Offset="-240,132" Size="136,3" Style="Grid9Bar" Hidden="0" />
-    <Grid ID="CitiesTabSelection" Anchor="C,T" Offset="-80,132" Size="136,3" Style="Grid9Bar" Hidden="1" />
-    <Grid ID="KiyotakaTabSelection" Anchor="C,T" Offset="80,132" Size="136,3" Style="Grid9Bar" Hidden="1" />
-    <Grid ID="UnitsTabSelection" Anchor="C,T" Offset="240,132" Size="136,3" Style="Grid9Bar" Hidden="1" />
+    <Grid ID="EmpireTabSelection" Anchor="C,T" Offset="-288,132" Size="124,3" Style="Grid9Bar" Hidden="0" />
+    <Grid ID="CitiesTabSelection" Anchor="C,T" Offset="-144,132" Size="124,3" Style="Grid9Bar" Hidden="1" />
+    <Grid ID="KiyotakaTabSelection" Anchor="C,T" Offset="0,132" Size="124,3" Style="Grid9Bar" Hidden="1" />
+    <Grid ID="UnitsTabSelection" Anchor="C,T" Offset="144,132" Size="124,3" Style="Grid9Bar" Hidden="1" />
+    <Grid ID="TelemetryTabSelection" Anchor="C,T" Offset="288,132" Size="124,3" Style="Grid9Bar" Hidden="1" />
 
     <Label ID="SummaryTitle" Anchor="C,T" Offset="0,140" Size="780,26" Font="TwCenMT20" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
 

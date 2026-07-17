@@ -127,14 +127,31 @@ local function WR_RecordTradeRouteLearning(playerID, otherPlayerID, fromCityID, 
 
     local wholePercent = math.floor(halfStacks / 2)
     local learnedPercent = halfStacks * 0.5
+    local fromCityName = WR_CityName(playerID, fromCityID)
+    local toCityName = WR_CityName(otherPlayerID, toCityID)
 
     WR_Debug(string.format(
         "WR Trade Route Learning: trade connection learned by White Room (%s -> %s); gold learning now +%.2f%%, applied gold modifier +%d%%",
-        WR_CityName(playerID, fromCityID),
-        WR_CityName(otherPlayerID, toCityID),
+        fromCityName,
+        toCityName,
         learnedPercent,
         wholePercent
     ))
+
+    if WR_RecordTelemetry ~= nil then
+        WR_RecordTelemetry(
+            playerID,
+            "EMPIRE",
+            "TRADE CONNECTION ANALYZED",
+            string.format(
+                "%s -> %s // Gold stored +%.2f%% // Applied +%d%%",
+                fromCityName,
+                toCityName,
+                learnedPercent,
+                wholePercent
+            )
+        )
+    end
 end
 
 local function WR_GetRouteField(route, names)

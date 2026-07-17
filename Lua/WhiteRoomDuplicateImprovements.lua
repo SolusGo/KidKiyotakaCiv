@@ -39,6 +39,7 @@ local YieldDummyBuildings = {
 local ImprovementYieldType = {}
 local ImprovementNames = {}
 local LastCitySignatures = {}
+local LastTelemetrySignatures = {}
 
 local function WR_Log(message)
     print("WR Duplicate Improvements: " .. message)
@@ -255,6 +256,37 @@ local function BuildYieldSignature(yieldPercents)
     return table.concat(parts, ";")
 end
 
+local function RecordCityPatternChange(playerID, city, improvementCounts, yieldPercents)
+    local cityKey = GetCityKey(playerID, city)
+    local signature = BuildImprovementSignature(improvementCounts) .. "|" .. BuildYieldSignature(yieldPercents)
+    local previousSignature = LastTelemetrySignatures[cityKey]
+    LastTelemetrySignatures[cityKey] = signature
+
+    if previousSignature == nil or previousSignature == signature or WR_RecordTelemetry == nil then
+        return
+    end
+
+    local yieldParts = {}
+    for _, yieldName in ipairs(YIELD_ORDER) do
+        local percent = yieldPercents[yieldName] or 0
+        if percent > 0 then
+            table.insert(yieldParts, yieldName .. " +" .. string.format("%.2f%%", percent))
+        end
+    end
+
+    local detail = "No duplicate yield bonus currently active"
+    if #yieldParts > 0 then
+        detail = table.concat(yieldParts, " // ")
+    end
+
+    WR_RecordTelemetry(
+        playerID,
+        "CITY",
+        "WORK PATTERN UPDATED // " .. city:GetName(),
+        detail
+    )
+end
+
 local function LogCityResult(playerID, city, improvementCounts, yieldPercents, forceLog)
     if not WR_DUP_DEBUG and not WR_DUP_LOG_EVERY_TURN then
         return
@@ -295,6 +327,7 @@ function WR_RecalculateCityDuplicateImprovementBonuses(playerID, city, forceLog)
         ApplyPercentToCity(city, yieldName, yieldPercents[yieldName] or 0)
     end
 
+    RecordCityPatternChange(playerID, city, improvementCounts, yieldPercents)
     LogCityResult(playerID, city, improvementCounts, yieldPercents, forceLog)
 end
 
