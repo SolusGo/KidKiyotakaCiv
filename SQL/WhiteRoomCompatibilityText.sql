@@ -58,6 +58,24 @@ WHERE BuildingType = 'AURONTRAIT'
       WHERE Type = 'BUILDING_AURONTRAIT'
   );
 
+UPDATE Building_BuildingClassHappiness
+SET BuildingType = 'BUILDING_AURONTRAIT'
+WHERE BuildingType = 'AURONTRAIT'
+  AND EXISTS (
+      SELECT 1
+      FROM Buildings
+      WHERE Type = 'BUILDING_AURONTRAIT'
+  );
+
+UPDATE Building_BuildingClassLocalHappiness
+SET BuildingType = 'BUILDING_AURONTRAIT'
+WHERE BuildingType = 'AURONTRAIT'
+  AND EXISTS (
+      SELECT 1
+      FROM Buildings
+      WHERE Type = 'BUILDING_AURONTRAIT'
+  );
+
 -- CP assumes every BuildingType in this base-game table resolves to a real
 -- building. Discard only orphaned references left by enabled content mods.
 DELETE FROM Building_BuildingClassYieldChanges
@@ -66,6 +84,22 @@ WHERE BuildingType IS NULL
        SELECT 1
        FROM Buildings
        WHERE Buildings.Type = Building_BuildingClassYieldChanges.BuildingType
+   );
+
+DELETE FROM Building_BuildingClassHappiness
+WHERE BuildingType IS NULL
+   OR NOT EXISTS (
+       SELECT 1
+       FROM Buildings
+       WHERE Buildings.Type = Building_BuildingClassHappiness.BuildingType
+   );
+
+DELETE FROM Building_BuildingClassLocalHappiness
+WHERE BuildingType IS NULL
+   OR NOT EXISTS (
+       SELECT 1
+       FROM Buildings
+       WHERE Buildings.Type = Building_BuildingClassLocalHappiness.BuildingType
    );
 
 -- CP's unit and technology tooltips assume every free-promotion reference
@@ -78,6 +112,52 @@ WHERE PromotionType IS NULL
        FROM UnitPromotions
        WHERE UnitPromotions.Type = Unit_FreePromotions.PromotionType
    );
+
+-- CP's unique-unit tooltip indexes UnitClasses.DefaultUnit before checking the
+-- result. Several custom civilizations, including White Room, use a NULL
+-- default to make a unit class civilization-exclusive. Give those classes a
+-- valid tooltip default, then explicitly disable the class for every civ that
+-- did not already own an override so availability remains unchanged.
+CREATE TEMP TABLE WR_CP_NullDefaultUnitClasses (
+    UnitClassType TEXT PRIMARY KEY,
+    DefaultUnitType TEXT NOT NULL
+);
+
+INSERT INTO WR_CP_NullDefaultUnitClasses (UnitClassType, DefaultUnitType)
+SELECT UnitClasses.Type, MIN(Civilization_UnitClassOverrides.UnitType)
+FROM UnitClasses
+JOIN Civilization_UnitClassOverrides
+  ON Civilization_UnitClassOverrides.UnitClassType = UnitClasses.Type
+JOIN Units
+  ON Units.Type = Civilization_UnitClassOverrides.UnitType
+WHERE UnitClasses.DefaultUnit IS NULL
+   OR UnitClasses.DefaultUnit = ''
+GROUP BY UnitClasses.Type;
+
+UPDATE UnitClasses
+SET DefaultUnit = (
+    SELECT WR_CP_NullDefaultUnitClasses.DefaultUnitType
+    FROM WR_CP_NullDefaultUnitClasses
+    WHERE WR_CP_NullDefaultUnitClasses.UnitClassType = UnitClasses.Type
+)
+WHERE Type IN (
+    SELECT UnitClassType
+    FROM WR_CP_NullDefaultUnitClasses
+);
+
+INSERT INTO Civilization_UnitClassOverrides
+    (CivilizationType, UnitClassType, UnitType)
+SELECT Civilizations.Type, WR_CP_NullDefaultUnitClasses.UnitClassType, NULL
+FROM Civilizations
+CROSS JOIN WR_CP_NullDefaultUnitClasses
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Civilization_UnitClassOverrides
+    WHERE Civilization_UnitClassOverrides.CivilizationType = Civilizations.Type
+      AND Civilization_UnitClassOverrides.UnitClassType = WR_CP_NullDefaultUnitClasses.UnitClassType
+);
+
+DROP TABLE WR_CP_NullDefaultUnitClasses;
 
 -- Keep White Room dummy buildings out of CP/EUI CityView lists. These buildings
 -- are mechanical counters only and should not appear as city buildings,

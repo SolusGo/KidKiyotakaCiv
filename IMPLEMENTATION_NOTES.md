@@ -136,9 +136,10 @@ scene still uses safe existing Civilization V art.
   - tested in-game with IGE and confirmed working
 
 - CP research tooltip compatibility:
-  - repairs the malformed `AURONTRAIT` building references from Arendelle's United Republic of Nations to `BUILDING_AURONTRAIT`
-  - removes remaining orphaned `BuildingType` rows from `Building_BuildingClassYieldChanges` before CP builds technology tooltips
+  - repairs malformed `AURONTRAIT` building references from Arendelle's United Republic of Nations across yield and happiness tooltip tables
+  - removes remaining orphaned `BuildingType` rows from CP building-class yield and happiness tooltip tables
   - removes orphaned `Unit_FreePromotions` links that would abort CP's research-panel refresh and leave stale technology text
+  - normalizes custom unit classes with `NULL DefaultUnit` values while preserving their original civilization-only availability
 - Phase 4 in-game status UI:
   - files: `UI/WhiteRoomStatusPanel.xml`, `UI/WhiteRoomStatusPanel.lua`
   - separate `White Room Status Panel` InGameUIAddin
