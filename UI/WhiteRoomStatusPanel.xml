@@ -1,27 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context ID="WhiteRoomStatusPanel">
-  <Button ID="WhiteRoomStatusButton" Anchor="R,T" Offset="24,96" Size="150,34" String="White Room" ToolTip="Open White Room adaptation status" Style="BaseButton" />
+  <GridButton ID="WhiteRoomStatusButton" Anchor="R,T" Offset="24,96" Size="184,42" ToolTip="Open White Room adaptation status" Style="BaseButton">
+    <Image ID="WhiteRoomButtonIcon" Anchor="L,C" Offset="12,0" Size="32,32" />
+    <Label Anchor="L,C" Offset="54,0" Font="TwCenMT18" FontStyle="Shadow" String="WHITE ROOM" ColorSet="Beige_Black_Alpha" />
+  </GridButton>
 
-  <Grid ID="StatusPanel" Anchor="C,C" Size="820,590" Style="Grid9DetailFive140" Hidden="1" ConsumeMouse="1">
-    <Label ID="TitleLabel" Anchor="C,T" Offset="0,20" Font="TwCenMT24" String="White Room Status" ColorSet="Beige_Black_Alpha" />
+  <Grid ID="StatusPanel" Anchor="C,C" Size="900,650" Style="Grid9DetailFive140" Hidden="1" ConsumeMouse="1">
+    <Box Style="MenuLeftSideTreatment" />
+    <Box Style="MenuRightSideTreatment" />
 
-    <Button ID="EmpireTabButton" Anchor="C,T" Offset="-210,58" Size="128,32" String="Empire" ToolTip="Show empire-wide White Room learning" Style="BaseButton" />
-    <Button ID="CitiesTabButton" Anchor="C,T" Offset="-70,58" Size="128,32" String="Cities" ToolTip="Show per-city adaptation and worked improvements" Style="BaseButton" />
-    <Button ID="KiyotakaTabButton" Anchor="C,T" Offset="70,58" Size="128,32" String="Kiyotaka" ToolTip="Show Kiyotaka Perfect Adaptation counters" Style="BaseButton" />
-    <Button ID="UnitsTabButton" Anchor="C,T" Offset="210,58" Size="128,32" String="Units" ToolTip="Show unique unit deployment and caps" Style="BaseButton" />
+    <Image ID="HeaderIconFrame" Anchor="L,T" Offset="48,14" Texture="256x256Frame.dds" Size="72,72">
+      <Image ID="HeaderCivIcon" Anchor="C,C" Offset="0,0" Size="64,64" />
+    </Image>
 
-    <Label ID="SummaryTitle" Anchor="C,T" Offset="0,104" Size="700,26" Font="TwCenMT20" String="" ColorSet="Beige_Black_Alpha" />
-    <Label ID="SummaryMetricOne" Anchor="C,T" Offset="-270,136" Size="170,62" Font="TwCenMT18" WrapWidth="170" String="" ColorSet="Beige_Black_Alpha" />
-    <Label ID="SummaryMetricTwo" Anchor="C,T" Offset="-90,136" Size="170,62" Font="TwCenMT18" WrapWidth="170" String="" ColorSet="Beige_Black_Alpha" />
-    <Label ID="SummaryMetricThree" Anchor="C,T" Offset="90,136" Size="170,62" Font="TwCenMT18" WrapWidth="170" String="" ColorSet="Beige_Black_Alpha" />
-    <Label ID="SummaryMetricFour" Anchor="C,T" Offset="270,136" Size="170,62" Font="TwCenMT18" WrapWidth="170" String="" ColorSet="Beige_Black_Alpha" />
+    <Label ID="TitleLabel" Anchor="C,T" Offset="0,18" Font="TwCenMT24" FontStyle="Shadow" String="WHITE ROOM CONTROL" ColorSet="Beige_Black_Alpha" />
+    <Label Anchor="C,T" Offset="0,50" Font="TwCenMT14" FontStyle="Shadow" String="ADAPTATION ARCHIVE // LIVE FACILITY READOUT" ColorSet="Beige_Black_Alpha" />
+    <Grid Anchor="C,T" Offset="0,78" Size="810,1" Style="Grid9Bar" />
 
-    <ScrollPanel ID="StatusScrollPanel" Anchor="C,T" Offset="0,210" Size="740,282" Vertical="1">
-      <Label ID="StatusText" Anchor="L,T" Offset="8,8" Size="700,4096" Font="TwCenMT18" WrapWidth="700" String="" ColorSet="Beige_Black_Alpha" />
-    </ScrollPanel>
+    <Button ID="EmpireTabButton" Anchor="C,T" Offset="-240,94" Size="148,32" String="[ICON_GOLD] Empire" ToolTip="Show empire-wide White Room learning" Style="BaseButton" />
+    <Button ID="CitiesTabButton" Anchor="C,T" Offset="-80,94" Size="148,32" String="[ICON_CAPITAL] Cities" ToolTip="Show per-city adaptation and worked improvements" Style="BaseButton" />
+    <Button ID="KiyotakaTabButton" Anchor="C,T" Offset="80,94" Size="148,32" String="[ICON_RESEARCH] Kiyotaka" ToolTip="Show Kiyotaka Perfect Adaptation counters" Style="BaseButton" />
+    <Button ID="UnitsTabButton" Anchor="C,T" Offset="240,94" Size="148,32" String="[ICON_STRENGTH] Units" ToolTip="Show unique unit deployment and caps" Style="BaseButton" />
 
-    <Button ID="RefreshButton" Anchor="C,B" Offset="-170,28" Size="150,36" String="Refresh" ToolTip="Refresh White Room status" Style="BaseButton" />
-    <Button ID="CompactButton" Anchor="C,B" Offset="0,28" Size="150,36" String="Compact" ToolTip="Toggle compact or expanded White Room status details" Style="BaseButton" />
-    <Button ID="CloseButton" Anchor="C,B" Offset="170,28" Size="150,36" String="Close" ToolTip="Close White Room status" Style="BaseButton" />
+    <Label ID="SummaryTitle" Anchor="C,T" Offset="0,140" Size="780,26" Font="TwCenMT20" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
+
+    <Grid Anchor="C,T" Offset="-300,172" Size="180,78" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
+        <Label ID="SummaryMetricOne" Anchor="C,C" Offset="0,0" Size="164,62" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="164" String="" ColorSet="Beige_Black_Alpha" />
+      </Grid>
+    </Grid>
+    <Grid Anchor="C,T" Offset="-100,172" Size="180,78" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
+        <Label ID="SummaryMetricTwo" Anchor="C,C" Offset="0,0" Size="164,62" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="164" String="" ColorSet="Beige_Black_Alpha" />
+      </Grid>
+    </Grid>
+    <Grid Anchor="C,T" Offset="100,172" Size="180,78" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
+        <Label ID="SummaryMetricThree" Anchor="C,C" Offset="0,0" Size="164,62" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="164" String="" ColorSet="Beige_Black_Alpha" />
+      </Grid>
+    </Grid>
+    <Grid Anchor="C,T" Offset="300,172" Size="180,78" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
+        <Label ID="SummaryMetricFour" Anchor="C,C" Offset="0,0" Size="164,62" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="164" String="" ColorSet="Beige_Black_Alpha" />
+      </Grid>
+    </Grid>
+
+    <Grid Anchor="C,T" Offset="0,282" Size="820,288" Style="GridBlackIndent8">
+      <Label Anchor="L,T" AnchorSide="I.O" Offset="12,-18" Font="TwCenMT18" FontStyle="Shadow" String="DETAILED FACILITY RECORD" ColorSet="Beige_Black_Alpha" />
+      <Grid Anchor="C,C" Offset="0,0" Size="824,292" Style="Grid9Frame">
+        <ScrollPanel ID="StatusScrollPanel" Anchor="C,C" Offset="0,0" Size="790,262" Vertical="1">
+          <Label ID="StatusText" Anchor="L,T" Offset="8,8" Size="748,4096" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="748" String="" ColorSet="Beige_Black_Alpha" />
+        </ScrollPanel>
+      </Grid>
+    </Grid>
+
+    <Button ID="RefreshButton" Anchor="C,B" Offset="-180,22" Size="160,36" String="[ICON_RESEARCH] Refresh" ToolTip="Refresh White Room status" Style="BaseButton" />
+    <Button ID="CompactButton" Anchor="C,B" Offset="0,22" Size="160,36" String="[ICON_BULLET] Compact" ToolTip="Toggle compact or expanded White Room status details" Style="BaseButton" />
+    <Button ID="CloseButton" Anchor="C,B" Offset="180,22" Size="160,36" String="Close" ToolTip="Close White Room status" Style="BaseButton" />
   </Grid>
 </Context>

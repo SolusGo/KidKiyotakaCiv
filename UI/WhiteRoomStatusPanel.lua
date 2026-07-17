@@ -4,6 +4,7 @@ print("WhiteRoomStatusPanel.lua loaded")
 
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local UNIT_WR_KIYOTAKA = GameInfoTypes.UNIT_WR_KIYOTAKA
+local WR_CIV_ICON_ATLAS = "WR_WHITE_ROOM_ICON_ATLAS"
 
 local WR_STATUS_SAVE = Modding.OpenSaveData()
 local WR_PERCENT_PER_DUPLICATE = 0.5
@@ -622,6 +623,31 @@ local function WR_SetTooltip(control, text)
     end
 end
 
+local function WR_TryIncludeIconSupport()
+    local ok, err = pcall(function()
+        include("IconSupport")
+    end)
+
+    if not ok then
+        print("WR Status Panel: could not load IconSupport: " .. tostring(err))
+    end
+end
+
+local function WR_SetCivIcon(control, iconSize)
+    if control == nil then
+        return false
+    end
+
+    if IconHookup == nil then
+        control:SetHide(true)
+        return false
+    end
+
+    local ok, result = pcall(IconHookup, 0, iconSize, WR_CIV_ICON_ATLAS, control)
+    control:SetHide(not ok or result == false)
+    return ok and result ~= false
+end
+
 local function WR_UpdateSummaryTooltips()
     WR_SetTooltip(Controls.SummaryTitle, "At-a-glance White Room readout for the active tab.")
     WR_SetTooltip(Controls.SummaryMetricOne, "")
@@ -713,29 +739,29 @@ local function WR_UpdateSummaryPanel()
 
     if WR_ACTIVE_TAB == "CITIES" then
         WR_SetLabel(Controls.SummaryTitle, "City Adaptation Records")
-        WR_SetLabel(Controls.SummaryMetricOne, "Cities[NEWLINE]" .. tostring(cityCount))
-        WR_SetLabel(Controls.SummaryMetricTwo, "Most Adapted[NEWLINE]" .. bestCityName)
-        WR_SetLabel(Controls.SummaryMetricThree, "Defense Stacks[NEWLINE]" .. tostring(totalDefenseStacks))
-        WR_SetLabel(Controls.SummaryMetricFour, "Duplicate Yields[NEWLINE]+" .. string.format("%.2f%%", totalDuplicatePercent))
+        WR_SetLabel(Controls.SummaryMetricOne, "[ICON_CAPITAL] Cities[NEWLINE]" .. tostring(cityCount))
+        WR_SetLabel(Controls.SummaryMetricTwo, "[ICON_RESEARCH] Most Adapted[NEWLINE]" .. bestCityName)
+        WR_SetLabel(Controls.SummaryMetricThree, "[ICON_STRENGTH] Defense Stacks[NEWLINE]" .. tostring(totalDefenseStacks))
+        WR_SetLabel(Controls.SummaryMetricFour, "[ICON_GOLD] Duplicate Yields[NEWLINE]+" .. string.format("%.2f%%", totalDuplicatePercent))
     elseif WR_ACTIVE_TAB == "KIYOTAKA" then
         WR_SetLabel(Controls.SummaryTitle, "Subject Dossier: Kiyotaka")
-        WR_SetLabel(Controls.SummaryMetricOne, "Deployment[NEWLINE]" .. (kiyotaka ~= nil and "Active" or "Missing"))
-        WR_SetLabel(Controls.SummaryMetricTwo, "Vitals[NEWLINE]" .. WR_UnitHpLine(kiyotaka))
-        WR_SetLabel(Controls.SummaryMetricThree, "Adaptation[NEWLINE]+" .. WR_FormatPercentFromHundredths(kiyotakaProfile.totalScore))
-        WR_SetLabel(Controls.SummaryMetricFour, "Flow State[NEWLINE]" .. WR_StatusTag(kiyotakaProfile.moveChance >= 10000) .. " " .. WR_FormatPercentFromHundredths(kiyotakaProfile.moveChance))
+        WR_SetLabel(Controls.SummaryMetricOne, "[ICON_STRENGTH] Deployment[NEWLINE]" .. (kiyotaka ~= nil and "Active" or "Missing"))
+        WR_SetLabel(Controls.SummaryMetricTwo, "[ICON_BULLET] Vitals[NEWLINE]" .. WR_UnitHpLine(kiyotaka))
+        WR_SetLabel(Controls.SummaryMetricThree, "[ICON_RESEARCH] Adaptation[NEWLINE]+" .. WR_FormatPercentFromHundredths(kiyotakaProfile.totalScore))
+        WR_SetLabel(Controls.SummaryMetricFour, "[ICON_MOVES] Flow State[NEWLINE]" .. WR_StatusTag(kiyotakaProfile.moveChance >= 10000) .. " " .. WR_FormatPercentFromHundredths(kiyotakaProfile.moveChance))
     elseif WR_ACTIVE_TAB == "UNITS" then
         local operativeCount = WR_CountOperatives(player)
         WR_SetLabel(Controls.SummaryTitle, "Operative Deployment")
-        WR_SetLabel(Controls.SummaryMetricOne, "Kiyotaka[NEWLINE]" .. tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1")
-        WR_SetLabel(Controls.SummaryMetricTwo, "Operatives[NEWLINE]" .. tostring(operativeCount) .. " / 3")
-        WR_SetLabel(Controls.SummaryMetricThree, "Kiyotaka Tech[NEWLINE]" .. WR_TechStatus(player, UNIT_WR_KIYOTAKA))
-        WR_SetLabel(Controls.SummaryMetricFour, "Operative Tech[NEWLINE]" .. WR_TechStatus(player, GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE))
+        WR_SetLabel(Controls.SummaryMetricOne, "[ICON_STRENGTH] Kiyotaka[NEWLINE]" .. tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1")
+        WR_SetLabel(Controls.SummaryMetricTwo, "[ICON_STRENGTH] Operatives[NEWLINE]" .. tostring(operativeCount) .. " / 3")
+        WR_SetLabel(Controls.SummaryMetricThree, "[ICON_RESEARCH] Kiyotaka Tech[NEWLINE]" .. WR_TechStatus(player, UNIT_WR_KIYOTAKA))
+        WR_SetLabel(Controls.SummaryMetricFour, "[ICON_RESEARCH] Operative Tech[NEWLINE]" .. WR_TechStatus(player, GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE))
     else
         WR_SetLabel(Controls.SummaryTitle, "Facility Readout")
-        WR_SetLabel(Controls.SummaryMetricOne, "Trade Gold[NEWLINE]" .. WR_FormatStoredApplied(tradeHalfStacks * 0.5, math.floor(tradeHalfStacks / 2)))
-        WR_SetLabel(Controls.SummaryMetricTwo, "City Losses[NEWLINE]" .. tostring(cityLossStacks))
-        WR_SetLabel(Controls.SummaryMetricThree, "Vs Cities[NEWLINE]" .. WR_FormatStoredApplied(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK, math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)))
-        WR_SetLabel(Controls.SummaryMetricFour, "Best City[NEWLINE]" .. bestCityName)
+        WR_SetLabel(Controls.SummaryMetricOne, "[ICON_GOLD] Trade Gold[NEWLINE]" .. WR_FormatStoredApplied(tradeHalfStacks * 0.5, math.floor(tradeHalfStacks / 2)))
+        WR_SetLabel(Controls.SummaryMetricTwo, "[ICON_CAPITAL] City Losses[NEWLINE]" .. tostring(cityLossStacks))
+        WR_SetLabel(Controls.SummaryMetricThree, "[ICON_STRENGTH] Vs Cities[NEWLINE]" .. WR_FormatStoredApplied(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK, math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)))
+        WR_SetLabel(Controls.SummaryMetricFour, "[ICON_RESEARCH] Best City[NEWLINE]" .. bestCityName)
     end
 
     WR_UpdateSummaryTooltips()
@@ -760,11 +786,11 @@ local function WR_UpdateTabButtons()
     WR_SetButtonDisabled(Controls.CitiesTabButton, WR_ACTIVE_TAB == "CITIES")
     WR_SetButtonDisabled(Controls.KiyotakaTabButton, WR_ACTIVE_TAB == "KIYOTAKA")
     WR_SetButtonDisabled(Controls.UnitsTabButton, WR_ACTIVE_TAB == "UNITS")
-    WR_SetButtonString(Controls.EmpireTabButton, WR_ACTIVE_TAB == "EMPIRE" and "[ Empire ]" or "Empire")
-    WR_SetButtonString(Controls.CitiesTabButton, WR_ACTIVE_TAB == "CITIES" and "[ Cities ]" or "Cities")
-    WR_SetButtonString(Controls.KiyotakaTabButton, WR_ACTIVE_TAB == "KIYOTAKA" and "[ Kiyotaka ]" or "Kiyotaka")
-    WR_SetButtonString(Controls.UnitsTabButton, WR_ACTIVE_TAB == "UNITS" and "[ Units ]" or "Units")
-    WR_SetButtonString(Controls.CompactButton, WR_COMPACT_MODE and "Expanded" or "Compact")
+    WR_SetButtonString(Controls.EmpireTabButton, (WR_ACTIVE_TAB == "EMPIRE" and "[ " or "") .. "[ICON_GOLD] Empire" .. (WR_ACTIVE_TAB == "EMPIRE" and " ]" or ""))
+    WR_SetButtonString(Controls.CitiesTabButton, (WR_ACTIVE_TAB == "CITIES" and "[ " or "") .. "[ICON_CAPITAL] Cities" .. (WR_ACTIVE_TAB == "CITIES" and " ]" or ""))
+    WR_SetButtonString(Controls.KiyotakaTabButton, (WR_ACTIVE_TAB == "KIYOTAKA" and "[ " or "") .. "[ICON_RESEARCH] Kiyotaka" .. (WR_ACTIVE_TAB == "KIYOTAKA" and " ]" or ""))
+    WR_SetButtonString(Controls.UnitsTabButton, (WR_ACTIVE_TAB == "UNITS" and "[ " or "") .. "[ICON_STRENGTH] Units" .. (WR_ACTIVE_TAB == "UNITS" and " ]" or ""))
+    WR_SetButtonString(Controls.CompactButton, "[ICON_BULLET] " .. (WR_COMPACT_MODE and "Expanded" or "Compact"))
     WR_SetTooltip(Controls.EmpireTabButton, "Facility-level learning from trade routes and observed city losses.")
     WR_SetTooltip(Controls.CitiesTabButton, "Per-city adaptation records: damage defense, ranged strikes, duplicate yields, and worked improvements.")
     WR_SetTooltip(Controls.KiyotakaTabButton, "Kiyotaka's Perfect Adaptation dossier, including Flow State and class matchups.")
@@ -847,6 +873,10 @@ local function WR_TogglePanel()
         WR_HidePanel()
     end
 end
+
+WR_TryIncludeIconSupport()
+WR_SetCivIcon(Controls.WhiteRoomButtonIcon, 32)
+Controls.HeaderIconFrame:SetHide(not WR_SetCivIcon(Controls.HeaderCivIcon, 64))
 
 Controls.WhiteRoomStatusButton:RegisterCallback(Mouse.eLClick, WR_TogglePanel)
 Controls.EmpireTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("EMPIRE") end)
