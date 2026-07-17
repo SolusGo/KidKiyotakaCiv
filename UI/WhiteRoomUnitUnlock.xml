@@ -1,14 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context ID="WhiteRoomUnitUnlock">
-  <Grid ID="UnlockPanel" Anchor="C,C" Size="800,600" Style="Grid9DetailFive140" Hidden="1" ConsumeMouse="1">
-    <Label ID="ClassificationLabel" Anchor="C,T" Offset="0,20" Font="TwCenMT18" String="WHITE ROOM // RESTRICTED DOSSIER" ColorSet="Beige_Black_Alpha" />
-    <Label ID="TitleLabel" Anchor="C,T" Offset="0,52" Size="720,38" Font="TwCenMT24" WrapWidth="720" String="" ColorSet="Beige_Black_Alpha" />
+  <Grid ID="UnlockPanel" Anchor="C,C" Size="900,660" Style="Grid9DetailFive140" Hidden="1" ConsumeMouse="1">
+    <Box Style="MenuLeftSideTreatment" />
+    <Box Style="MenuRightSideTreatment" />
 
-    <Image ID="UnitPortrait" Anchor="L,T" Offset="52,108" Size="128,128" />
-    <Label ID="UnitNameLabel" Anchor="L,T" Offset="210,108" Size="540,34" Font="TwCenMT22" WrapWidth="540" String="" ColorSet="Beige_Black_Alpha" />
-    <Label ID="TechLabel" Anchor="L,T" Offset="210,146" Size="540,28" Font="TwCenMT18" WrapWidth="540" String="" ColorSet="Beige_Black_Alpha" />
-    <Label ID="BodyLabel" Anchor="L,T" Offset="210,184" Size="540,294" Font="TwCenMT18" WrapWidth="540" String="" ColorSet="Beige_Black_Alpha" />
-    <Label ID="QuoteLabel" Anchor="C,T" Offset="0,492" Size="700,34" Font="TwCenMT18" WrapWidth="700" String="" ColorSet="Beige_Black_Alpha" />
+    <Label ID="ClassificationLabel" Anchor="C,T" Offset="0,18" Font="TwCenMT18" FontStyle="Shadow" String="WHITE ROOM // RESTRICTED DOSSIER" ColorSet="Beige_Black_Alpha" />
+    <Label ID="TitleLabel" Anchor="C,T" Offset="0,48" Size="820,38" Font="TwCenMT24" FontStyle="Shadow" WrapWidth="820" String="" ColorSet="Beige_Black_Alpha" />
+    <Grid Anchor="C,T" Offset="0,90" Size="820,1" Style="Grid9Bar" />
+
+    <Image ID="PortraitFrame" Anchor="L,T" Offset="50,110" Texture="256x256Frame.dds" Size="160,160">
+      <Image ID="UnitPortrait" Anchor="C,C" Offset="0,0" Size="128,128" />
+    </Image>
+
+    <Grid ID="RecordFrame" Anchor="L,T" Offset="44,310" Size="172,215" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="176,219" Style="Grid9Frame">
+        <Label Anchor="L,T" Offset="14,12" Font="TwCenMT14" FontStyle="Shadow" String="ARCHIVE INDEX" ColorSet="Beige_Black_Alpha" />
+        <Label ID="RecordLabel" Anchor="L,T" Offset="14,34" Size="144,38" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="144" String="" ColorSet="Beige_Black_Alpha" />
+        <Grid Anchor="C,T" Offset="0,78" Size="144,1" Style="Grid9Bar" />
+
+        <Label Anchor="L,T" Offset="14,90" Font="TwCenMT14" FontStyle="Shadow" String="PROGRAM" ColorSet="Beige_Black_Alpha" />
+        <Label ID="ProgramLabel" Anchor="L,T" Offset="14,112" Size="144,42" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="144" String="" ColorSet="Beige_Black_Alpha" />
+        <Grid Anchor="C,T" Offset="0,160" Size="144,1" Style="Grid9Bar" />
+
+        <Label Anchor="L,T" Offset="14,172" Font="TwCenMT14" FontStyle="Shadow" String="STATUS" ColorSet="Beige_Black_Alpha" />
+        <Label ID="StatusLabel" Anchor="L,T" Offset="14,191" Size="144,24" Font="TwCenMT14" FontStyle="Shadow" WrapWidth="144" String="" ColorSet="Beige_Black_Alpha" />
+      </Grid>
+    </Grid>
+
+    <Label ID="UnitNameLabel" Anchor="L,T" Offset="240,108" Size="610,34" Font="TwCenMT22" FontStyle="Shadow" WrapWidth="610" String="" ColorSet="Beige_Black_Alpha" />
+    <Label Anchor="L,T" Offset="240,138" Size="610,22" Font="TwCenMT14" FontStyle="Shadow" String="TECHNOLOGY INTEGRATION COMPLETE" ColorSet="Beige_Black_Alpha" />
+
+    <Grid ID="TechIconFrame" Anchor="L,T" Offset="240,166" Size="72,72" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="76,76" Style="Grid9Frame">
+        <Image ID="TechIcon" Anchor="C,C" Offset="0,0" Size="64,64" />
+      </Grid>
+    </Grid>
+    <Label Anchor="L,T" Offset="330,174" Font="TwCenMT14" FontStyle="Shadow" String="UNLOCK VECTOR" ColorSet="Beige_Black_Alpha" />
+    <Label ID="TechLabel" Anchor="L,T" Offset="330,197" Size="510,32" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="510" String="" ColorSet="Beige_Black_Alpha" />
+
+    <Grid ID="BodyFrame" Anchor="L,T" Offset="240,270" Size="610,255" Style="GridBlackIndent8">
+      <Label Anchor="L,T" AnchorSide="I.O" Offset="10,-18" Font="TwCenMT18" FontStyle="Shadow" String="ARCHIVED ASSESSMENT" ColorSet="Beige_Black_Alpha" />
+      <Grid Anchor="C,C" Offset="0,0" Size="614,259" Style="Grid9Frame">
+        <Label ID="BodyLabel" Anchor="L,T" Offset="15,15" Size="580,228" Font="TwCenMT16" FontStyle="Shadow" LeadingOffset="-2" WrapWidth="580" String="" ColorSet="Beige_Black_Alpha" />
+      </Grid>
+    </Grid>
+
+    <Grid ID="QuoteFrame" Anchor="C,T" Offset="0,548" Size="800,54" Style="GridBlackIndent8">
+      <Label Anchor="L,T" AnchorSide="I.O" Offset="10,-18" Font="TwCenMT18" FontStyle="Shadow" String="WHITE ROOM DOCTRINE" ColorSet="Beige_Black_Alpha" />
+      <Grid Anchor="C,C" Offset="0,0" Size="804,58" Style="Grid9Frame">
+        <Label ID="QuoteLabel" Anchor="C,C" Offset="0,0" Size="760,34" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="760" String="" ColorSet="Beige_Black_Alpha" />
+      </Grid>
+    </Grid>
 
     <Button ID="AcknowledgeButton" Anchor="C,B" Offset="0,22" Size="190,38" String="Acknowledge" ToolTip="Close the White Room dossier" Style="BaseButton" />
   </Grid>

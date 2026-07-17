@@ -13,12 +13,18 @@ local WR_UNLOCK_DEFINITIONS = {
     {
         UnitType = "UNIT_WR_FOURTH_GEN_OPERATIVE",
         Title = "DOSSIER 04: THE DEMONIC GENERATION",
+        Record = "GENERATION 04 // BETA",
+        Program = "OPERATIVE FIELD PROGRAM",
+        Status = "DEPLOYMENT READY",
         Body = "The Fourth Generation was never meant to be survivable. Seventy-four children entered the White Room and were subjected to the gruelling Beta curriculum, a course its own designer considered beyond the limits of humane education. Their days were consumed by examinations, memory trials, physical conditioning, swimming, and live martial training. Failure meant removal, while success only raised the standard.\n\nThese were the demons of the Demonic Fourth Generation: children forged under the most merciless curriculum in White Room history. Its doctrine has now left the laboratory. Fourth Generation Operatives can be trained.",
         Quote = "A standard made for monsters can only produce demons."
     },
     {
         UnitType = "UNIT_WR_KIYOTAKA",
         Title = "SUBJECT A-04: THE MASTERPIECE",
+        Record = "SUBJECT A-04",
+        Program = "PERFECT ADAPTATION",
+        Status = "DEPLOYMENT READY",
         Body = "\"You are on your own, Kiyotaka.\"\n\nHe learned that lesson before he could understand its cruelty. What separated Kiyotaka was not that he never lost, but his limitless curiosity and terrifying adaptability. Yuki once surpassed him in swimming. Shiro once surpassed him in martial arts and defeated him in an early bout. Kiyotaka observed, understood, and closed each gap until no one could keep pace.\n\nHe decoded the written examinations until no student could displace him, overtook Yuki in the pool, and turned his first defeat in each new fighting style into victory in the next match. One by one, the other children fell away. By nine, Kiyotaka alone remained, defeating multiple adult fighters. The White Room searched for the limit of a child. Subject A-04 kept moving that limit.",
         Quote = "Every failure became data. Every lesson became his."
     }
@@ -64,6 +70,8 @@ local function WR_ResolveUnlocks()
             definition.TechID = techInfo.ID
             definition.TechType = techInfo.Type
             definition.TechName = WR_Localize(techInfo.Description)
+            definition.TechPortraitIndex = techInfo.PortraitIndex or 0
+            definition.TechIconAtlas = techInfo.IconAtlas
             definition.PortraitIndex = unitInfo.PortraitIndex or 0
             definition.IconAtlas = unitInfo.IconAtlas
             table.insert(resolved, definition)
@@ -114,7 +122,24 @@ local function WR_SetUnitPortrait(unlock)
         shown = ok and result ~= false
     end
 
-    Controls.UnitPortrait:SetHide(not shown)
+    Controls.PortraitFrame:SetHide(not shown)
+end
+
+local function WR_SetTechPortrait(unlock)
+    local shown = false
+
+    if unlock ~= nil and unlock.TechIconAtlas ~= nil and IconHookup ~= nil then
+        local ok, result = pcall(
+            IconHookup,
+            unlock.TechPortraitIndex,
+            64,
+            unlock.TechIconAtlas,
+            Controls.TechIcon
+        )
+        shown = ok and result ~= false
+    end
+
+    Controls.TechIconFrame:SetHide(not shown)
 end
 
 local function WR_ShowNextUnlock()
@@ -127,9 +152,13 @@ local function WR_ShowNextUnlock()
     WR_CURRENT_UNLOCK = table.remove(WR_PENDING_UNLOCKS, 1)
 
     WR_SetUnitPortrait(WR_CURRENT_UNLOCK)
+    WR_SetTechPortrait(WR_CURRENT_UNLOCK)
     Controls.TitleLabel:SetText(WR_CURRENT_UNLOCK.Title)
     Controls.UnitNameLabel:SetText(WR_CURRENT_UNLOCK.UnitName)
     Controls.TechLabel:SetText("Unlocked by " .. WR_CURRENT_UNLOCK.TechName)
+    Controls.RecordLabel:SetText(WR_CURRENT_UNLOCK.Record)
+    Controls.ProgramLabel:SetText(WR_CURRENT_UNLOCK.Program)
+    Controls.StatusLabel:SetText(WR_CURRENT_UNLOCK.Status)
     Controls.BodyLabel:SetText(WR_CURRENT_UNLOCK.Body)
     Controls.QuoteLabel:SetText("\"" .. WR_CURRENT_UNLOCK.Quote .. "\"")
     Controls.UnlockPanel:SetHide(false)
