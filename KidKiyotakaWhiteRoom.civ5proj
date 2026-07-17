@@ -82,6 +82,12 @@
         <Description>Shows current White Room adaptation stacks for testing and play.</Description>
         <FileName>UI/WhiteRoomStatusPanel.xml</FileName>
       </Content>
+      <Content>
+        <Type>InGameUIAddin</Type>
+        <Name>White Room Unit Unlock Dossiers</Name>
+        <Description>Presents a one-time dossier when each White Room unique unit becomes available.</Description>
+        <FileName>UI/WhiteRoomUnitUnlock.xml</FileName>
+      </Content>
     </ModContent>
     <Homepage>
     </Homepage>
@@ -424,6 +430,14 @@
       <ImportIntoVFS>False</ImportIntoVFS>
     </Content>
     <Content Include="UI\WhiteRoomStatusPanel.lua">
+      <SubType>Lua</SubType>
+      <ImportIntoVFS>False</ImportIntoVFS>
+    </Content>
+    <Content Include="UI\WhiteRoomUnitUnlock.xml">
+      <SubType>Lua</SubType>
+      <ImportIntoVFS>False</ImportIntoVFS>
+    </Content>
+    <Content Include="UI\WhiteRoomUnitUnlock.lua">
       <SubType>Lua</SubType>
       <ImportIntoVFS>False</ImportIntoVFS>
     </Content>

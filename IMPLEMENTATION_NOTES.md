@@ -155,6 +155,12 @@ scene still uses safe existing Civilization V art.
   - Phase 5 polish adds color-coded status badges, stronger readout hierarchy, and sorted city cards
   - Phase 6 polish adds richer tooltips, a compact/expanded toggle, White Room-themed labels, and a stronger Kiyotaka dossier profile
   - reads existing saved counters through `Modding.OpenSaveData()` and recalculates worked-improvement display live from city plots
+- Unique-unit unlock dossiers:
+  - separate `WhiteRoomUnitUnlock` UI add-in; it does not replace CP or base-game research and notification contexts
+  - shows a one-time portrait dossier when Plastics unlocks the Fourth Generation Operative and Robotics unlocks Kiyotaka
+  - also leaves a standard generic notification after the dossier is acknowledged
+  - old saves silently record technologies already researched, preventing historical unlock spam
+  - writes the seen flag before opening UI and falls back to next-turn polling if the research event is unavailable
 
 ## Hardest To Easiest Remaining Work
 
