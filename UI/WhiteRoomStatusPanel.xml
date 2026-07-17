@@ -41,7 +41,7 @@
         <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
         <Label ID="SummaryMetricOneCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
         <Label ID="SummaryMetricOne" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
-        <Label Anchor="R,T" Offset="9,7" Size="18,14" Font="TwCenMT12" FontStyle="Shadow" String="01" ColorSet="Beige_Black_Alpha" />
+        <Label Anchor="R,T" Offset="9,7" Size="18,16" Font="TwCenMT14" FontStyle="Shadow" String="01" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
     <Grid Anchor="C,T" Offset="-100,172" Size="180,78" Style="GridBlackIndent8">
@@ -49,7 +49,7 @@
         <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
         <Label ID="SummaryMetricTwoCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
         <Label ID="SummaryMetricTwo" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
-        <Label Anchor="R,T" Offset="9,7" Size="18,14" Font="TwCenMT12" FontStyle="Shadow" String="02" ColorSet="Beige_Black_Alpha" />
+        <Label Anchor="R,T" Offset="9,7" Size="18,16" Font="TwCenMT14" FontStyle="Shadow" String="02" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
     <Grid Anchor="C,T" Offset="100,172" Size="180,78" Style="GridBlackIndent8">
@@ -57,7 +57,7 @@
         <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
         <Label ID="SummaryMetricThreeCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
         <Label ID="SummaryMetricThree" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
-        <Label Anchor="R,T" Offset="9,7" Size="18,14" Font="TwCenMT12" FontStyle="Shadow" String="03" ColorSet="Beige_Black_Alpha" />
+        <Label Anchor="R,T" Offset="9,7" Size="18,16" Font="TwCenMT14" FontStyle="Shadow" String="03" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
     <Grid Anchor="C,T" Offset="300,172" Size="180,78" Style="GridBlackIndent8">
@@ -65,7 +65,7 @@
         <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
         <Label ID="SummaryMetricFourCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
         <Label ID="SummaryMetricFour" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
-        <Label Anchor="R,T" Offset="9,7" Size="18,14" Font="TwCenMT12" FontStyle="Shadow" String="04" ColorSet="Beige_Black_Alpha" />
+        <Label Anchor="R,T" Offset="9,7" Size="18,16" Font="TwCenMT14" FontStyle="Shadow" String="04" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
 
@@ -80,7 +80,7 @@
     </Grid>
 
     <Grid Anchor="C,B" Offset="0,76" Size="810,1" Style="Grid9Bar" />
-    <Label ID="FooterStatusLabel" Anchor="L,B" Offset="48,51" Size="160,18" Font="TwCenMT12" FontStyle="Shadow" String="FACILITY LINK: STABLE" ColorSet="Beige_Black_Alpha" />
+    <Label ID="FooterStatusLabel" Anchor="L,B" Offset="48,51" Size="160,18" Font="TwCenMT14" FontStyle="Shadow" String="FACILITY LINK: STABLE" ColorSet="Beige_Black_Alpha" />
     <GridButton ID="RefreshButton" Anchor="C,B" Offset="-180,42" Size="160,36" String="[ICON_RESEARCH] Refresh" ToolTip="Refresh White Room status" Style="BaseButton" />
     <GridButton ID="CompactButton" Anchor="C,B" Offset="0,42" Size="160,36" String="[ICON_BULLET] Compact" ToolTip="Toggle compact or expanded White Room status details" Style="BaseButton" />
     <GridButton ID="CloseButton" Anchor="C,B" Offset="180,42" Size="160,36" String="Close" ToolTip="Close White Room status" Style="BaseButton" />
