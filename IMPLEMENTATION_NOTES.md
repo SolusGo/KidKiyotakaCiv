@@ -83,6 +83,11 @@ scene still uses safe existing Civilization V art.
 - 4th Generation Operative behavior:
   - file: `Lua/WhiteRoomFourthGenOperative.lua`
   - blocks gifting 4th Generation Operatives to City-States through Community Patch `GameEvents.PlayerCanGiftUnit` when available
+  - assigns each deployment a persistent, non-reused callsign (`OPERATIVE-01`, `OPERATIVE-02`, and so on)
+  - maps callsigns to live Civ V unit IDs and clears the mapping on loss so recycled unit IDs receive new identities
+  - tracks per-operative and lifetime combats, kills, damage dealt/taken, wounded-target engagements, controlled-environment engagements, deployment turn, and loss turn
+  - archives final level, combat totals, and kills when an Operative is lost
+  - records Operative registration, engagements, kills, special-condition engagements, and losses in adaptation telemetry
 - Perfect Adaptation for Kiyotaka:
   - files: `Lua/WhiteRoomKiyotakaScaling.lua`, `SQL/WhiteRoomAdaptationDummyPromotions.sql`
   - Kiyotaka gets the base `PROMOTION_WR_PERFECT_ADAPTATION`
@@ -155,7 +160,7 @@ scene still uses safe existing Civilization V art.
   - Phase 5 polish adds color-coded status badges, stronger readout hierarchy, and sorted city cards
   - Phase 6 polish adds richer tooltips, a compact/expanded toggle, White Room-themed labels, and a stronger Kiyotaka dossier profile
   - adaptation telemetry adds a fifth tab backed by a persistent 32-record rotating buffer
-  - telemetry records actual Kiyotaka combat/survival/recovery, city damage and ranged strikes, worked-improvement pattern changes, trade-route learning, and observed foreign city losses
+  - telemetry records actual Kiyotaka combat/survival/recovery, Operative service activity, city damage and ranged strikes, worked-improvement pattern changes, trade-route learning, and observed foreign city losses
   - the telemetry feed is newest-first, turn-stamped, category-coded, save-persistent, compact-mode aware, and live-refreshes while open
   - reads existing saved counters through `Modding.OpenSaveData()` and recalculates worked-improvement display live from city plots
 - Unique-unit unlock dossiers:
@@ -229,7 +234,7 @@ WhiteRoomUnitCaps.lua loaded
 WR Unit Caps: initialized; Kiyotaka cap 1, 4th Generation Operative cap 3
 WhiteRoomLuaLoader included WhiteRoomFourthGenOperative.lua
 WhiteRoomFourthGenOperative.lua loaded
-WR 4th Generation Operative: initialized
+WR 4th Generation Operative: initialized with persistent service records
 WhiteRoomStatusPanel.lua loaded
 WR Status Panel: initialized
 ```

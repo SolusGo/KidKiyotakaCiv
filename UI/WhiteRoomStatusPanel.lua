@@ -4,6 +4,7 @@ print("WhiteRoomStatusPanel.lua loaded")
 
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local UNIT_WR_KIYOTAKA = GameInfoTypes.UNIT_WR_KIYOTAKA
+local UNIT_WR_FOURTH_GEN_OPERATIVE = GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE
 local WR_CIV_ICON_ATLAS = "WR_WHITE_ROOM_ICON_ATLAS"
 
 local WR_STATUS_SAVE = Modding.OpenSaveData()
@@ -169,6 +170,7 @@ local function WR_GetTelemetrySummary(playerID)
         retained = #events,
         latestTurn = nil,
         subject = 0,
+        operative = 0,
         city = 0,
         empire = 0,
         surveillance = 0
@@ -181,6 +183,8 @@ local function WR_GetTelemetrySummary(playerID)
     for _, event in ipairs(events) do
         if event.category == "SUBJECT" then
             summary.subject = summary.subject + 1
+        elseif event.category == "OPERATIVE" then
+            summary.operative = summary.operative + 1
         elseif event.category == "CITY" then
             summary.city = summary.city + 1
         elseif event.category == "SURVEILLANCE" then
@@ -373,7 +377,89 @@ local function WR_CountUnitsOfType(player, unitType)
 end
 
 local function WR_CountOperatives(player)
-    return WR_CountUnitsOfType(player, GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE)
+    return WR_CountUnitsOfType(player, UNIT_WR_FOURTH_GEN_OPERATIVE)
+end
+
+local function WR_OperativeGlobalKey(playerID, suffix)
+    return "WR_OPERATIVE_" .. tostring(playerID) .. "_" .. suffix
+end
+
+local function WR_OperativeRecordKey(playerID, serial, suffix)
+    return WR_OperativeGlobalKey(playerID, "RECORD_" .. tostring(serial) .. "_" .. suffix)
+end
+
+local function WR_OperativeUnitKey(playerID, unitID)
+    return WR_OperativeGlobalKey(playerID, "UNIT_" .. tostring(unitID) .. "_SERIAL")
+end
+
+local function WR_OperativeCallsign(serial)
+    if serial == nil or serial <= 0 then
+        return "OPERATIVE-??"
+    end
+
+    return string.format("OPERATIVE-%02d", serial)
+end
+
+local function WR_GetOperativeRecordNumber(playerID, serial, suffix)
+    return WR_GetSavedNumber(WR_OperativeRecordKey(playerID, serial, suffix))
+end
+
+local function WR_GetOperativeLifetimeSummary(playerID)
+    return {
+        deployed = WR_GetSavedNumber(WR_OperativeGlobalKey(playerID, "NEXT_SERIAL")),
+        losses = WR_GetSavedNumber(WR_OperativeGlobalKey(playerID, "TOTAL_LOSSES")),
+        combats = WR_GetSavedNumber(WR_OperativeGlobalKey(playerID, "TOTAL_COMBATS")),
+        kills = WR_GetSavedNumber(WR_OperativeGlobalKey(playerID, "TOTAL_KILLS")),
+        damageDealt = WR_GetSavedNumber(WR_OperativeGlobalKey(playerID, "TOTAL_DAMAGE_DEALT")),
+        damageTaken = WR_GetSavedNumber(WR_OperativeGlobalKey(playerID, "TOTAL_DAMAGE_TAKEN")),
+        woundedEngagements = WR_GetSavedNumber(WR_OperativeGlobalKey(playerID, "TOTAL_WOUNDED_ENGAGEMENTS")),
+        friendlyEngagements = WR_GetSavedNumber(WR_OperativeGlobalKey(playerID, "TOTAL_FRIENDLY_ENGAGEMENTS"))
+    }
+end
+
+local function WR_GetActiveOperativeRecords(playerID, player)
+    local records = {}
+
+    for unit in player:Units() do
+        if unit:GetUnitType() == UNIT_WR_FOURTH_GEN_OPERATIVE then
+            local serial = WR_GetSavedNumber(WR_OperativeUnitKey(playerID, unit:GetID()))
+            local plot = unit:GetPlot()
+            local location = "unknown"
+            if plot ~= nil then
+                location = string.format("(%d, %d)", plot:GetX(), plot:GetY())
+            end
+
+            table.insert(records, {
+                serial = serial,
+                callsign = WR_OperativeCallsign(serial),
+                unit = unit,
+                location = location,
+                deployTurn = serial > 0 and WR_GetOperativeRecordNumber(playerID, serial, "DEPLOY_TURN") or Game.GetGameTurn(),
+                combats = serial > 0 and WR_GetOperativeRecordNumber(playerID, serial, "COMBATS") or 0,
+                kills = serial > 0 and WR_GetOperativeRecordNumber(playerID, serial, "KILLS") or 0,
+                damageDealt = serial > 0 and WR_GetOperativeRecordNumber(playerID, serial, "DAMAGE_DEALT") or 0,
+                damageTaken = serial > 0 and WR_GetOperativeRecordNumber(playerID, serial, "DAMAGE_TAKEN") or 0,
+                woundedEngagements = serial > 0 and WR_GetOperativeRecordNumber(playerID, serial, "WOUNDED_ENGAGEMENTS") or 0,
+                friendlyEngagements = serial > 0 and WR_GetOperativeRecordNumber(playerID, serial, "FRIENDLY_ENGAGEMENTS") or 0
+            })
+        end
+    end
+
+    table.sort(records, function(a, b)
+        if a.serial == b.serial then
+            return a.unit:GetID() < b.unit:GetID()
+        end
+
+        if a.serial <= 0 then
+            return false
+        elseif b.serial <= 0 then
+            return true
+        end
+
+        return a.serial < b.serial
+    end)
+
+    return records
 end
 
 local function WR_TechStatus(player, unitType)
@@ -471,6 +557,8 @@ end
 local function WR_TelemetryBadge(category)
     if category == "SUBJECT" then
         return WR_StatusBadge("SUBJECT", "GOOD")
+    elseif category == "OPERATIVE" then
+        return WR_StatusBadge("OPERATIVE", "GOOD")
     elseif category == "CITY" then
         return WR_StatusBadge("CITY", "WARN")
     elseif category == "SURVEILLANCE" then
@@ -495,6 +583,7 @@ local function WR_AppendTelemetry(lines, playerID)
         summary.sequence
     ))
     table.insert(lines, "  Subject " .. tostring(summary.subject)
+        .. "    Operative " .. tostring(summary.operative)
         .. "    City " .. tostring(summary.city)
         .. "    Empire " .. tostring(summary.empire)
         .. "    Surveillance " .. tostring(summary.surveillance))
@@ -724,10 +813,11 @@ local function WR_AppendCities(lines, playerID, player)
     end
 end
 
-local function WR_AppendUnits(lines, player)
+local function WR_AppendUnits(lines, playerID, player)
     local kiyotakaCount = WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)
-    local operativeID = GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE
-    local operativeCount = WR_CountUnitsOfType(player, operativeID)
+    local operativeCount = WR_CountUnitsOfType(player, UNIT_WR_FOURTH_GEN_OPERATIVE)
+    local lifetime = WR_GetOperativeLifetimeSummary(playerID)
+    local activeRecords = WR_GetActiveOperativeRecords(playerID, player)
 
     table.insert(lines, WR_Header("Kiyotaka Ayanokoji"))
     table.insert(lines, WR_Divider())
@@ -741,10 +831,93 @@ local function WR_AppendUnits(lines, player)
     table.insert(lines, WR_Header("4th Generation Operatives"))
     table.insert(lines, WR_Divider())
     table.insert(lines, "  " .. WR_StatusTag(operativeCount > 0) .. " Active: " .. tostring(operativeCount) .. " / 3")
-    table.insert(lines, "  Tech: " .. WR_TechStatus(player, operativeID))
+    table.insert(lines, "  Tech: " .. WR_TechStatus(player, UNIT_WR_FOURTH_GEN_OPERATIVE))
+    table.insert(lines, string.format(
+        "  Lifetime: %d deployed // %d lost // %d combats // %d kills",
+        lifetime.deployed,
+        lifetime.losses,
+        lifetime.combats,
+        lifetime.kills
+    ))
+    table.insert(lines, string.format(
+        "  Combat data: %d damage dealt // %d taken // %d wounded-target // %d controlled-environment engagements",
+        lifetime.damageDealt,
+        lifetime.damageTaken,
+        lifetime.woundedEngagements,
+        lifetime.friendlyEngagements
+    ))
     if not WR_COMPACT_MODE then
-        table.insert(lines, "  Training: " .. WR_CanTrainStatus(player, operativeID))
+        table.insert(lines, "  Training: " .. WR_CanTrainStatus(player, UNIT_WR_FOURTH_GEN_OPERATIVE))
         table.insert(lines, "  Cannot be purchased or gifted to City-States.")
+    end
+
+    table.insert(lines, "")
+    table.insert(lines, WR_Header("Active Service Records"))
+    table.insert(lines, WR_Divider())
+
+    if #activeRecords == 0 then
+        table.insert(lines, "  " .. WR_StatusBadge("NO ACTIVE OPERATIVES", "WARN") .. " Awaiting deployment.")
+    else
+        for _, record in ipairs(activeRecords) do
+            local unit = record.unit
+            table.insert(lines, string.format(
+                "  %s %s  Level %d // XP %d // HP %d/100",
+                WR_StatusBadge("ACTIVE", "GOOD"),
+                WR_Header(record.callsign),
+                unit:GetLevel(),
+                unit:GetExperience(),
+                100 - unit:GetDamage()
+            ))
+            table.insert(lines, string.format(
+                "     Deployed turn %d // Location %s // %d combats // %d kills",
+                record.deployTurn,
+                record.location,
+                record.combats,
+                record.kills
+            ))
+
+            if not WR_COMPACT_MODE then
+                table.insert(lines, string.format(
+                    "     Damage %d dealt / %d taken // Wounded targets %d // Controlled environment %d",
+                    record.damageDealt,
+                    record.damageTaken,
+                    record.woundedEngagements,
+                    record.friendlyEngagements
+                ))
+            end
+
+            table.insert(lines, "")
+        end
+    end
+
+    if not WR_COMPACT_MODE and lifetime.losses > 0 then
+        table.insert(lines, WR_Header("Archived Service Records"))
+        table.insert(lines, WR_Divider())
+
+        local firstSerial = math.max(1, lifetime.deployed - 7)
+        local archivedShown = 0
+        for serial = lifetime.deployed, firstSerial, -1 do
+            if WR_GetOperativeRecordNumber(playerID, serial, "ACTIVE") == 0
+                and WR_GetOperativeRecordNumber(playerID, serial, "LOSS_TURN") >= 0 then
+                table.insert(lines, string.format(
+                    "  %s %s  Turns %d-%d // Level %d // %d combats // %d kills // Damage %d / %d",
+                    WR_StatusBadge("LOST", "BAD"),
+                    WR_OperativeCallsign(serial),
+                    WR_GetOperativeRecordNumber(playerID, serial, "DEPLOY_TURN"),
+                    WR_GetOperativeRecordNumber(playerID, serial, "LOSS_TURN"),
+                    WR_GetOperativeRecordNumber(playerID, serial, "FINAL_LEVEL"),
+                    WR_GetOperativeRecordNumber(playerID, serial, "COMBATS"),
+                    WR_GetOperativeRecordNumber(playerID, serial, "KILLS"),
+                    WR_GetOperativeRecordNumber(playerID, serial, "DAMAGE_DEALT"),
+                    WR_GetOperativeRecordNumber(playerID, serial, "DAMAGE_TAKEN")
+                ))
+                archivedShown = archivedShown + 1
+            end
+        end
+
+        if lifetime.losses > archivedShown then
+            table.insert(lines, "  " .. tostring(lifetime.losses - archivedShown) .. " older archived records omitted from this readout.")
+        end
     end
 end
 
@@ -764,7 +937,7 @@ local function WR_BuildStatusText()
         WR_AppendKiyotaka(lines, playerID, player)
     elseif WR_ACTIVE_TAB == "UNITS" then
         WR_AppendPanelHeader(lines, "Operative Deployment", player)
-        WR_AppendUnits(lines, player)
+        WR_AppendUnits(lines, playerID, player)
     elseif WR_ACTIVE_TAB == "TELEMETRY" then
         WR_AppendPanelHeader(lines, "Adaptation Telemetry", player)
         WR_AppendTelemetry(lines, playerID)
@@ -845,13 +1018,13 @@ local function WR_UpdateSummaryTooltips()
     elseif WR_ACTIVE_TAB == "UNITS" then
         WR_SetMetricTooltip(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "Kiyotaka active count. The cap script limits this unit to one.")
         WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "4th Generation Operative active count. The cap script limits them to three.")
-        WR_SetMetricTooltip(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "Technology and trainability status for Kiyotaka.")
-        WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "Technology and trainability status for 4th Generation Operatives.")
+        WR_SetMetricTooltip(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "Lifetime confirmed kills recorded across all 4th Generation Operatives.")
+        WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "Lifetime combat engagements recorded across all 4th Generation Operatives.")
     elseif WR_ACTIVE_TAB == "TELEMETRY" then
         WR_SetMetricTooltip(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "Total number of adaptation telemetry events recorded during this game.")
         WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "Newest records currently retained in the rotating telemetry buffer.")
         WR_SetMetricTooltip(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "Kiyotaka combat and survival records retained in the current feed.")
-        WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "City, empire, and foreign-surveillance records retained in the current feed.")
+        WR_SetMetricTooltip(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "4th Generation Operative records retained in the current feed.")
     else
         WR_SetMetricTooltip(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "Trade-route learning. Stored fractional gold becomes applied once it reaches a full integer percent.")
         WR_SetMetricTooltip(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "Number of observed city-loss events that feed the captured-city learning mechanic.")
@@ -933,18 +1106,19 @@ local function WR_UpdateSummaryPanel()
         WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_MOVES] FLOW STATE", WR_StatusTag(kiyotakaProfile.moveChance >= 10000) .. " " .. WR_FormatPercentFromHundredths(kiyotakaProfile.moveChance))
     elseif WR_ACTIVE_TAB == "UNITS" then
         local operativeCount = WR_CountOperatives(player)
+        local operativeLifetime = WR_GetOperativeLifetimeSummary(playerID)
         WR_SetLabel(Controls.SummaryTitle, "Operative Deployment")
         WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_STRENGTH] KIYOTAKA", tostring(WR_CountUnitsOfType(player, UNIT_WR_KIYOTAKA)) .. " / 1")
         WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "[ICON_STRENGTH] OPERATIVES", tostring(operativeCount) .. " / 3")
-        WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_RESEARCH] KIYOTAKA TECH", WR_TechStatus(player, UNIT_WR_KIYOTAKA))
-        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_RESEARCH] OPERATIVE TECH", WR_TechStatus(player, GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE))
+        WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_STRENGTH] LIFETIME KILLS", tostring(operativeLifetime.kills))
+        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_BULLET] COMBAT RECORDS", tostring(operativeLifetime.combats))
     elseif WR_ACTIVE_TAB == "TELEMETRY" then
         local telemetry = WR_GetTelemetrySummary(playerID)
         WR_SetLabel(Controls.SummaryTitle, "Live Adaptation Telemetry")
         WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_RESEARCH] LIFETIME EVENTS", tostring(telemetry.sequence))
         WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "[ICON_BULLET] RETAINED", tostring(telemetry.retained) .. " / " .. tostring(WR_TELEMETRY_MAX_EVENTS))
         WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_STRENGTH] SUBJECT DATA", tostring(telemetry.subject))
-        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_CAPITAL] NETWORK DATA", tostring(telemetry.city + telemetry.empire + telemetry.surveillance))
+        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_STRENGTH] OPERATIVE DATA", tostring(telemetry.operative))
     else
         WR_SetLabel(Controls.SummaryTitle, "Facility Readout")
         WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_GOLD] TRADE GOLD", WR_FormatStoredApplied(tradeHalfStacks * 0.5, math.floor(tradeHalfStacks / 2)))
@@ -1007,9 +1181,9 @@ WR_RefreshPanel = function()
     elseif WR_ACTIVE_TAB == "KIYOTAKA" then
         WR_SetTooltip(Controls.StatusText, "Subject Dossier tracks Perfect Adaptation: kills, damage dealt, damage taken, low-HP survival, Flow State chance, and class-specific matchups.")
     elseif WR_ACTIVE_TAB == "UNITS" then
-        WR_SetTooltip(Controls.StatusText, "Operative Deployment shows White Room unique unit counts, caps, tech requirements, and training availability.")
+        WR_SetTooltip(Controls.StatusText, "Operative Deployment shows persistent callsigns, active service records, lifetime combat totals, and archived losses.")
     elseif WR_ACTIVE_TAB == "TELEMETRY" then
-        WR_SetTooltip(Controls.StatusText, "Adaptation Telemetry retains the newest 32 subject, city, empire, and surveillance records. Newest events appear first.")
+        WR_SetTooltip(Controls.StatusText, "Adaptation Telemetry retains the newest 32 subject, operative, city, empire, and surveillance records. Newest events appear first.")
     else
         WR_SetTooltip(Controls.StatusText, "Facility Readout tracks empire-wide White Room learning from trade routes and observed city losses.")
     end
@@ -1018,11 +1192,9 @@ WR_RefreshPanel = function()
         Controls.StatusScrollPanel:CalculateInternalSize()
     end
 
-    if WR_ACTIVE_TAB == "TELEMETRY" then
-        local playerID = WR_GetActiveWhiteRoomPlayer()
-        if playerID ~= nil then
-            WR_LAST_TELEMETRY_SEQUENCE = WR_GetTelemetrySequence(playerID)
-        end
+    local playerID = WR_GetActiveWhiteRoomPlayer()
+    if playerID ~= nil then
+        WR_LAST_TELEMETRY_SEQUENCE = WR_GetTelemetrySequence(playerID)
     end
 end
 
@@ -1193,7 +1365,8 @@ ContextPtr:SetUpdate(function(deltaTime)
     if WR_TELEMETRY_POLL_ELAPSED >= 0.5 then
         WR_TELEMETRY_POLL_ELAPSED = 0
 
-        if WR_ACTIVE_TAB == "TELEMETRY" and not Controls.StatusPanel:IsHidden() then
+        if (WR_ACTIVE_TAB == "TELEMETRY" or WR_ACTIVE_TAB == "UNITS")
+            and not Controls.StatusPanel:IsHidden() then
             local playerID = WR_GetActiveWhiteRoomPlayer()
             if playerID ~= nil then
                 local sequence = WR_GetTelemetrySequence(playerID)

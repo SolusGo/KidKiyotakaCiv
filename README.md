@@ -103,8 +103,8 @@ The panel is split into focused tabs:
 - **Empire**: trade-route learning, captured-city learning, applied global bonuses, and ready/pending status.
 - **Cities**: per-city damage defense, ranged-strike stacks, duplicate yields, worked improvements, and most-adapted city.
 - **Kiyotaka**: deployment details, Perfect Adaptation counters, Flow State progress, and class adaptations.
-- **Units**: Kiyotaka and 4th Generation Operative caps, tech status, trainability, and deployment status.
-- **Telemetry**: a persistent, turn-stamped feed of the newest 32 adaptation events from combat, city pressure, worked-improvement patterns, trade routes, and observed foreign city losses.
+- **Units**: Kiyotaka and Operative caps, persistent `OPERATIVE-##` callsigns, active and archived service records, combat statistics, technology, trainability, and deployment status.
+- **Telemetry**: a persistent, turn-stamped feed of the newest 32 adaptation and operational events from Kiyotaka, Operatives, city pressure, worked-improvement patterns, trade routes, and observed foreign city losses.
 
 Each tab includes a compact summary strip above the detailed readout so the
 most important status can be checked quickly.
