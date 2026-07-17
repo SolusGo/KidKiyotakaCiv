@@ -12,15 +12,15 @@ local WR_DIPLOMACY_OPEN = false
 local WR_UNLOCK_DEFINITIONS = {
     {
         UnitType = "UNIT_WR_FOURTH_GEN_OPERATIVE",
-        Title = "FOURTH GENERATION CLEARED",
-        Body = "The fourth-generation curriculum has matured into an operational field program. Fourth Generation Operatives can now be trained.",
-        Quote = "Standardization is only the beginning."
+        Title = "DOSSIER 04: THE DEMONIC GENERATION",
+        Body = "The Fourth Generation was never meant to be survivable. Seventy-four children entered the White Room and were subjected to the gruelling Beta curriculum, a course its own designer considered beyond the limits of humane education. Their days were consumed by examinations, memory trials, physical conditioning, swimming, and live martial training. Failure meant removal, while success only raised the standard.\n\nThese were the demons of the Demonic Fourth Generation: children forged under the most merciless curriculum in White Room history. Its doctrine has now left the laboratory. Fourth Generation Operatives can be trained.",
+        Quote = "A standard made for monsters can only produce demons."
     },
     {
         UnitType = "UNIT_WR_KIYOTAKA",
-        Title = "SUBJECT A-04: DEPLOYMENT AUTHORIZED",
-        Body = "The final systems are in place. Kiyotaka Ayanokoji, the White Room's masterpiece, can now be trained.",
-        Quote = "Every environment is another lesson."
+        Title = "SUBJECT A-04: THE MASTERPIECE",
+        Body = "\"You are on your own, Kiyotaka.\"\n\nHe learned that lesson before he could understand its cruelty. What separated Kiyotaka was not that he never lost, but his limitless curiosity and terrifying adaptability. Yuki once surpassed him in swimming. Shiro once surpassed him in martial arts and defeated him in an early bout. Kiyotaka observed, understood, and closed each gap until no one could keep pace.\n\nHe decoded the written examinations until no student could displace him, overtook Yuki in the pool, and turned his first defeat in each new fighting style into victory in the next match. One by one, the other children fell away. By nine, Kiyotaka alone remained, defeating multiple adult fighters. The White Room searched for the limit of a child. Subject A-04 kept moving that limit.",
+        Quote = "Every failure became data. Every lesson became his."
     }
 }
 

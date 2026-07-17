@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context ID="WhiteRoomUnitUnlock">
-  <Grid ID="UnlockPanel" Anchor="C,C" Size="700,360" Style="Grid9DetailFive140" Hidden="1" ConsumeMouse="1">
+  <Grid ID="UnlockPanel" Anchor="C,C" Size="800,600" Style="Grid9DetailFive140" Hidden="1" ConsumeMouse="1">
     <Label ID="ClassificationLabel" Anchor="C,T" Offset="0,20" Font="TwCenMT18" String="WHITE ROOM // RESTRICTED DOSSIER" ColorSet="Beige_Black_Alpha" />
-    <Label ID="TitleLabel" Anchor="C,T" Offset="0,52" Size="620,38" Font="TwCenMT24" WrapWidth="620" String="" ColorSet="Beige_Black_Alpha" />
+    <Label ID="TitleLabel" Anchor="C,T" Offset="0,52" Size="720,38" Font="TwCenMT24" WrapWidth="720" String="" ColorSet="Beige_Black_Alpha" />
 
     <Image ID="UnitPortrait" Anchor="L,T" Offset="52,108" Size="128,128" />
-    <Label ID="UnitNameLabel" Anchor="L,T" Offset="210,108" Size="430,34" Font="TwCenMT22" WrapWidth="430" String="" ColorSet="Beige_Black_Alpha" />
-    <Label ID="TechLabel" Anchor="L,T" Offset="210,146" Size="430,28" Font="TwCenMT18" WrapWidth="430" String="" ColorSet="Beige_Black_Alpha" />
-    <Label ID="BodyLabel" Anchor="L,T" Offset="210,184" Size="430,86" Font="TwCenMT18" WrapWidth="430" String="" ColorSet="Beige_Black_Alpha" />
-    <Label ID="QuoteLabel" Anchor="C,T" Offset="0,270" Size="600,34" Font="TwCenMT18" WrapWidth="600" String="" ColorSet="Beige_Black_Alpha" />
+    <Label ID="UnitNameLabel" Anchor="L,T" Offset="210,108" Size="540,34" Font="TwCenMT22" WrapWidth="540" String="" ColorSet="Beige_Black_Alpha" />
+    <Label ID="TechLabel" Anchor="L,T" Offset="210,146" Size="540,28" Font="TwCenMT18" WrapWidth="540" String="" ColorSet="Beige_Black_Alpha" />
+    <Label ID="BodyLabel" Anchor="L,T" Offset="210,184" Size="540,294" Font="TwCenMT18" WrapWidth="540" String="" ColorSet="Beige_Black_Alpha" />
+    <Label ID="QuoteLabel" Anchor="C,T" Offset="0,492" Size="700,34" Font="TwCenMT18" WrapWidth="700" String="" ColorSet="Beige_Black_Alpha" />
 
     <Button ID="AcknowledgeButton" Anchor="C,B" Offset="0,22" Size="190,38" String="Acknowledge" ToolTip="Close the White Room dossier" Style="BaseButton" />
   </Grid>
