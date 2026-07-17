@@ -767,12 +767,6 @@ local function WR_UpdateSummaryPanel()
     WR_UpdateSummaryTooltips()
 end
 
-local function WR_SetButtonDisabled(control, disabled)
-    if control ~= nil and control.SetDisabled ~= nil then
-        control:SetDisabled(disabled)
-    end
-end
-
 local function WR_SetButtonString(control, text)
     if control ~= nil and control.SetText ~= nil then
         control:SetText(text)
@@ -782,14 +776,14 @@ local function WR_SetButtonString(control, text)
 end
 
 local function WR_UpdateTabButtons()
-    WR_SetButtonDisabled(Controls.EmpireTabButton, WR_ACTIVE_TAB == "EMPIRE")
-    WR_SetButtonDisabled(Controls.CitiesTabButton, WR_ACTIVE_TAB == "CITIES")
-    WR_SetButtonDisabled(Controls.KiyotakaTabButton, WR_ACTIVE_TAB == "KIYOTAKA")
-    WR_SetButtonDisabled(Controls.UnitsTabButton, WR_ACTIVE_TAB == "UNITS")
-    WR_SetButtonString(Controls.EmpireTabButton, (WR_ACTIVE_TAB == "EMPIRE" and "[ " or "") .. "[ICON_GOLD] Empire" .. (WR_ACTIVE_TAB == "EMPIRE" and " ]" or ""))
-    WR_SetButtonString(Controls.CitiesTabButton, (WR_ACTIVE_TAB == "CITIES" and "[ " or "") .. "[ICON_CAPITAL] Cities" .. (WR_ACTIVE_TAB == "CITIES" and " ]" or ""))
-    WR_SetButtonString(Controls.KiyotakaTabButton, (WR_ACTIVE_TAB == "KIYOTAKA" and "[ " or "") .. "[ICON_RESEARCH] Kiyotaka" .. (WR_ACTIVE_TAB == "KIYOTAKA" and " ]" or ""))
-    WR_SetButtonString(Controls.UnitsTabButton, (WR_ACTIVE_TAB == "UNITS" and "[ " or "") .. "[ICON_STRENGTH] Units" .. (WR_ACTIVE_TAB == "UNITS" and " ]" or ""))
+    WR_SetButtonString(Controls.EmpireTabButton, "[ICON_GOLD] " .. (WR_ACTIVE_TAB == "EMPIRE" and "EMPIRE" or "Empire"))
+    WR_SetButtonString(Controls.CitiesTabButton, "[ICON_CAPITAL] " .. (WR_ACTIVE_TAB == "CITIES" and "CITIES" or "Cities"))
+    WR_SetButtonString(Controls.KiyotakaTabButton, "[ICON_RESEARCH] " .. (WR_ACTIVE_TAB == "KIYOTAKA" and "KIYOTAKA" or "Kiyotaka"))
+    WR_SetButtonString(Controls.UnitsTabButton, "[ICON_STRENGTH] " .. (WR_ACTIVE_TAB == "UNITS" and "UNITS" or "Units"))
+    Controls.EmpireTabSelection:SetHide(WR_ACTIVE_TAB ~= "EMPIRE")
+    Controls.CitiesTabSelection:SetHide(WR_ACTIVE_TAB ~= "CITIES")
+    Controls.KiyotakaTabSelection:SetHide(WR_ACTIVE_TAB ~= "KIYOTAKA")
+    Controls.UnitsTabSelection:SetHide(WR_ACTIVE_TAB ~= "UNITS")
     WR_SetButtonString(Controls.CompactButton, "[ICON_BULLET] " .. (WR_COMPACT_MODE and "Expanded" or "Compact"))
     WR_SetTooltip(Controls.EmpireTabButton, "Facility-level learning from trade routes and observed city losses.")
     WR_SetTooltip(Controls.CitiesTabButton, "Per-city adaptation records: damage defense, ranged strikes, duplicate yields, and worked improvements.")

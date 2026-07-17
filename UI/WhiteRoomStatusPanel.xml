@@ -9,18 +9,25 @@
     <Box Style="MenuLeftSideTreatment" />
     <Box Style="MenuRightSideTreatment" />
 
-    <Image ID="HeaderIconFrame" Anchor="L,T" Offset="48,14" Texture="256x256Frame.dds" Size="72,72">
-      <Image ID="HeaderCivIcon" Anchor="C,C" Offset="0,0" Size="64,64" />
-    </Image>
+    <Grid ID="HeaderIconFrame" Anchor="L,T" Offset="48,14" Size="72,72" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="76,76" Style="Grid9Frame">
+        <Image ID="HeaderCivIcon" Anchor="C,C" Offset="0,0" Size="64,64" />
+      </Grid>
+    </Grid>
 
     <Label ID="TitleLabel" Anchor="C,T" Offset="0,18" Font="TwCenMT24" FontStyle="Shadow" String="WHITE ROOM CONTROL" ColorSet="Beige_Black_Alpha" />
     <Label Anchor="C,T" Offset="0,50" Font="TwCenMT14" FontStyle="Shadow" String="ADAPTATION ARCHIVE // LIVE FACILITY READOUT" ColorSet="Beige_Black_Alpha" />
     <Grid Anchor="C,T" Offset="0,78" Size="810,1" Style="Grid9Bar" />
 
-    <Button ID="EmpireTabButton" Anchor="C,T" Offset="-240,94" Size="148,32" String="[ICON_GOLD] Empire" ToolTip="Show empire-wide White Room learning" Style="BaseButton" />
-    <Button ID="CitiesTabButton" Anchor="C,T" Offset="-80,94" Size="148,32" String="[ICON_CAPITAL] Cities" ToolTip="Show per-city adaptation and worked improvements" Style="BaseButton" />
-    <Button ID="KiyotakaTabButton" Anchor="C,T" Offset="80,94" Size="148,32" String="[ICON_RESEARCH] Kiyotaka" ToolTip="Show Kiyotaka Perfect Adaptation counters" Style="BaseButton" />
-    <Button ID="UnitsTabButton" Anchor="C,T" Offset="240,94" Size="148,32" String="[ICON_STRENGTH] Units" ToolTip="Show unique unit deployment and caps" Style="BaseButton" />
+    <GridButton ID="EmpireTabButton" Anchor="C,T" Offset="-240,94" Size="148,32" String="[ICON_GOLD] Empire" ToolTip="Show empire-wide White Room learning" Style="BaseButton" />
+    <GridButton ID="CitiesTabButton" Anchor="C,T" Offset="-80,94" Size="148,32" String="[ICON_CAPITAL] Cities" ToolTip="Show per-city adaptation and worked improvements" Style="BaseButton" />
+    <GridButton ID="KiyotakaTabButton" Anchor="C,T" Offset="80,94" Size="148,32" String="[ICON_RESEARCH] Kiyotaka" ToolTip="Show Kiyotaka Perfect Adaptation counters" Style="BaseButton" />
+    <GridButton ID="UnitsTabButton" Anchor="C,T" Offset="240,94" Size="148,32" String="[ICON_STRENGTH] Units" ToolTip="Show unique unit deployment and caps" Style="BaseButton" />
+
+    <Grid ID="EmpireTabSelection" Anchor="C,T" Offset="-240,132" Size="136,3" Style="Grid9Bar" Hidden="0" />
+    <Grid ID="CitiesTabSelection" Anchor="C,T" Offset="-80,132" Size="136,3" Style="Grid9Bar" Hidden="1" />
+    <Grid ID="KiyotakaTabSelection" Anchor="C,T" Offset="80,132" Size="136,3" Style="Grid9Bar" Hidden="1" />
+    <Grid ID="UnitsTabSelection" Anchor="C,T" Offset="240,132" Size="136,3" Style="Grid9Bar" Hidden="1" />
 
     <Label ID="SummaryTitle" Anchor="C,T" Offset="0,140" Size="780,26" Font="TwCenMT20" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
 
@@ -54,8 +61,9 @@
       </Grid>
     </Grid>
 
-    <Button ID="RefreshButton" Anchor="C,B" Offset="-180,22" Size="160,36" String="[ICON_RESEARCH] Refresh" ToolTip="Refresh White Room status" Style="BaseButton" />
-    <Button ID="CompactButton" Anchor="C,B" Offset="0,22" Size="160,36" String="[ICON_BULLET] Compact" ToolTip="Toggle compact or expanded White Room status details" Style="BaseButton" />
-    <Button ID="CloseButton" Anchor="C,B" Offset="180,22" Size="160,36" String="Close" ToolTip="Close White Room status" Style="BaseButton" />
+    <Grid Anchor="C,B" Offset="0,76" Size="810,1" Style="Grid9Bar" />
+    <GridButton ID="RefreshButton" Anchor="C,B" Offset="-180,42" Size="160,36" String="[ICON_RESEARCH] Refresh" ToolTip="Refresh White Room status" Style="BaseButton" />
+    <GridButton ID="CompactButton" Anchor="C,B" Offset="0,42" Size="160,36" String="[ICON_BULLET] Compact" ToolTip="Toggle compact or expanded White Room status details" Style="BaseButton" />
+    <GridButton ID="CloseButton" Anchor="C,B" Offset="180,42" Size="160,36" String="Close" ToolTip="Close White Room status" Style="BaseButton" />
   </Grid>
 </Context>
