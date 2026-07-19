@@ -166,6 +166,8 @@ scene still uses safe existing Civilization V art.
 - Unique-unit unlock dossiers:
   - separate `WhiteRoomUnitUnlock` UI add-in; it does not replace CP or base-game research and notification contexts
   - shows a one-time portrait dossier when Plastics unlocks the Fourth Generation Operative and Robotics unlocks Kiyotaka
+  - portrait presentation uses grid frames rather than a stretched `256x256Frame.dds`, avoiding the offset opaque block visible behind Kiyotaka's circular icon
+  - assessment, doctrine, and acknowledgement controls use explicit interior rows and spacing so text and buttons do not overlap panel borders
   - also leaves a standard generic notification after the dossier is acknowledged
   - old saves silently record technologies already researched, preventing historical unlock spam
   - writes the seen flag before opening UI and falls back to next-turn polling if the research event is unavailable

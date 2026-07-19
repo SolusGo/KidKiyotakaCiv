@@ -8,12 +8,14 @@
     <Label ID="TitleLabel" Anchor="C,T" Offset="0,48" Size="820,38" Font="TwCenMT24" FontStyle="Shadow" WrapWidth="820" String="" ColorSet="Beige_Black_Alpha" />
     <Grid Anchor="C,T" Offset="0,90" Size="820,1" Style="Grid9Bar" />
 
-    <Image ID="PortraitFrame" Anchor="L,T" Offset="50,110" Texture="256x256Frame.dds" Size="160,160">
-      <Image ID="UnitPortrait" Anchor="C,C" Offset="0,0" Size="128,128" />
-    </Image>
+    <Grid ID="PortraitFrame" Anchor="L,T" Offset="48,108" Size="172,172" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="176,176" Style="Grid9Frame">
+        <Image ID="UnitPortrait" Anchor="C,C" Offset="0,0" Size="128,128" />
+      </Grid>
+    </Grid>
 
-    <Grid ID="RecordFrame" Anchor="L,T" Offset="44,310" Size="172,215" Style="GridBlackIndent8">
-      <Grid Anchor="C,C" Offset="0,0" Size="176,219" Style="Grid9Frame">
+    <Grid ID="RecordFrame" Anchor="L,T" Offset="48,300" Size="172,210" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="176,214" Style="Grid9Frame">
         <Label Anchor="L,T" Offset="14,12" Font="TwCenMT14" FontStyle="Shadow" String="ARCHIVE INDEX" ColorSet="Beige_Black_Alpha" />
         <Label ID="RecordLabel" Anchor="L,T" Offset="14,34" Size="144,38" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="144" String="" ColorSet="Beige_Black_Alpha" />
         <Grid Anchor="C,T" Offset="0,78" Size="144,1" Style="Grid9Bar" />
@@ -22,8 +24,8 @@
         <Label ID="ProgramLabel" Anchor="L,T" Offset="14,112" Size="144,42" Font="TwCenMT16" FontStyle="Shadow" WrapWidth="144" String="" ColorSet="Beige_Black_Alpha" />
         <Grid Anchor="C,T" Offset="0,160" Size="144,1" Style="Grid9Bar" />
 
-        <Label Anchor="L,T" Offset="14,172" Font="TwCenMT14" FontStyle="Shadow" String="STATUS" ColorSet="Beige_Black_Alpha" />
-        <Label ID="StatusLabel" Anchor="L,T" Offset="14,191" Size="144,24" Font="TwCenMT14" FontStyle="Shadow" WrapWidth="144" String="" ColorSet="Beige_Black_Alpha" />
+        <Label Anchor="L,T" Offset="14,171" Font="TwCenMT14" FontStyle="Shadow" String="STATUS" ColorSet="Beige_Black_Alpha" />
+        <Label ID="StatusLabel" Anchor="L,T" Offset="14,190" Size="144,20" Font="TwCenMT14" FontStyle="Shadow" WrapWidth="144" String="" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
 
@@ -38,20 +40,22 @@
     <Label Anchor="L,T" Offset="330,174" Font="TwCenMT14" FontStyle="Shadow" String="UNLOCK VECTOR" ColorSet="Beige_Black_Alpha" />
     <Label ID="TechLabel" Anchor="L,T" Offset="330,197" Size="510,32" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="510" String="" ColorSet="Beige_Black_Alpha" />
 
-    <Grid ID="BodyFrame" Anchor="L,T" Offset="240,270" Size="610,255" Style="GridBlackIndent8">
-      <Label Anchor="L,T" AnchorSide="I.O" Offset="10,-18" Font="TwCenMT18" FontStyle="Shadow" String="ARCHIVED ASSESSMENT" ColorSet="Beige_Black_Alpha" />
-      <Grid Anchor="C,C" Offset="0,0" Size="614,259" Style="Grid9Frame">
-        <Label ID="BodyLabel" Anchor="L,T" Offset="15,15" Size="580,228" Font="TwCenMT16" FontStyle="Shadow" LeadingOffset="-2" WrapWidth="580" String="" ColorSet="Beige_Black_Alpha" />
+    <Grid ID="BodyFrame" Anchor="L,T" Offset="240,258" Size="610,252" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="614,256" Style="Grid9Frame">
+        <Label Anchor="L,T" Offset="16,10" Font="TwCenMT18" FontStyle="Shadow" String="ARCHIVED ASSESSMENT" ColorSet="Beige_Black_Alpha" />
+        <Grid Anchor="C,T" Offset="0,38" Size="578,1" Style="Grid9Bar" />
+        <Label ID="BodyLabel" Anchor="L,T" Offset="16,48" Size="578,192" Font="TwCenMT16" FontStyle="Shadow" LeadingOffset="-2" WrapWidth="578" String="" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
 
-    <Grid ID="QuoteFrame" Anchor="C,T" Offset="0,548" Size="800,54" Style="GridBlackIndent8">
-      <Label Anchor="L,T" AnchorSide="I.O" Offset="10,-18" Font="TwCenMT18" FontStyle="Shadow" String="WHITE ROOM DOCTRINE" ColorSet="Beige_Black_Alpha" />
-      <Grid Anchor="C,C" Offset="0,0" Size="804,58" Style="Grid9Frame">
-        <Label ID="QuoteLabel" Anchor="C,C" Offset="0,0" Size="760,34" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="760" String="" ColorSet="Beige_Black_Alpha" />
+    <Grid ID="QuoteFrame" Anchor="C,T" Offset="0,526" Size="804,58" Style="GridBlackIndent8">
+      <Grid Anchor="C,C" Offset="0,0" Size="808,62" Style="Grid9Frame">
+        <Label Anchor="L,C" Offset="16,0" Size="184,24" Font="TwCenMT16" FontStyle="Shadow" String="WHITE ROOM DOCTRINE" ColorSet="Beige_Black_Alpha" />
+        <Box Anchor="L,C" Offset="212,0" Size="1,34" Color="210,185,105,220" />
+        <Label ID="QuoteLabel" Anchor="L,C" Offset="232,0" Size="548,34" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="548" String="" ColorSet="Beige_Black_Alpha" />
       </Grid>
     </Grid>
 
-    <Button ID="AcknowledgeButton" Anchor="C,B" Offset="0,22" Size="190,38" String="Acknowledge" ToolTip="Close the White Room dossier" Style="BaseButton" />
+    <GridButton ID="AcknowledgeButton" Anchor="C,B" Offset="0,52" Size="190,36" String="Acknowledge" ToolTip="Close the White Room dossier" Style="BaseButton" />
   </Grid>
 </Context>
