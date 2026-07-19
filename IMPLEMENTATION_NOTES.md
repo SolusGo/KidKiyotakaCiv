@@ -89,7 +89,7 @@ scene still uses safe existing Civilization V art.
   - archives final level, combat totals, and kills when an Operative is lost
   - records Operative registration, engagements, kills, special-condition engagements, and losses in adaptation telemetry
 - Perfect Adaptation for Kiyotaka:
-  - files: `Lua/WhiteRoomKiyotakaScaling.lua`, `SQL/WhiteRoomAdaptationDummyPromotions.sql`
+  - files: `Lua/WhiteRoomKiyotakaScaling.lua`, `Lua/WhiteRoomKiyotakaFlavor.lua`, `SQL/WhiteRoomAdaptationDummyPromotions.sql`
   - Kiyotaka gets the base `PROMOTION_WR_PERFECT_ADAPTATION`
   - on credited kill: +0.25% combat counter, +0.25% counter against the killed unit's combat class, +1 XP
   - on Kiyotaka-attributed damage dealt to a unit: +0.13% combat counter, +0.13% attack counter, +0.07% move-after-combat chance counter
@@ -99,6 +99,11 @@ scene still uses safe existing Civilization V art.
   - movement-after-combat becomes the `Flow State` promotion once the stored chance reaches 100%
   - exact counters are saved with `Modding.OpenSaveData()` and converted into visible tier promotions
   - damage-dealt credit uses `Events.EndCombatSim` when available and only fires when Kiyotaka is the attacker or defender and the opposing combat target's damage increases
+  - contextual flavor separates ordinary attacks, clean exchanges, counterattacks, wounded targets, kills, wounded kills, damage, below-half-health pressure, critical survival, recovery, deployment, Flow State, tier breakthroughs, class-doctrine milestones, and death
+  - routine combat barks use a 35% chance, a one-turn cooldown, and per-event no-repeat selection; forced milestone/survival lines bypass the chance and cooldown
+  - floating combat text is only shown for the active White Room player, while every trigger still records its original Subject Note in persistent telemetry
+  - major assessments are saved to an eight-record banner queue so consecutive milestones display in order; banners pause behind the status panel, city screen, diplomacy, and blocking overview popups
+  - flavor can be disabled or tuned before initialization with `WR_KIYOTAKA_FLAVOR_ENABLED`, `WR_KIYOTAKA_BARK_CHANCE_PERCENT`, and `WR_KIYOTAKA_BARK_COOLDOWN_TURNS`
   - tested in-game with Community Patch active: kill credit, non-kill damage credit, damage taken, below-25-HP survival, and next-turn heal all confirmed in `Lua.log`
 - City HP-loss adaptation:
   - files: `Lua/WhiteRoomCityHpAdaptation.lua`, `SQL/WhiteRoomCityHpAdaptationDummyBuildings.sql`
@@ -162,6 +167,7 @@ scene still uses safe existing Civilization V art.
   - adaptation telemetry adds a fifth tab backed by a persistent 32-record rotating buffer
   - telemetry records actual Kiyotaka combat/survival/recovery, Operative service activity, city damage and ranged strikes, worked-improvement pattern changes, trade-route learning, and observed foreign city losses
   - the telemetry feed is newest-first, turn-stamped, category-coded, save-persistent, compact-mode aware, and live-refreshes while open
+  - a dossier-style live-assessment banner consumes Kiyotaka's persistent major-event queue without dropping events during other full-screen UI
   - reads existing saved counters through `Modding.OpenSaveData()` and recalculates worked-improvement display live from city plots
 - Unique-unit unlock dossiers:
   - separate `WhiteRoomUnitUnlock` UI add-in; it does not replace CP or base-game research and notification contexts
@@ -207,6 +213,9 @@ WhiteRoomLuaLoader.lua loaded
 WhiteRoomLuaLoader included WhiteRoomTelemetry.lua
 WhiteRoomTelemetry.lua loaded
 WR Adaptation Telemetry: initialized; retaining newest 32 records
+WhiteRoomLuaLoader included WhiteRoomKiyotakaFlavor.lua
+WhiteRoomKiyotakaFlavor.lua loaded
+WR Kiyotaka Flavor: initialized with contextual barks, telemetry notes, and banner queue
 WhiteRoomLuaLoader included WhiteRoomDuplicateImprovements.lua
 WhiteRoomDuplicateImprovements.lua loaded
 WR Duplicate Improvements: initialized

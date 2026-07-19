@@ -87,4 +87,15 @@
     <GridButton ID="CompactButton" Anchor="C,B" Offset="0,42" Size="160,36" String="[ICON_BULLET] Compact" ToolTip="Toggle compact or expanded White Room status details" Style="BaseButton" />
     <GridButton ID="CloseButton" Anchor="C,B" Offset="180,42" Size="160,36" String="Close" ToolTip="Close White Room status" Style="BaseButton" />
   </Grid>
+
+  <Grid ID="FlavorBanner" Anchor="C,T" Offset="0,82" Size="760,104" Style="GridBlackIndent8" Hidden="1">
+    <Grid Anchor="C,C" Offset="0,0" Size="764,108" Style="Grid9Frame">
+      <Box Anchor="L,C" Offset="12,0" Size="4,76" Color="210,185,105,240" />
+      <Label ID="FlavorBannerTitle" Anchor="L,T" Offset="30,12" Size="500,28" Font="TwCenMT20" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
+      <Label Anchor="R,T" Offset="24,14" Size="190,20" Font="TwCenMT14" FontStyle="Shadow" String="WHITE ROOM // LIVE ASSESSMENT" ColorSet="Beige_Black_Alpha" />
+      <Grid Anchor="C,T" Offset="0,42" Size="700,1" Style="Grid9Bar" />
+      <Label ID="FlavorBannerSubtitle" Anchor="L,T" Offset="30,50" Size="700,22" Font="TwCenMT16" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
+      <Label ID="FlavorBannerQuote" Anchor="L,T" Offset="30,74" Size="700,22" Font="TwCenMT16" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
+    </Grid>
+  </Grid>
 </Context>

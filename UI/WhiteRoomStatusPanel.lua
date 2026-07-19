@@ -14,6 +14,8 @@ local WR_CITY_RANGED_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_DEF_PERCENT_PER_STACK = 0.25
 local WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK = 0.5
 local WR_TELEMETRY_MAX_EVENTS = 32
+local WR_KIYOTAKA_BANNER_BUFFER_SIZE = 8
+local WR_KIYOTAKA_BANNER_DURATION = 4.8
 local WR_ACTIVE_TAB = "EMPIRE"
 local WR_CITY_SCREEN_OPEN = false
 local WR_DIPLOMACY_OPEN = false
@@ -24,6 +26,9 @@ local WR_DIPLO_LIST_WAS_OPEN = false
 local WR_DIPLO_LIST_POLL_ELAPSED = 0
 local WR_TELEMETRY_POLL_ELAPSED = 0
 local WR_LAST_TELEMETRY_SEQUENCE = -1
+local WR_LAST_KIYOTAKA_BANNER_SEQUENCE = 0
+local WR_KIYOTAKA_BANNER_VISIBLE = false
+local WR_KIYOTAKA_BANNER_REMAINING = 0
 
 local WR_BLOCKING_POPUP_TYPES = {}
 
@@ -136,6 +141,46 @@ end
 
 local function WR_GetTelemetrySequence(playerID)
     return WR_GetSavedNumber(WR_TelemetryPrefix(playerID) .. "SEQUENCE")
+end
+
+local function WR_KiyotakaBannerPrefix(playerID)
+    return "WR_KIYOTAKA_BANNER_" .. tostring(playerID) .. "_"
+end
+
+local function WR_KiyotakaBannerSlotKey(playerID, slot, suffix)
+    return WR_KiyotakaBannerPrefix(playerID) .. "SLOT_" .. tostring(slot) .. "_" .. suffix
+end
+
+local function WR_GetKiyotakaBannerSequence(playerID)
+    return WR_GetSavedNumber(WR_KiyotakaBannerPrefix(playerID) .. "SEQUENCE")
+end
+
+local function WR_GetNextKiyotakaBanner(playerID)
+    local currentSequence = WR_GetKiyotakaBannerSequence(playerID)
+    if WR_LAST_KIYOTAKA_BANNER_SEQUENCE >= currentSequence then
+        return nil
+    end
+
+    local nextSequence = WR_LAST_KIYOTAKA_BANNER_SEQUENCE + 1
+    local oldestSequence = math.max(1, currentSequence - WR_KIYOTAKA_BANNER_BUFFER_SIZE + 1)
+    if nextSequence < oldestSequence then
+        nextSequence = oldestSequence
+    end
+
+    local slot = ((nextSequence - 1) % WR_KIYOTAKA_BANNER_BUFFER_SIZE) + 1
+    local storedSequence = WR_GetSavedNumber(WR_KiyotakaBannerSlotKey(playerID, slot, "SEQUENCE"))
+    if storedSequence ~= nextSequence then
+        WR_LAST_KIYOTAKA_BANNER_SEQUENCE = currentSequence
+        return nil
+    end
+
+    return {
+        sequence = nextSequence,
+        turn = WR_GetSavedNumber(WR_KiyotakaBannerSlotKey(playerID, slot, "TURN")),
+        title = tostring(WR_SaveValue(WR_KiyotakaBannerSlotKey(playerID, slot, "TITLE")) or "SUBJECT 004 // ASSESSMENT"),
+        subtitle = tostring(WR_SaveValue(WR_KiyotakaBannerSlotKey(playerID, slot, "SUBTITLE")) or "Adaptation record updated"),
+        quote = tostring(WR_SaveValue(WR_KiyotakaBannerSlotKey(playerID, slot, "QUOTE")) or "")
+    }
 end
 
 local function WR_GetTelemetryEvents(playerID)
@@ -1234,6 +1279,65 @@ local function WR_IsBlockingPopupOpen()
     return next(WR_OPEN_BLOCKING_POPUPS) ~= nil
 end
 
+local function WR_IsFlavorBannerBlocked()
+    return WR_CITY_SCREEN_OPEN
+        or WR_IsDiplomacyOpen()
+        or WR_IsDiploListOpen()
+        or WR_IsBlockingPopupOpen()
+        or not Controls.StatusPanel:IsHidden()
+end
+
+local function WR_HideKiyotakaBanner()
+    Controls.FlavorBanner:SetHide(true)
+end
+
+local function WR_ShowKiyotakaBanner(banner)
+    WR_SetLabel(Controls.FlavorBannerTitle, banner.title)
+    WR_SetLabel(Controls.FlavorBannerSubtitle, banner.subtitle)
+
+    if banner.quote ~= "" then
+        WR_SetLabel(Controls.FlavorBannerQuote, "\"" .. banner.quote .. "\"")
+    else
+        WR_SetLabel(Controls.FlavorBannerQuote, "")
+    end
+
+    WR_LAST_KIYOTAKA_BANNER_SEQUENCE = banner.sequence
+    WR_KIYOTAKA_BANNER_REMAINING = WR_KIYOTAKA_BANNER_DURATION
+    WR_KIYOTAKA_BANNER_VISIBLE = true
+    Controls.FlavorBanner:SetHide(false)
+end
+
+local function WR_UpdateKiyotakaBanner(deltaTime)
+    local playerID = WR_GetActiveWhiteRoomPlayer()
+    if playerID == nil then
+        WR_KIYOTAKA_BANNER_VISIBLE = false
+        WR_HideKiyotakaBanner()
+        return
+    end
+
+    if WR_IsFlavorBannerBlocked() then
+        WR_HideKiyotakaBanner()
+        return
+    end
+
+    if WR_KIYOTAKA_BANNER_VISIBLE then
+        Controls.FlavorBanner:SetHide(false)
+        WR_KIYOTAKA_BANNER_REMAINING = WR_KIYOTAKA_BANNER_REMAINING - deltaTime
+
+        if WR_KIYOTAKA_BANNER_REMAINING <= 0 then
+            WR_KIYOTAKA_BANNER_VISIBLE = false
+            WR_HideKiyotakaBanner()
+        end
+
+        return
+    end
+
+    local banner = WR_GetNextKiyotakaBanner(playerID)
+    if banner ~= nil then
+        WR_ShowKiyotakaBanner(banner)
+    end
+end
+
 local function WR_UpdateChromeVisibility()
     local playerID, player = WR_GetActiveWhiteRoomPlayer()
     local shouldHide = WR_CITY_SCREEN_OPEN
@@ -1246,6 +1350,7 @@ local function WR_UpdateChromeVisibility()
 
     if shouldHide then
         WR_HidePanel()
+        WR_HideKiyotakaBanner()
     end
 end
 
@@ -1347,6 +1452,7 @@ if Events.SerialEventGameMessagePopupProcessed ~= nil then
 end
 
 ContextPtr:SetUpdate(function(deltaTime)
+    WR_UpdateKiyotakaBanner(deltaTime)
     WR_DIPLO_LIST_POLL_ELAPSED = WR_DIPLO_LIST_POLL_ELAPSED + deltaTime
     WR_TELEMETRY_POLL_ELAPSED = WR_TELEMETRY_POLL_ELAPSED + deltaTime
 
@@ -1378,6 +1484,14 @@ ContextPtr:SetUpdate(function(deltaTime)
     end
 end)
 
+do
+    local playerID = WR_GetActiveWhiteRoomPlayer()
+    if playerID ~= nil then
+        WR_LAST_KIYOTAKA_BANNER_SEQUENCE = WR_GetKiyotakaBannerSequence(playerID)
+    end
+end
+
+WR_HideKiyotakaBanner()
 WR_UpdateChromeVisibility()
 
 print("WR Status Panel: initialized")

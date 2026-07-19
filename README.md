@@ -62,6 +62,19 @@ Kiyotaka permanently improves whenever he experiences combat.
 
 The worst mistake an enemy can make is failing to finish him.
 
+### Contextual Presentation
+
+Kiyotaka reacts to the battle instead of repeating one generic line. Attacking
+an already-wounded target, taking no return damage, counterattacking, falling
+below half health, surviving critical damage, recovering, and eliminating a
+unit all draw from separate original dialogue pools. Routine combat remarks are
+deliberately intermittent, with a cooldown and no immediate repeats.
+
+Deployment, critical survival, Flow State, adaptation-tier breakthroughs,
+decoded enemy combat classes, and death also create White Room assessment
+banners. Every adaptation event is preserved in telemetry with its associated
+Subject Note, even when no floating combat line is shown.
+
 ## Unique Unit: 4th Generation Operative
 
 **Unlocks:** Plastics  

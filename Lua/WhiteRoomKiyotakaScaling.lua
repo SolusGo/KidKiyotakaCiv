@@ -103,6 +103,29 @@ local function WR_FindKiyotaka(player)
     return nil
 end
 
+local function WR_GetFlavorMetrics(playerID)
+    return {
+        COMBAT = WR_GetSavedNumber(playerID, "COMBAT"),
+        ATTACK = WR_GetSavedNumber(playerID, "ATTACK"),
+        RESISTANCE = WR_GetSavedNumber(playerID, "RESISTANCE"),
+        HEALING = WR_GetSavedNumber(playerID, "HEALING"),
+        DESPERATION = WR_GetSavedNumber(playerID, "DESPERATION"),
+        MOVE_CHANCE = WR_GetSavedNumber(playerID, "MOVE_CHANCE")
+    }
+end
+
+local function WR_RegisterFlavorDeployment(playerID, unit)
+    if WR_KiyotakaFlavorRegisterDeployment ~= nil then
+        WR_KiyotakaFlavorRegisterDeployment(playerID, unit, WR_GetFlavorMetrics(playerID))
+    end
+end
+
+local function WR_CheckFlavorMilestones(playerID, unit)
+    if WR_KiyotakaFlavorCheckMilestones ~= nil then
+        WR_KiyotakaFlavorCheckMilestones(playerID, unit, WR_GetFlavorMetrics(playerID))
+    end
+end
+
 local function WR_UnitDamageKey(playerID, unitID)
     return tostring(playerID) .. ":" .. tostring(unitID)
 end
@@ -225,6 +248,7 @@ local function WR_RecordLowHpSurvival(playerID, unit, reason)
         return
     end
 
+    WR_RegisterFlavorDeployment(playerID, unit)
     WR_SetSavedNumber(playerID, "LOW_HP_TURN", turn)
     WR_ChangeSavedNumber(playerID, "COMBAT", 75)
     WR_ChangeSavedNumber(playerID, "RESISTANCE", 75)
@@ -232,14 +256,22 @@ local function WR_RecordLowHpSurvival(playerID, unit, reason)
     WR_ApplyPerfectAdaptation(playerID, unit)
     WR_LogCounters(playerID, "survived below 25 HP (" .. reason .. ")")
 
-    if WR_RecordTelemetry ~= nil then
-        WR_RecordTelemetry(
+    if WR_KiyotakaFlavorEvent ~= nil then
+        WR_KiyotakaFlavorEvent(
             playerID,
-            "SUBJECT",
+            unit,
+            "LOW_HP",
             "CRITICAL SURVIVAL // SUBJECT 004",
-            "Below 25 HP // Combat +0.75% // Resistance +0.75% // Recovery queued +3 HP"
+            "Below 25 HP // Combat +0.75% // Resistance +0.75% // Recovery queued +3 HP",
+            {
+                forceBark = true,
+                bannerTitle = "SUBJECT 004 // CRITICAL SURVIVAL",
+                bannerSubtitle = "Failure conditions rejected // Adaptation accelerated"
+            }
         )
     end
+
+    WR_CheckFlavorMilestones(playerID, unit)
 end
 
 local function WR_RecordDamageTaken(playerID, unit, oldDamage, newDamage)
@@ -247,6 +279,7 @@ local function WR_RecordDamageTaken(playerID, unit, oldDamage, newDamage)
         return
     end
 
+    WR_RegisterFlavorDeployment(playerID, unit)
     WR_ChangeSavedNumber(playerID, "RESISTANCE", 19)
     WR_ChangeSavedNumber(playerID, "HEALING", 13)
     WR_ChangeSavedNumber(playerID, "DESPERATION", 13)
@@ -258,55 +291,90 @@ local function WR_RecordDamageTaken(playerID, unit, oldDamage, newDamage)
     WR_ApplyPerfectAdaptation(playerID, unit)
     WR_LogCounters(playerID, "took damage")
 
-    if WR_RecordTelemetry ~= nil then
-        WR_RecordTelemetry(
+    if WR_KiyotakaFlavorEvent ~= nil then
+        local eventType = "DAMAGE_TAKEN"
+        if oldDamage < 50 and newDamage >= 50 then
+            eventType = "BELOW_HALF"
+        end
+
+        WR_KiyotakaFlavorEvent(
             playerID,
-            "SUBJECT",
+            unit,
+            eventType,
             "DAMAGE ASSIMILATED // SUBJECT 004",
             string.format(
                 "HP %d -> %d // Resistance +0.19%% // Healing +0.13%% // Low-HP power +0.13%%",
                 100 - oldDamage,
                 100 - newDamage
-            )
+            ),
+            {forceBark = false}
         )
     end
+
+
+    WR_CheckFlavorMilestones(playerID, unit)
 end
 
-local function WR_RecordDamageDealt(playerID, unit, targetLabel)
+local function WR_RecordDamageDealt(playerID, unit, targetLabel, flavorEventType)
+    WR_RegisterFlavorDeployment(playerID, unit)
+    local oldMoveChance = WR_GetSavedNumber(playerID, "MOVE_CHANCE")
     WR_ChangeSavedNumber(playerID, "COMBAT", 13)
     WR_ChangeSavedNumber(playerID, "ATTACK", 13)
     WR_ChangeSavedNumber(playerID, "MOVE_CHANCE", 7)
     WR_ApplyPerfectAdaptation(playerID, unit)
     WR_LogCounters(playerID, "dealt damage to " .. targetLabel)
 
-    if WR_RecordTelemetry ~= nil then
-        WR_RecordTelemetry(
+    if WR_KiyotakaFlavorEvent ~= nil then
+        WR_KiyotakaFlavorEvent(
             playerID,
-            "SUBJECT",
+            unit,
+            flavorEventType or "DAMAGE_DEALT",
             "COMBAT PATTERN ACQUIRED // SUBJECT 004",
-            "Target " .. tostring(targetLabel) .. " // Combat +0.13% // Attack +0.13% // Flow +0.07%"
+            "Target " .. tostring(targetLabel) .. " // Combat +0.13% // Attack +0.13% // Flow +0.07%",
+            {forceBark = false}
         )
     end
+
+
+    local newMoveChance = WR_GetSavedNumber(playerID, "MOVE_CHANCE")
+    if oldMoveChance < 10000 and newMoveChance >= 10000 and WR_KiyotakaFlavorEvent ~= nil then
+        WR_KiyotakaFlavorEvent(
+            playerID,
+            unit,
+            "FLOW_STATE",
+            "FLOW STATE ACHIEVED // SUBJECT 004",
+            "Movement-after-combat threshold reached // Stored chance 100.00%",
+            {
+                forceBark = true,
+                bannerTitle = "SUBJECT 004 // FLOW STATE",
+                bannerSubtitle = "The pattern is complete // Movement is no longer interrupted"
+            }
+        )
+    end
+
+    WR_CheckFlavorMilestones(playerID, unit)
 end
 
-local function WR_RecordKill(playerID, unit, killedUnitType)
+local function WR_RecordKill(playerID, unit, killedUnitType, flavorEventType)
     local killedUnitInfo = GameInfo.Units[killedUnitType]
     local killedClass = killedUnitInfo and killedUnitInfo.CombatClass or nil
+    WR_RegisterFlavorDeployment(playerID, unit)
 
     WR_ChangeSavedNumber(playerID, "COMBAT", 25)
     WR_ChangeExperience(unit, 1)
 
+    local classValue = 0
     if killedClass ~= nil then
         local suffix = WR_ClassSuffix(killedClass)
         if suffix ~= nil then
-            WR_ChangeSavedNumber(playerID, "CLASS_" .. suffix, 25)
+            classValue = WR_ChangeSavedNumber(playerID, "CLASS_" .. suffix, 25)
         end
     end
 
     WR_ApplyPerfectAdaptation(playerID, unit)
     WR_LogCounters(playerID, "kill")
 
-    if WR_RecordTelemetry ~= nil then
+    if WR_KiyotakaFlavorEvent ~= nil then
         local killedUnitLabel = killedUnitInfo and killedUnitInfo.Description or "UNKNOWN TARGET"
         if killedUnitInfo ~= nil and killedUnitInfo.Description ~= nil then
             killedUnitLabel = Locale.ConvertTextKey(killedUnitInfo.Description)
@@ -316,13 +384,22 @@ local function WR_RecordKill(playerID, unit, killedUnitType)
         classLabel = string.gsub(classLabel, "UNITCOMBAT_", "")
         classLabel = string.gsub(classLabel, "_", " ")
 
-        WR_RecordTelemetry(
+        WR_KiyotakaFlavorEvent(
             playerID,
-            "SUBJECT",
+            unit,
+            flavorEventType or "KILL",
             "TARGET NEUTRALIZED // SUBJECT 004",
-            tostring(killedUnitLabel) .. " // " .. classLabel .. " // Combat +0.25% // Class adaptation +0.25% // XP +1"
+            tostring(killedUnitLabel) .. " // " .. classLabel .. " // Combat +0.25% // Class adaptation +0.25% // XP +1",
+            {forceBark = true}
         )
+
+        if killedClass ~= nil and classValue > 0 and WR_KiyotakaFlavorCheckClassMilestone ~= nil then
+            WR_KiyotakaFlavorCheckClassMilestone(playerID, unit, classLabel, classValue)
+        end
     end
+
+
+    WR_CheckFlavorMilestones(playerID, unit)
 end
 
 local function WR_IsKiyotakaNearPlot(unit, x, y)
@@ -364,12 +441,14 @@ local function WR_ApplyPendingHeal(playerID, unit)
         totalHeal
     ))
 
-    if WR_RecordTelemetry ~= nil then
-        WR_RecordTelemetry(
+    if WR_KiyotakaFlavorEvent ~= nil then
+        WR_KiyotakaFlavorEvent(
             playerID,
-            "SUBJECT",
+            unit,
+            "RECOVERY",
             "RECOVERY PROTOCOL COMPLETE // SUBJECT 004",
-            "Queued critical-survival recovery restored " .. tostring(totalHeal) .. " HP"
+            "Queued critical-survival recovery restored " .. tostring(totalHeal) .. " HP",
+            {forceBark = true}
         )
     end
 end
@@ -385,6 +464,7 @@ function WR_KiyotakaScaling_DoTurn(playerID)
         return
     end
 
+    WR_RegisterFlavorDeployment(playerID, unit)
     WR_ApplyPendingHeal(playerID, unit)
 
     local lastDamage = WR_GetSavedNumber(playerID, "LAST_DAMAGE")
@@ -403,6 +483,15 @@ GameEvents.PlayerDoTurn.Add(WR_KiyotakaScaling_DoTurn)
 
 if GameEvents.UnitPrekill ~= nil then
     GameEvents.UnitPrekill.Add(function(killedPlayerID, killedUnitID, killedUnitType, x, y, delay, killerPlayerID)
+        local killedPlayer = Players[killedPlayerID]
+        local killedUnit = killedPlayer ~= nil and killedPlayer:GetUnitByID(killedUnitID) or nil
+
+        if killedUnitType == UNIT_WR_KIYOTAKA then
+            if WR_IsWhiteRoomPlayer(killedPlayer) and WR_KiyotakaFlavorRecordDeath ~= nil then
+                WR_KiyotakaFlavorRecordDeath(killedPlayerID, killedUnit)
+            end
+        end
+
         if killerPlayerID == nil or killerPlayerID < 0 then
             return
         end
@@ -417,7 +506,12 @@ if GameEvents.UnitPrekill ~= nil then
             return
         end
 
-        WR_RecordKill(killerPlayerID, unit, killedUnitType)
+        local flavorEventType = "KILL"
+        if killedUnit ~= nil and killedUnit:GetDamage() > 0 then
+            flavorEventType = "WOUNDED_KILL"
+        end
+
+        WR_RecordKill(killerPlayerID, unit, killedUnitType, flavorEventType)
     end)
 end
 
@@ -478,7 +572,16 @@ if Events.EndCombatSim ~= nil then
                 and defenderFinalUnitDamage ~= nil
                 and defenderUnitDamage ~= nil
                 and defenderFinalUnitDamage > defenderUnitDamage then
-                WR_RecordDamageDealt(attackerPlayerID, attackerUnit, "combat target")
+                local flavorEventType = "DAMAGE_DEALT"
+                if type(defenderUnitDamage) == "number" and defenderUnitDamage > 0 then
+                    flavorEventType = "WOUNDED_TARGET"
+                elseif type(attackerFinalUnitDamage) == "number"
+                    and type(attackerUnitDamage) == "number"
+                    and attackerFinalUnitDamage <= attackerUnitDamage then
+                    flavorEventType = "NO_DAMAGE"
+                end
+
+                WR_RecordDamageDealt(attackerPlayerID, attackerUnit, "combat target", flavorEventType)
             end
         end
 
@@ -490,7 +593,7 @@ if Events.EndCombatSim ~= nil then
                 and attackerFinalUnitDamage ~= nil
                 and attackerUnitDamage ~= nil
                 and attackerFinalUnitDamage > attackerUnitDamage then
-                WR_RecordDamageDealt(defenderPlayerID, defenderUnit, "counterattack target")
+                WR_RecordDamageDealt(defenderPlayerID, defenderUnit, "counterattack target", "COUNTERATTACK")
             end
         end
     end)
