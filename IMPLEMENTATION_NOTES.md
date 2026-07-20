@@ -91,7 +91,7 @@ scene still uses safe existing Civilization V art.
 - Perfect Adaptation for Kiyotaka:
   - files: `Lua/WhiteRoomKiyotakaScaling.lua`, `Lua/WhiteRoomKiyotakaFlavor.lua`, `SQL/WhiteRoomAdaptationDummyPromotions.sql`
   - Kiyotaka gets the base `PROMOTION_WR_PERFECT_ADAPTATION`
-  - on credited kill: +0.25% combat counter, +0.25% counter against the killed unit's combat class, +1 XP
+  - on a verified direct Kiyotaka kill: +0.25% combat counter, +0.25% counter against the killed unit's combat class, +1 XP
   - on Kiyotaka-attributed damage dealt to a unit: +0.13% combat counter, +0.13% attack counter, +0.07% move-after-combat chance counter
   - on damage taken: +0.19% resistance counter, +0.13% healing counter, +0.13% below-50-HP combat counter
   - on surviving a drop below 25 HP: +0.75% combat counter, +0.75% resistance counter, and a 3 HP heal queued for the next White Room turn
@@ -99,6 +99,8 @@ scene still uses safe existing Civilization V art.
   - movement-after-combat becomes the `Flow State` promotion once the stored chance reaches 100%
   - exact counters are saved with `Modding.OpenSaveData()` and converted into visible tier promotions
   - damage-dealt credit uses `Events.EndCombatSim` when available and only fires when Kiyotaka is the attacker or defender and the opposing combat target's damage increases
+  - kill credit uses the same explicit attacker/defender combat IDs and requires lethal final damage; the old one-tile proximity approximation was removed so nearby allied kills cannot grant Kiyotaka adaptation or XP
+  - a live unit-type cache preserves the defeated unit's combat class through Civ V's unit removal, allowing verified direct kills and counterattack kills to retain class-specific adaptation
   - contextual flavor separates ordinary attacks, clean exchanges, counterattacks, wounded targets, kills, wounded kills, damage, below-half-health pressure, critical survival, recovery, deployment, Flow State, tier breakthroughs, class-doctrine milestones, and death
   - routine combat barks use a 35% chance, a one-turn cooldown, and per-event no-repeat selection; forced milestone/survival lines bypass the chance and cooldown
   - floating combat text is only shown for the active White Room player, while every trigger still records its original Subject Note in persistent telemetry
@@ -249,6 +251,11 @@ WR 4th Generation Operative: initialized with persistent service records
 WhiteRoomStatusPanel.lua loaded
 WR Status Panel: initialized
 ```
+
+- Verify Kiyotaka receives kill XP, combat adaptation, and class adaptation when
+  his own attack or counterattack destroys a unit.
+- Verify a different White Room unit destroying an enemy adjacent to Kiyotaka
+  grants him no XP, kill telemetry, or class adaptation.
 
 ## Notes
 

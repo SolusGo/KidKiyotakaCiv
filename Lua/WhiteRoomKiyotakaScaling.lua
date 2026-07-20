@@ -62,6 +62,7 @@ local WR_DESPERATION_PROMOTIONS = {
 }
 
 local WR_DAMAGE_CACHE = {}
+local WR_UNIT_TYPE_CACHE = {}
 
 local function WR_SaveKey(playerID, key)
     return "WR_KIYOTAKA_" .. tostring(playerID) .. "_" .. key
@@ -128,6 +129,21 @@ end
 
 local function WR_UnitDamageKey(playerID, unitID)
     return tostring(playerID) .. ":" .. tostring(unitID)
+end
+
+local function WR_CacheUnitType(playerID, unitID)
+    if playerID == nil or unitID == nil or unitID < 0 then
+        return nil
+    end
+
+    local key = WR_UnitDamageKey(playerID, unitID)
+    local player = Players[playerID]
+    local unit = player ~= nil and player:GetUnitByID(unitID) or nil
+    if unit ~= nil then
+        WR_UNIT_TYPE_CACHE[key] = unit:GetUnitType()
+    end
+
+    return WR_UNIT_TYPE_CACHE[key]
 end
 
 local function WR_GetTierIndex(hundredths)
@@ -402,28 +418,24 @@ local function WR_RecordKill(playerID, unit, killedUnitType, flavorEventType)
     WR_CheckFlavorMilestones(playerID, unit)
 end
 
-local function WR_IsKiyotakaNearPlot(unit, x, y)
-    if unit == nil or x == nil or y == nil or x < 0 or y < 0 then
-        return false
-    end
-
-    local plot = unit:GetPlot()
-    if plot == nil then
-        return false
-    end
-
-    return Map.PlotDistance(plot:GetX(), plot:GetY(), x, y) <= 1
-end
-
 local function WR_PrimeDamageCache()
     for playerID = 0, (GameDefines.MAX_CIV_PLAYERS or 63) - 1 do
         local player = Players[playerID]
         if player ~= nil and player:IsAlive() then
             for unit in player:Units() do
-                WR_DAMAGE_CACHE[WR_UnitDamageKey(playerID, unit:GetID())] = unit:GetDamage()
+                local key = WR_UnitDamageKey(playerID, unit:GetID())
+                WR_DAMAGE_CACHE[key] = unit:GetDamage()
+                WR_UNIT_TYPE_CACHE[key] = unit:GetUnitType()
             end
         end
     end
+end
+
+local function WR_WasDestroyed(finalDamage, maxHitPoints)
+    return type(finalDamage) == "number"
+        and type(maxHitPoints) == "number"
+        and maxHitPoints > 0
+        and finalDamage >= maxHitPoints
 end
 
 local function WR_ApplyPendingHeal(playerID, unit)
@@ -491,27 +503,12 @@ if GameEvents.UnitPrekill ~= nil then
                 WR_KiyotakaFlavorRecordDeath(killedPlayerID, killedUnit)
             end
         end
+    end)
+end
 
-        if killerPlayerID == nil or killerPlayerID < 0 then
-            return
-        end
-
-        local killerPlayer = Players[killerPlayerID]
-        if not WR_IsWhiteRoomPlayer(killerPlayer) then
-            return
-        end
-
-        local unit = WR_FindKiyotaka(killerPlayer)
-        if not WR_IsKiyotakaNearPlot(unit, x, y) then
-            return
-        end
-
-        local flavorEventType = "KILL"
-        if killedUnit ~= nil and killedUnit:GetDamage() > 0 then
-            flavorEventType = "WOUNDED_KILL"
-        end
-
-        WR_RecordKill(killerPlayerID, unit, killedUnitType, flavorEventType)
+if Events.SerialEventUnitCreated ~= nil then
+    Events.SerialEventUnitCreated.Add(function(playerID, unitID)
+        WR_CacheUnitType(playerID, unitID)
     end)
 end
 
@@ -544,6 +541,21 @@ if Events.SerialEventUnitSetDamage ~= nil then
             WR_SetSavedNumber(playerID, "LAST_DAMAGE", newDamage)
             return
         end
+    end)
+end
+
+if Events.RunCombatSim ~= nil then
+    Events.RunCombatSim.Add(function(
+        attackerPlayerID,
+        attackerUnitID,
+        attackerUnitDamage,
+        attackerFinalUnitDamage,
+        attackerMaxHitPoints,
+        defenderPlayerID,
+        defenderUnitID
+    )
+        WR_CacheUnitType(attackerPlayerID, attackerUnitID)
+        WR_CacheUnitType(defenderPlayerID, defenderUnitID)
     end)
 end
 
@@ -582,6 +594,16 @@ if Events.EndCombatSim ~= nil then
                 end
 
                 WR_RecordDamageDealt(attackerPlayerID, attackerUnit, "combat target", flavorEventType)
+
+                if WR_WasDestroyed(defenderFinalUnitDamage, defenderMaxHitPoints) then
+                    local killedUnitType = WR_CacheUnitType(defenderPlayerID, defenderUnitID)
+                    if killedUnitType ~= nil then
+                        local killFlavorEventType = defenderUnitDamage > 0 and "WOUNDED_KILL" or "KILL"
+                        WR_RecordKill(attackerPlayerID, attackerUnit, killedUnitType, killFlavorEventType)
+                    else
+                        WR_Debug("WR Perfect Adaptation: direct kill skipped because the defeated unit type was unavailable")
+                    end
+                end
             end
         end
 
@@ -594,6 +616,16 @@ if Events.EndCombatSim ~= nil then
                 and attackerUnitDamage ~= nil
                 and attackerFinalUnitDamage > attackerUnitDamage then
                 WR_RecordDamageDealt(defenderPlayerID, defenderUnit, "counterattack target", "COUNTERATTACK")
+
+                if WR_WasDestroyed(attackerFinalUnitDamage, attackerMaxHitPoints) then
+                    local killedUnitType = WR_CacheUnitType(attackerPlayerID, attackerUnitID)
+                    if killedUnitType ~= nil then
+                        local killFlavorEventType = attackerUnitDamage > 0 and "WOUNDED_KILL" or "KILL"
+                        WR_RecordKill(defenderPlayerID, defenderUnit, killedUnitType, killFlavorEventType)
+                    else
+                        WR_Debug("WR Perfect Adaptation: direct counterattack kill skipped because the defeated unit type was unavailable")
+                    end
+                end
             end
         end
     end)

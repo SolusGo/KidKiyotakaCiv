@@ -51,8 +51,8 @@ Survivalism I, Ignore Terrain Cost, and White Room Training.
 
 Kiyotaka permanently improves whenever he experiences combat.
 
-- On kill: gains combat strength, bonus damage against that unit class, and
-  immediate XP.
+- When personally landing a killing blow: gains combat strength, bonus damage
+  against that unit class, and immediate XP. Nearby allied kills do not count.
 - On dealing damage: gains combat strength, attack strength, and progress
   toward moving after combat.
 - On taking damage: gains damage resistance, healing scaling, and extra combat
