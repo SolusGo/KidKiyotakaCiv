@@ -99,7 +99,8 @@ scene still uses safe existing Civilization V art.
   - movement-after-combat becomes the `Flow State` promotion once the stored chance reaches 100%
   - exact counters are saved with `Modding.OpenSaveData()` and converted into visible tier promotions
   - damage-dealt credit uses `Events.EndCombatSim` when available and only fires when Kiyotaka is the attacker or defender and the opposing combat target's damage increases
-  - kill credit uses the same explicit attacker/defender combat IDs and requires lethal final damage; the old one-tile proximity approximation was removed so nearby allied kills cannot grant Kiyotaka adaptation or XP
+  - kill credit correlates Civ V's confirmed `UnitPrekill` death record with the same victim player/unit ID from Kiyotaka's explicit attacker/defender combat record; lethal final damage and a removed victim object remain guarded fallbacks
+  - the old one-tile proximity approximation was removed, so nearby allied kills cannot grant Kiyotaka adaptation, XP, telemetry, or kill flavor
   - a live unit-type cache preserves the defeated unit's combat class through Civ V's unit removal, allowing verified direct kills and counterattack kills to retain class-specific adaptation
   - contextual flavor separates ordinary attacks, clean exchanges, counterattacks, wounded targets, kills, wounded kills, damage, below-half-health pressure, critical survival, recovery, deployment, Flow State, tier breakthroughs, class-doctrine milestones, and death
   - routine combat barks use a 35% chance, a one-turn cooldown, and per-event no-repeat selection; forced milestone/survival lines bypass the chance and cooldown
@@ -252,8 +253,9 @@ WhiteRoomStatusPanel.lua loaded
 WR Status Panel: initialized
 ```
 
-- Verify Kiyotaka receives kill XP, combat adaptation, and class adaptation when
-  his own attack or counterattack destroys a unit.
+- Verify Kiyotaka receives kill XP, combat adaptation, class adaptation,
+  `TARGET NEUTRALIZED` telemetry, and a forced kill bark when his own attack or
+  counterattack destroys a unit.
 - Verify a different White Room unit destroying an enemy adjacent to Kiyotaka
   grants him no XP, kill telemetry, or class adaptation.
 

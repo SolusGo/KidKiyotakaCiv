@@ -63,6 +63,7 @@ local WR_DESPERATION_PROMOTIONS = {
 
 local WR_DAMAGE_CACHE = {}
 local WR_UNIT_TYPE_CACHE = {}
+local WR_PENDING_COMBAT_DEATHS = {}
 
 local function WR_SaveKey(playerID, key)
     return "WR_KIYOTAKA_" .. tostring(playerID) .. "_" .. key
@@ -144,6 +145,22 @@ local function WR_CacheUnitType(playerID, unitID)
     end
 
     return WR_UNIT_TYPE_CACHE[key]
+end
+
+local function WR_RememberCombatDeath(killedPlayerID, killedUnitID, killedUnitType, killerPlayerID)
+    if killedPlayerID == nil
+        or killedUnitID == nil
+        or killedUnitID < 0
+        or killerPlayerID == nil
+        or killerPlayerID < 0 then
+        return
+    end
+
+    WR_PENDING_COMBAT_DEATHS[WR_UnitDamageKey(killedPlayerID, killedUnitID)] = {
+        turn = Game.GetGameTurn(),
+        killerPlayerID = killerPlayerID,
+        killedUnitType = killedUnitType
+    }
 end
 
 local function WR_GetTierIndex(hundredths)
@@ -438,6 +455,36 @@ local function WR_WasDestroyed(finalDamage, maxHitPoints)
         and finalDamage >= maxHitPoints
 end
 
+local function WR_GetVerifiedDirectKillType(
+    killerPlayerID,
+    killedPlayerID,
+    killedUnitID,
+    finalDamage,
+    maxHitPoints
+)
+    if killedPlayerID == nil or killedUnitID == nil or killedUnitID < 0 then
+        return nil
+    end
+
+    local key = WR_UnitDamageKey(killedPlayerID, killedUnitID)
+    local pendingDeath = WR_PENDING_COMBAT_DEATHS[key]
+    if pendingDeath ~= nil
+        and pendingDeath.turn == Game.GetGameTurn()
+        and pendingDeath.killerPlayerID == killerPlayerID then
+        WR_PENDING_COMBAT_DEATHS[key] = nil
+        return pendingDeath.killedUnitType or WR_CacheUnitType(killedPlayerID, killedUnitID)
+    end
+
+    local killedPlayer = Players[killedPlayerID]
+    local killedUnit = killedPlayer ~= nil and killedPlayer:GetUnitByID(killedUnitID) or nil
+    if WR_WasDestroyed(finalDamage, maxHitPoints) or killedUnit == nil then
+        WR_PENDING_COMBAT_DEATHS[key] = nil
+        return WR_CacheUnitType(killedPlayerID, killedUnitID)
+    end
+
+    return nil
+end
+
 local function WR_ApplyPendingHeal(playerID, unit)
     local pendingHeal = WR_GetSavedNumber(playerID, "PENDING_HEAL")
     if pendingHeal <= 0 then
@@ -498,6 +545,8 @@ if GameEvents.UnitPrekill ~= nil then
         local killedPlayer = Players[killedPlayerID]
         local killedUnit = killedPlayer ~= nil and killedPlayer:GetUnitByID(killedUnitID) or nil
 
+        WR_RememberCombatDeath(killedPlayerID, killedUnitID, killedUnitType, killerPlayerID)
+
         if killedUnitType == UNIT_WR_KIYOTAKA then
             if WR_IsWhiteRoomPlayer(killedPlayer) and WR_KiyotakaFlavorRecordDeath ~= nil then
                 WR_KiyotakaFlavorRecordDeath(killedPlayerID, killedUnit)
@@ -508,6 +557,7 @@ end
 
 if Events.SerialEventUnitCreated ~= nil then
     Events.SerialEventUnitCreated.Add(function(playerID, unitID)
+        WR_PENDING_COMBAT_DEATHS[WR_UnitDamageKey(playerID, unitID)] = nil
         WR_CacheUnitType(playerID, unitID)
     end)
 end
@@ -595,14 +645,16 @@ if Events.EndCombatSim ~= nil then
 
                 WR_RecordDamageDealt(attackerPlayerID, attackerUnit, "combat target", flavorEventType)
 
-                if WR_WasDestroyed(defenderFinalUnitDamage, defenderMaxHitPoints) then
-                    local killedUnitType = WR_CacheUnitType(defenderPlayerID, defenderUnitID)
-                    if killedUnitType ~= nil then
-                        local killFlavorEventType = defenderUnitDamage > 0 and "WOUNDED_KILL" or "KILL"
-                        WR_RecordKill(attackerPlayerID, attackerUnit, killedUnitType, killFlavorEventType)
-                    else
-                        WR_Debug("WR Perfect Adaptation: direct kill skipped because the defeated unit type was unavailable")
-                    end
+                local killedUnitType = WR_GetVerifiedDirectKillType(
+                    attackerPlayerID,
+                    defenderPlayerID,
+                    defenderUnitID,
+                    defenderFinalUnitDamage,
+                    defenderMaxHitPoints
+                )
+                if killedUnitType ~= nil then
+                    local killFlavorEventType = defenderUnitDamage > 0 and "WOUNDED_KILL" or "KILL"
+                    WR_RecordKill(attackerPlayerID, attackerUnit, killedUnitType, killFlavorEventType)
                 end
             end
         end
@@ -617,14 +669,16 @@ if Events.EndCombatSim ~= nil then
                 and attackerFinalUnitDamage > attackerUnitDamage then
                 WR_RecordDamageDealt(defenderPlayerID, defenderUnit, "counterattack target", "COUNTERATTACK")
 
-                if WR_WasDestroyed(attackerFinalUnitDamage, attackerMaxHitPoints) then
-                    local killedUnitType = WR_CacheUnitType(attackerPlayerID, attackerUnitID)
-                    if killedUnitType ~= nil then
-                        local killFlavorEventType = attackerUnitDamage > 0 and "WOUNDED_KILL" or "KILL"
-                        WR_RecordKill(defenderPlayerID, defenderUnit, killedUnitType, killFlavorEventType)
-                    else
-                        WR_Debug("WR Perfect Adaptation: direct counterattack kill skipped because the defeated unit type was unavailable")
-                    end
+                local killedUnitType = WR_GetVerifiedDirectKillType(
+                    defenderPlayerID,
+                    attackerPlayerID,
+                    attackerUnitID,
+                    attackerFinalUnitDamage,
+                    attackerMaxHitPoints
+                )
+                if killedUnitType ~= nil then
+                    local killFlavorEventType = attackerUnitDamage > 0 and "WOUNDED_KILL" or "KILL"
+                    WR_RecordKill(defenderPlayerID, defenderUnit, killedUnitType, killFlavorEventType)
                 end
             end
         end
