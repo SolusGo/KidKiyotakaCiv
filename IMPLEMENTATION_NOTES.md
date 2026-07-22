@@ -99,9 +99,10 @@ scene still uses safe existing Civilization V art.
   - movement-after-combat becomes the `Flow State` promotion once the stored chance reaches 100%
   - exact counters are saved with `Modding.OpenSaveData()` and converted into visible tier promotions
   - damage-dealt credit uses `Events.EndCombatSim` when available and only fires when Kiyotaka is the attacker or defender and the opposing combat target's damage increases
-  - kill credit correlates Civ V's confirmed `UnitPrekill` death record with the same victim player/unit ID from Kiyotaka's explicit attacker/defender combat record; lethal final damage and a removed victim object remain guarded fallbacks
-  - the old one-tile proximity approximation was removed, so nearby allied kills cannot grant Kiyotaka adaptation, XP, telemetry, or kill flavor
-  - a live unit-type cache preserves the defeated unit's combat class through Civ V's unit removal, allowing verified direct kills and counterattack kills to retain class-specific adaptation
+  - kill credit is awarded directly from Civ V's authoritative `UnitPrekill` event while the defeated unit type and Kiyotaka's combat state are still available
+  - the combat simulation records Kiyotaka's exact opposing unit before the fight; active combat state plus the victim plot provides a guarded fallback if that visual record is unavailable
+  - credit requires that exact combat pairing or Kiyotaka actively fighting within one tile of the victim; proximity by itself is insufficient, so nearby allied kills grant no adaptation, XP, telemetry, or kill flavor
+  - per-victim deduplication protects against delayed-death callbacks firing more than once, while the `UnitPrekill` unit type preserves class-specific adaptation for direct kills and counterattack kills
   - contextual flavor separates ordinary attacks, clean exchanges, counterattacks, wounded targets, kills, wounded kills, damage, below-half-health pressure, critical survival, recovery, deployment, Flow State, tier breakthroughs, class-doctrine milestones, and death
   - routine combat barks use a 35% chance, a one-turn cooldown, and per-event no-repeat selection; forced milestone/survival lines bypass the chance and cooldown
   - floating combat text is only shown for the active White Room player, while every trigger still records its original Subject Note in persistent telemetry

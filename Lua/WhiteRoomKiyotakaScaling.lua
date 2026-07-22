@@ -62,8 +62,8 @@ local WR_DESPERATION_PROMOTIONS = {
 }
 
 local WR_DAMAGE_CACHE = {}
-local WR_UNIT_TYPE_CACHE = {}
-local WR_PENDING_COMBAT_DEATHS = {}
+local WR_KILL_CREDIT_CACHE = {}
+local WR_ACTIVE_KIYOTAKA_TARGETS = {}
 
 local function WR_SaveKey(playerID, key)
     return "WR_KIYOTAKA_" .. tostring(playerID) .. "_" .. key
@@ -130,37 +130,6 @@ end
 
 local function WR_UnitDamageKey(playerID, unitID)
     return tostring(playerID) .. ":" .. tostring(unitID)
-end
-
-local function WR_CacheUnitType(playerID, unitID)
-    if playerID == nil or unitID == nil or unitID < 0 then
-        return nil
-    end
-
-    local key = WR_UnitDamageKey(playerID, unitID)
-    local player = Players[playerID]
-    local unit = player ~= nil and player:GetUnitByID(unitID) or nil
-    if unit ~= nil then
-        WR_UNIT_TYPE_CACHE[key] = unit:GetUnitType()
-    end
-
-    return WR_UNIT_TYPE_CACHE[key]
-end
-
-local function WR_RememberCombatDeath(killedPlayerID, killedUnitID, killedUnitType, killerPlayerID)
-    if killedPlayerID == nil
-        or killedUnitID == nil
-        or killedUnitID < 0
-        or killerPlayerID == nil
-        or killerPlayerID < 0 then
-        return
-    end
-
-    WR_PENDING_COMBAT_DEATHS[WR_UnitDamageKey(killedPlayerID, killedUnitID)] = {
-        turn = Game.GetGameTurn(),
-        killerPlayerID = killerPlayerID,
-        killedUnitType = killedUnitType
-    }
 end
 
 local function WR_GetTierIndex(hundredths)
@@ -442,47 +411,52 @@ local function WR_PrimeDamageCache()
             for unit in player:Units() do
                 local key = WR_UnitDamageKey(playerID, unit:GetID())
                 WR_DAMAGE_CACHE[key] = unit:GetDamage()
-                WR_UNIT_TYPE_CACHE[key] = unit:GetUnitType()
             end
         end
     end
 end
 
-local function WR_WasDestroyed(finalDamage, maxHitPoints)
-    return type(finalDamage) == "number"
-        and type(maxHitPoints) == "number"
-        and maxHitPoints > 0
-        and finalDamage >= maxHitPoints
+local function WR_IsDirectKiyotakaCombat(unit, victimX, victimY)
+    if unit == nil or victimX == nil or victimY == nil then
+        return false
+    end
+
+    local stateOK, isActiveCombat = pcall(function()
+        return unit:IsFighting()
+            or unit:IsAttacking()
+            or unit:IsDefending()
+            or unit:IsInCombat()
+    end)
+    if not stateOK or not isActiveCombat then
+        return false
+    end
+
+    local unitPlot = unit:GetPlot()
+    local victimPlot = Map.GetPlot(victimX, victimY)
+    if unitPlot == nil or victimPlot == nil then
+        return false
+    end
+
+    return Map.PlotDistance(
+        unitPlot:GetX(),
+        unitPlot:GetY(),
+        victimPlot:GetX(),
+        victimPlot:GetY()
+    ) <= 1
 end
 
-local function WR_GetVerifiedDirectKillType(
-    killerPlayerID,
-    killedPlayerID,
-    killedUnitID,
-    finalDamage,
-    maxHitPoints
-)
-    if killedPlayerID == nil or killedUnitID == nil or killedUnitID < 0 then
-        return nil
+local function WR_MarkKiyotakaCombatTarget(killerPlayerID, killerUnitID, victimPlayerID, victimUnitID)
+    if victimPlayerID == nil or victimUnitID == nil or victimUnitID < 0 then
+        return
     end
 
-    local key = WR_UnitDamageKey(killedPlayerID, killedUnitID)
-    local pendingDeath = WR_PENDING_COMBAT_DEATHS[key]
-    if pendingDeath ~= nil
-        and pendingDeath.turn == Game.GetGameTurn()
-        and pendingDeath.killerPlayerID == killerPlayerID then
-        WR_PENDING_COMBAT_DEATHS[key] = nil
-        return pendingDeath.killedUnitType or WR_CacheUnitType(killedPlayerID, killedUnitID)
+    local killerPlayer = Players[killerPlayerID]
+    local killerUnit = killerPlayer ~= nil and killerPlayer:GetUnitByID(killerUnitID) or nil
+    if WR_IsWhiteRoomPlayer(killerPlayer)
+        and killerUnit ~= nil
+        and killerUnit:GetUnitType() == UNIT_WR_KIYOTAKA then
+        WR_ACTIVE_KIYOTAKA_TARGETS[WR_UnitDamageKey(victimPlayerID, victimUnitID)] = killerPlayerID
     end
-
-    local killedPlayer = Players[killedPlayerID]
-    local killedUnit = killedPlayer ~= nil and killedPlayer:GetUnitByID(killedUnitID) or nil
-    if WR_WasDestroyed(finalDamage, maxHitPoints) or killedUnit == nil then
-        WR_PENDING_COMBAT_DEATHS[key] = nil
-        return WR_CacheUnitType(killedPlayerID, killedUnitID)
-    end
-
-    return nil
 end
 
 local function WR_ApplyPendingHeal(playerID, unit)
@@ -545,7 +519,25 @@ if GameEvents.UnitPrekill ~= nil then
         local killedPlayer = Players[killedPlayerID]
         local killedUnit = killedPlayer ~= nil and killedPlayer:GetUnitByID(killedUnitID) or nil
 
-        WR_RememberCombatDeath(killedPlayerID, killedUnitID, killedUnitType, killerPlayerID)
+        local killerPlayer = killerPlayerID ~= nil and killerPlayerID >= 0 and Players[killerPlayerID] or nil
+        if WR_IsWhiteRoomPlayer(killerPlayer) then
+            local kiyotaka = WR_FindKiyotaka(killerPlayer)
+            local deathKey = WR_UnitDamageKey(killedPlayerID, killedUnitID)
+            local matchedCombat = WR_ACTIVE_KIYOTAKA_TARGETS[deathKey] == killerPlayerID
+            if not WR_KILL_CREDIT_CACHE[deathKey]
+                and (matchedCombat or WR_IsDirectKiyotakaCombat(kiyotaka, x, y)) then
+                WR_KILL_CREDIT_CACHE[deathKey] = true
+
+                local priorDamage = tonumber(WR_DAMAGE_CACHE[deathKey]) or 0
+                local maxHitPoints = killedUnit ~= nil and killedUnit:GetMaxHitPoints()
+                    or tonumber(GameDefines.MAX_HIT_POINTS)
+                    or 100
+                local flavorEventType = priorDamage > 0 and priorDamage < maxHitPoints
+                    and "WOUNDED_KILL"
+                    or "KILL"
+                WR_RecordKill(killerPlayerID, kiyotaka, killedUnitType, flavorEventType)
+            end
+        end
 
         if killedUnitType == UNIT_WR_KIYOTAKA then
             if WR_IsWhiteRoomPlayer(killedPlayer) and WR_KiyotakaFlavorRecordDeath ~= nil then
@@ -557,8 +549,9 @@ end
 
 if Events.SerialEventUnitCreated ~= nil then
     Events.SerialEventUnitCreated.Add(function(playerID, unitID)
-        WR_PENDING_COMBAT_DEATHS[WR_UnitDamageKey(playerID, unitID)] = nil
-        WR_CacheUnitType(playerID, unitID)
+        local key = WR_UnitDamageKey(playerID, unitID)
+        WR_KILL_CREDIT_CACHE[key] = nil
+        WR_ACTIVE_KIYOTAKA_TARGETS[key] = nil
     end)
 end
 
@@ -604,8 +597,8 @@ if Events.RunCombatSim ~= nil then
         defenderPlayerID,
         defenderUnitID
     )
-        WR_CacheUnitType(attackerPlayerID, attackerUnitID)
-        WR_CacheUnitType(defenderPlayerID, defenderUnitID)
+        WR_MarkKiyotakaCombatTarget(attackerPlayerID, attackerUnitID, defenderPlayerID, defenderUnitID)
+        WR_MarkKiyotakaCombatTarget(defenderPlayerID, defenderUnitID, attackerPlayerID, attackerUnitID)
     end)
 end
 
@@ -644,18 +637,6 @@ if Events.EndCombatSim ~= nil then
                 end
 
                 WR_RecordDamageDealt(attackerPlayerID, attackerUnit, "combat target", flavorEventType)
-
-                local killedUnitType = WR_GetVerifiedDirectKillType(
-                    attackerPlayerID,
-                    defenderPlayerID,
-                    defenderUnitID,
-                    defenderFinalUnitDamage,
-                    defenderMaxHitPoints
-                )
-                if killedUnitType ~= nil then
-                    local killFlavorEventType = defenderUnitDamage > 0 and "WOUNDED_KILL" or "KILL"
-                    WR_RecordKill(attackerPlayerID, attackerUnit, killedUnitType, killFlavorEventType)
-                end
             end
         end
 
@@ -668,20 +649,11 @@ if Events.EndCombatSim ~= nil then
                 and attackerUnitDamage ~= nil
                 and attackerFinalUnitDamage > attackerUnitDamage then
                 WR_RecordDamageDealt(defenderPlayerID, defenderUnit, "counterattack target", "COUNTERATTACK")
-
-                local killedUnitType = WR_GetVerifiedDirectKillType(
-                    defenderPlayerID,
-                    attackerPlayerID,
-                    attackerUnitID,
-                    attackerFinalUnitDamage,
-                    attackerMaxHitPoints
-                )
-                if killedUnitType ~= nil then
-                    local killFlavorEventType = attackerUnitDamage > 0 and "WOUNDED_KILL" or "KILL"
-                    WR_RecordKill(defenderPlayerID, defenderUnit, killedUnitType, killFlavorEventType)
-                end
             end
         end
+
+        WR_ACTIVE_KIYOTAKA_TARGETS[WR_UnitDamageKey(attackerPlayerID, attackerUnitID)] = nil
+        WR_ACTIVE_KIYOTAKA_TARGETS[WR_UnitDamageKey(defenderPlayerID, defenderUnitID)] = nil
     end)
 end
 
