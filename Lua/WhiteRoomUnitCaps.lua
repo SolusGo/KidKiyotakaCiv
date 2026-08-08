@@ -17,6 +17,11 @@ local WR_UNIT_CAPS = {}
 WR_UNIT_CAPS[UNIT_WR_KIYOTAKA] = 1
 WR_UNIT_CAPS[UNIT_WR_FOURTH_GEN_OPERATIVE] = 3
 
+local function WR_IsRestrictedWhiteRoomUnit(unitType)
+    return (UNIT_WR_KIYOTAKA ~= nil and unitType == UNIT_WR_KIYOTAKA)
+        or (UNIT_WR_FOURTH_GEN_OPERATIVE ~= nil and unitType == UNIT_WR_FOURTH_GEN_OPERATIVE)
+end
+
 local function WR_IsWhiteRoomPlayer(player)
     return player
         and player:IsAlive()
@@ -108,7 +113,7 @@ if GameEvents.PlayerCanTrain ~= nil then
     GameEvents.PlayerCanTrain.Add(function(playerID, unitType)
         local player = Players[playerID]
         if not WR_IsWhiteRoomPlayer(player) then
-            return true
+            return not WR_IsRestrictedWhiteRoomUnit(unitType)
         end
 
         local cap = WR_UNIT_CAPS[unitType]
@@ -123,6 +128,17 @@ if GameEvents.PlayerCanTrain ~= nil then
                 player:GetName(),
                 cap
             ))
+            return false
+        end
+
+        return true
+    end)
+end
+
+if GameEvents.CanHaveUpgrade ~= nil then
+    GameEvents.CanHaveUpgrade.Add(function(playerID, unitID, unitClassType, unitType)
+        local player = Players[playerID]
+        if not WR_IsWhiteRoomPlayer(player) and WR_IsRestrictedWhiteRoomUnit(unitType) then
             return false
         end
 

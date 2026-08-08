@@ -130,8 +130,12 @@ JOIN Civilization_UnitClassOverrides
   ON Civilization_UnitClassOverrides.UnitClassType = UnitClasses.Type
 JOIN Units
   ON Units.Type = Civilization_UnitClassOverrides.UnitType
-WHERE UnitClasses.DefaultUnit IS NULL
-   OR UnitClasses.DefaultUnit = ''
+WHERE (UnitClasses.DefaultUnit IS NULL
+   OR UnitClasses.DefaultUnit = '')
+  AND UnitClasses.Type IN (
+      'UNITCLASS_WR_KIYOTAKA',
+      'UNITCLASS_WR_FOURTH_GEN_OPERATIVE'
+  )
 GROUP BY UnitClasses.Type;
 
 UPDATE UnitClasses

@@ -71,6 +71,7 @@ scene still uses safe existing Civilization V art.
   - 4th Generation Operative active cap: 3
   - blocks training through `PlayerCanTrain` when available
   - removes extra capped units if they are granted, captured, or otherwise created
+  - explicitly rejects Kiyotaka and the 4th Generation Operative as training or upgrade targets for every non-White Room civilization, preventing foreign unique-unit lineages from resolving into White Room units
   - keeps the highest-level/highest-XP copies when removing extras
 - Static unique unit polish:
   - file: `SQL/WhiteRoomPlayableCiv.sql`
@@ -153,7 +154,7 @@ scene still uses safe existing Civilization V art.
   - repairs malformed `AURONTRAIT` building references from Arendelle's United Republic of Nations across yield and happiness tooltip tables
   - removes remaining orphaned `BuildingType` rows from CP building-class yield and happiness tooltip tables
   - removes orphaned `Unit_FreePromotions` links that would abort CP's research-panel refresh and leave stale technology text
-  - normalizes custom unit classes with `NULL DefaultUnit` values while preserving their original civilization-only availability
+  - normalizes only White Room's two custom unit classes when their `DefaultUnit` is `NULL`, preserving civilization-only availability without rewriting unrelated custom civilizations' classes
 - Phase 4 in-game status UI:
   - files: `UI/WhiteRoomStatusPanel.xml`, `UI/WhiteRoomStatusPanel.lua`
   - separate `White Room Status Panel` InGameUIAddin
