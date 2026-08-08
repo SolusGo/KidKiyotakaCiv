@@ -100,13 +100,6 @@ local function WR_GetActiveWhiteRoomPlayer()
         return activePlayerID, activePlayer
     end
 
-    for playerID = 0, (GameDefines.MAX_CIV_PLAYERS or 63) - 1 do
-        local player = Players[playerID]
-        if WR_IsWhiteRoomPlayer(player) then
-            return playerID, player
-        end
-    end
-
     return nil, nil
 end
 

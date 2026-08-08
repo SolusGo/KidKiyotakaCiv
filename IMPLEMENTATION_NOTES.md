@@ -158,6 +158,7 @@ scene still uses safe existing Civilization V art.
   - files: `UI/WhiteRoomStatusPanel.xml`, `UI/WhiteRoomStatusPanel.lua`
   - separate `White Room Status Panel` InGameUIAddin
   - adds a small in-game `White Room` button
+  - shows the status button, dossier data, telemetry feed, and Kiyotaka assessment banners only when the local active player controls the White Room civilization; AI White Room records are not exposed to players using another civilization
   - hides and closes the status UI while a leader-diplomacy screen is active
   - opens a tabbed status panel with Empire, Cities, Kiyotaka, and Units views
   - Empire tab shows trade-route learning, captured-city learning, stored/applied global bonuses, and ready/pending labels
