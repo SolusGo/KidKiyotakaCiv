@@ -139,6 +139,9 @@ SELECT
 FROM Civilizations
 WHERE Type = 'CIVILIZATION_AMERICA';
 
+UPDATE Civilizations SET Playable = 1, AIPlayable = 0
+WHERE Type = 'CIVILIZATION_WHITE_ROOM_KID';
+
 INSERT INTO Civilization_Leaders (CivilizationType, LeaderheadType)
 VALUES ('CIVILIZATION_WHITE_ROOM_KID', 'LEADER_WR_KID_KIYOTAKA');
 
