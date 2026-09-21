@@ -5,10 +5,11 @@ print("WhiteRoomTradeRouteLearning.lua loaded")
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 
 local WR_TRADE_SAVE = Modding.OpenSaveData()
-local WR_TRADE_RECENT_EVENTS = {}
+local WR_TRADE_RECENT_DEPARTURES = {}
 local WR_TRADE_POLL_SUPPORT = nil
 local WR_TRADE_DEBUG = false
 local WR_TRADE_HALF_STACKS_PER_CONNECTION = 0.25
+local WR_TRADE_STATE_VERSION = 2
 
 local function WR_Debug(message)
     if WR_TRADE_DEBUG then
@@ -36,23 +37,11 @@ end
 
 local function WR_GetSavedNumber(playerID, suffix)
     local value = WR_TRADE_SAVE.GetValue(WR_SaveKey(playerID, suffix))
-    if type(value) ~= "number" then
-        return 0
-    end
-
-    return value
+    return tonumber(value) or 0
 end
 
 local function WR_SetSavedNumber(playerID, suffix, value)
     WR_TRADE_SAVE.SetValue(WR_SaveKey(playerID, suffix), value)
-end
-
-local function WR_GetSavedFlag(key)
-    return WR_TRADE_SAVE.GetValue(key) == 1
-end
-
-local function WR_SetSavedFlag(key)
-    WR_TRADE_SAVE.SetValue(key, 1)
 end
 
 local function WR_ClearTradeGoldDummies(city)
@@ -97,43 +86,23 @@ local function WR_CityName(playerID, cityID)
     end
 
     local city = player:GetCityByID(cityID)
-    if city == nil then
-        return tostring(cityID)
-    end
-
-    return city:GetName()
+    return city ~= nil and city:GetName() or tostring(cityID)
 end
 
-local function WR_RecordTradeRouteLearning(playerID, otherPlayerID, fromCityID, toCityID, domain, connectionType)
-    local turn = Game.GetGameTurn()
-    local eventKey = table.concat({
-        tostring(turn),
-        tostring(playerID),
-        tostring(otherPlayerID),
-        tostring(fromCityID),
-        tostring(toCityID),
-        tostring(domain),
-        tostring(connectionType)
-    }, ":")
-
-    if WR_TRADE_RECENT_EVENTS[eventKey] then
-        return
-    end
-    WR_TRADE_RECENT_EVENTS[eventKey] = true
-
+local function WR_RecordTradeRouteLearning(playerID, otherPlayerID, ownCityID, otherCityID, domain, connectionType)
     local halfStacks = WR_GetSavedNumber(playerID, "HALF_GOLD_STACKS") + WR_TRADE_HALF_STACKS_PER_CONNECTION
     WR_SetSavedNumber(playerID, "HALF_GOLD_STACKS", halfStacks)
     WR_ApplyTradeGoldForPlayer(playerID)
 
     local wholePercent = math.floor(halfStacks / 2)
     local learnedPercent = halfStacks * 0.5
-    local fromCityName = WR_CityName(playerID, fromCityID)
-    local toCityName = WR_CityName(otherPlayerID, toCityID)
+    local ownCityName = WR_CityName(playerID, ownCityID)
+    local otherCityName = WR_CityName(otherPlayerID, otherCityID)
 
     WR_Debug(string.format(
-        "WR Trade Route Learning: trade connection learned by White Room (%s -> %s); gold learning now +%.2f%%, applied gold modifier +%d%%",
-        fromCityName,
-        toCityName,
+        "WR Trade Route Learning: route instance learned by White Room (%s <-> %s); gold learning now +%.2f%%, applied gold modifier +%d%%",
+        ownCityName,
+        otherCityName,
         learnedPercent,
         wholePercent
     ))
@@ -144,9 +113,9 @@ local function WR_RecordTradeRouteLearning(playerID, otherPlayerID, fromCityID, 
             "EMPIRE",
             "TRADE CONNECTION ANALYZED",
             string.format(
-                "%s -> %s // Gold stored +%.2f%% // Applied +%d%%",
-                fromCityName,
-                toCityName,
+                "%s <-> %s // Gold stored +%.2f%% // Applied +%d%%",
+                ownCityName,
+                otherCityName,
                 learnedPercent,
                 wholePercent
             )
@@ -167,8 +136,17 @@ end
 
 local function WR_GetRouteCityID(route, cityFieldNames, idFieldNames)
     local city = WR_GetRouteField(route, cityFieldNames)
-    if city ~= nil and type(city) == "table" and city.GetID ~= nil then
-        return city:GetID()
+    if type(city) == "number" then
+        return city
+    end
+
+    if city ~= nil then
+        local ok, cityID = pcall(function()
+            return city:GetID()
+        end)
+        if ok then
+            return cityID
+        end
     end
 
     return WR_GetRouteField(route, idFieldNames)
@@ -185,77 +163,211 @@ local function WR_BuildPolledRoute(route)
     return fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType
 end
 
-local function WR_RecordPolledRoute(playerID, fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType)
-    if fromPlayerID == nil or toPlayerID == nil or fromCityID == nil or toCityID == nil then
-        return
-    end
-
-    local learnedRouteKey = table.concat({
-        "WR_TRADE_ROUTE_LEARNED",
-        tostring(playerID),
+local function WR_RouteFingerprint(fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType)
+    return table.concat({
         tostring(fromPlayerID),
         tostring(fromCityID),
         tostring(toPlayerID),
         tostring(toCityID),
         tostring(domain),
         tostring(connectionType)
-    }, "_")
+    }, ":")
+end
 
-    if WR_GetSavedFlag(learnedRouteKey) then
+local function WR_RegisterFingerprint(playerID, fingerprint)
+    local knownSuffix = "ROUTE_V2_KNOWN_" .. fingerprint
+    if WR_GetSavedNumber(playerID, knownSuffix) == 1 then
         return
     end
 
-    WR_SetSavedFlag(learnedRouteKey)
+    local count = WR_GetSavedNumber(playerID, "ROUTE_V2_REGISTRY_COUNT") + 1
+    WR_SetSavedNumber(playerID, "ROUTE_V2_REGISTRY_COUNT", count)
+    WR_TRADE_SAVE.SetValue(WR_SaveKey(playerID, "ROUTE_V2_REGISTRY_" .. tostring(count)), fingerprint)
+    WR_SetSavedNumber(playerID, knownSuffix, 1)
+end
 
-    if playerID == fromPlayerID then
-        WR_RecordTradeRouteLearning(playerID, toPlayerID, fromCityID, toCityID, domain, connectionType)
-    else
-        WR_RecordTradeRouteLearning(playerID, fromPlayerID, toCityID, fromCityID, domain, connectionType)
+local function WR_AwardRouteInstances(playerID, route, count)
+    for _ = 1, count do
+        if playerID == route.fromPlayerID then
+            WR_RecordTradeRouteLearning(playerID, route.toPlayerID, route.fromCityID, route.toCityID, route.domain, route.connectionType)
+        else
+            WR_RecordTradeRouteLearning(playerID, route.fromPlayerID, route.toCityID, route.fromCityID, route.domain, route.connectionType)
+        end
     end
 end
 
-local function WR_PollActiveTradeRoutes(playerID)
+local function WR_DepartureKey(playerID, fingerprint)
+    return tostring(playerID) .. "|" .. fingerprint
+end
+
+local function WR_RecordRecentDeparture(playerID, fingerprint, count)
+    if count <= 0 then
+        return
+    end
+
+    local key = WR_DepartureKey(playerID, fingerprint)
+    local departure = WR_TRADE_RECENT_DEPARTURES[key]
+    local turn = Game.GetGameTurn()
+
+    if departure == nil or departure.turn ~= turn then
+        departure = { turn = turn, count = 0 }
+        WR_TRADE_RECENT_DEPARTURES[key] = departure
+    end
+
+    departure.count = departure.count + count
+end
+
+local function WR_ConsumeRecentDeparture(playerID, fingerprint)
+    local key = WR_DepartureKey(playerID, fingerprint)
+    local departure = WR_TRADE_RECENT_DEPARTURES[key]
+    if departure == nil or Game.GetGameTurn() - departure.turn > 1 or departure.count <= 0 then
+        WR_TRADE_RECENT_DEPARTURES[key] = nil
+        return false
+    end
+
+    departure.count = departure.count - 1
+    if departure.count <= 0 then
+        WR_TRADE_RECENT_DEPARTURES[key] = nil
+    end
+
+    return true
+end
+
+local function WR_GetAllActiveRouteCounts(playerID)
+    local routeCounts = {}
+    local pollWorked = false
+
+    for routeOwnerID = 0, (GameDefines.MAX_CIV_PLAYERS or 63) - 1 do
+        local routeOwner = Players[routeOwnerID]
+        if routeOwner ~= nil and routeOwner:IsAlive() and routeOwner.GetTradeRoutes ~= nil then
+            local ok, routes = pcall(function()
+                return routeOwner:GetTradeRoutes()
+            end)
+
+            if ok and routes ~= nil then
+                pollWorked = true
+                for _, rawRoute in pairs(routes) do
+                    local fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType = WR_BuildPolledRoute(rawRoute)
+                    if (fromPlayerID == playerID or toPlayerID == playerID)
+                        and fromPlayerID ~= nil
+                        and fromCityID ~= nil
+                        and toPlayerID ~= nil
+                        and toCityID ~= nil then
+                        local fingerprint = WR_RouteFingerprint(fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType)
+                        local route = routeCounts[fingerprint]
+                        if route == nil then
+                            route = {
+                                count = 0,
+                                fromPlayerID = fromPlayerID,
+                                fromCityID = fromCityID,
+                                toPlayerID = toPlayerID,
+                                toCityID = toCityID,
+                                domain = domain,
+                                connectionType = connectionType
+                            }
+                            routeCounts[fingerprint] = route
+                        end
+                        route.count = route.count + 1
+                    end
+                end
+            end
+        end
+    end
+
+    if WR_TRADE_POLL_SUPPORT == nil then
+        WR_TRADE_POLL_SUPPORT = pollWorked
+        WR_Debug("WR Trade Route Learning: global route polling " .. (pollWorked and "available" or "unavailable"))
+    end
+
+    return pollWorked, routeCounts
+end
+
+local function WR_ReconcileActiveRoutes(playerID, awardNewRoutes)
+    local pollWorked, routeCounts = WR_GetAllActiveRouteCounts(playerID)
+    if not pollWorked then
+        return false
+    end
+
+    for fingerprint, route in pairs(routeCounts) do
+        WR_RegisterFingerprint(playerID, fingerprint)
+        local activeSuffix = "ROUTE_V2_ACTIVE_" .. fingerprint
+        local oldCount = WR_GetSavedNumber(playerID, activeSuffix)
+
+        if awardNewRoutes and route.count > oldCount then
+            WR_AwardRouteInstances(playerID, route, route.count - oldCount)
+        elseif route.count < oldCount then
+            WR_RecordRecentDeparture(playerID, fingerprint, oldCount - route.count)
+        end
+
+        WR_SetSavedNumber(playerID, activeSuffix, route.count)
+    end
+
+    local registryCount = WR_GetSavedNumber(playerID, "ROUTE_V2_REGISTRY_COUNT")
+    for index = 1, registryCount do
+        local fingerprint = WR_TRADE_SAVE.GetValue(WR_SaveKey(playerID, "ROUTE_V2_REGISTRY_" .. tostring(index)))
+        if type(fingerprint) == "string" and routeCounts[fingerprint] == nil then
+            local activeSuffix = "ROUTE_V2_ACTIVE_" .. fingerprint
+            local oldCount = WR_GetSavedNumber(playerID, activeSuffix)
+            if oldCount > 0 then
+                WR_RecordRecentDeparture(playerID, fingerprint, oldCount)
+                WR_SetSavedNumber(playerID, activeSuffix, 0)
+            end
+        end
+    end
+
+    return true
+end
+
+local function WR_EnsureRouteState(playerID)
+    if WR_GetSavedNumber(playerID, "ROUTE_STATE_VERSION") >= WR_TRADE_STATE_VERSION then
+        return true
+    end
+
+    if WR_ReconcileActiveRoutes(playerID, false) then
+        WR_SetSavedNumber(playerID, "ROUTE_STATE_VERSION", WR_TRADE_STATE_VERSION)
+        WR_Debug("WR Trade Route Learning: migrated active routes without granting duplicate credit")
+        return true
+    end
+
+    return false
+end
+
+local function WR_ProcessCompletedRoute(playerID, fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType)
+    local route = {
+        fromPlayerID = fromPlayerID,
+        fromCityID = fromCityID,
+        toPlayerID = toPlayerID,
+        toCityID = toCityID,
+        domain = domain,
+        connectionType = connectionType
+    }
+    local fingerprint = WR_RouteFingerprint(fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType)
+    WR_RegisterFingerprint(playerID, fingerprint)
+
+    local activeSuffix = "ROUTE_V2_ACTIVE_" .. fingerprint
+    local activeCount = WR_GetSavedNumber(playerID, activeSuffix)
+    if activeCount > 0 then
+        WR_SetSavedNumber(playerID, activeSuffix, activeCount - 1)
+        return
+    end
+
+    if WR_ConsumeRecentDeparture(playerID, fingerprint) then
+        return
+    end
+
+    WR_AwardRouteInstances(playerID, route, 1)
+end
+
+function WR_TradeRouteLearning_DoTurn(playerID)
     local player = Players[playerID]
     if not WR_IsWhiteRoomPlayer(player) then
         return
     end
 
-    if player.GetTradeRoutes == nil then
-        if WR_TRADE_POLL_SUPPORT == nil then
-            WR_TRADE_POLL_SUPPORT = false
-            WR_Debug("WR Trade Route Learning: player:GetTradeRoutes() unavailable")
-        end
-        return
-    end
-
-    local ok, routes = pcall(function()
-        return player:GetTradeRoutes()
-    end)
-
-    if WR_TRADE_POLL_SUPPORT == nil then
-        WR_TRADE_POLL_SUPPORT = ok
-        if ok then
-            WR_Debug("WR Trade Route Learning: player:GetTradeRoutes() polling available")
-        else
-            WR_Debug("WR Trade Route Learning: player:GetTradeRoutes() polling unavailable")
-        end
-    end
-
-    if not ok or routes == nil then
-        return
-    end
-
-    for _, route in pairs(routes) do
-        local fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType = WR_BuildPolledRoute(route)
-        if fromPlayerID == playerID or toPlayerID == playerID then
-            WR_RecordPolledRoute(playerID, fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType)
-        end
-    end
-end
-
-function WR_TradeRouteLearning_DoTurn(playerID)
     WR_ApplyTradeGoldForPlayer(playerID)
-    WR_PollActiveTradeRoutes(playerID)
+    if WR_EnsureRouteState(playerID) then
+        WR_ReconcileActiveRoutes(playerID, true)
+    end
 end
 
 GameEvents.PlayerDoTurn.Add(WR_TradeRouteLearning_DoTurn)
@@ -265,12 +377,12 @@ if GameEvents.PlayerTradeRouteCompleted ~= nil then
         local fromPlayer = Players[fromPlayerID]
         local toPlayer = Players[toPlayerID]
 
-        if WR_IsWhiteRoomPlayer(fromPlayer) then
-            WR_RecordTradeRouteLearning(fromPlayerID, toPlayerID, fromCityID, toCityID, domain, connectionType)
+        if WR_IsWhiteRoomPlayer(fromPlayer) and WR_EnsureRouteState(fromPlayerID) then
+            WR_ProcessCompletedRoute(fromPlayerID, fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType)
         end
 
-        if toPlayerID ~= fromPlayerID and WR_IsWhiteRoomPlayer(toPlayer) then
-            WR_RecordTradeRouteLearning(toPlayerID, fromPlayerID, toCityID, fromCityID, domain, connectionType)
+        if toPlayerID ~= fromPlayerID and WR_IsWhiteRoomPlayer(toPlayer) and WR_EnsureRouteState(toPlayerID) then
+            WR_ProcessCompletedRoute(toPlayerID, fromPlayerID, fromCityID, toPlayerID, toCityID, domain, connectionType)
         end
     end)
 

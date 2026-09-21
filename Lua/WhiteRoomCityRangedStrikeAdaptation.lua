@@ -30,7 +30,25 @@ local function WR_IsWhiteRoomPlayer(player)
         and player:GetCivilizationType() == CIV_WHITE_ROOM_KID
 end
 
+local function WR_CityFoundedTurn(city)
+    local ok, turn = pcall(function()
+        return city:GetGameTurnFounded()
+    end)
+
+    return ok and tonumber(turn) or -1
+end
+
 local function WR_CityKey(playerID, city)
+    return table.concat({
+        tostring(playerID),
+        tostring(city:GetID()),
+        tostring(city:GetX()),
+        tostring(city:GetY()),
+        tostring(WR_CityFoundedTurn(city))
+    }, ":")
+end
+
+local function WR_LegacyCityKey(playerID, city)
     return tostring(playerID) .. ":" .. tostring(city:GetID())
 end
 
@@ -49,6 +67,25 @@ end
 
 local function WR_SetSavedNumber(playerID, city, suffix, value)
     WR_CITY_RANGED_SAVE.SetValue(WR_SaveKey(playerID, city, suffix), value)
+end
+
+local function WR_MigrateLegacyCityStateForPlayer(playerID, player)
+    local migrationKey = "WR_CITY_RANGED_" .. tostring(playerID) .. "_IDENTITY_V2_MIGRATED"
+    if WR_CITY_RANGED_SAVE.GetValue(migrationKey) == 1 then
+        return
+    end
+
+    for city in player:Cities() do
+        local newKey = WR_SaveKey(playerID, city, "ATTACK_STACKS")
+        local oldKey = "WR_CITY_RANGED_" .. WR_LegacyCityKey(playerID, city) .. "_ATTACK_STACKS"
+        local oldValue = WR_CITY_RANGED_SAVE.GetValue(oldKey)
+
+        if WR_CITY_RANGED_SAVE.GetValue(newKey) == nil and type(oldValue) == "number" then
+            WR_CITY_RANGED_SAVE.SetValue(newKey, oldValue)
+        end
+    end
+
+    WR_CITY_RANGED_SAVE.SetValue(migrationKey, 1)
 end
 
 local function WR_ApplyRangedStacks(city, stacks)
@@ -157,6 +194,8 @@ local function WR_PollPlayerCities(playerID, reason)
     if not WR_IsWhiteRoomPlayer(player) then
         return
     end
+
+    WR_MigrateLegacyCityStateForPlayer(playerID, player)
 
     for city in player:Cities() do
         if reason == "PlayerDoTurn" or reason == "initial" then

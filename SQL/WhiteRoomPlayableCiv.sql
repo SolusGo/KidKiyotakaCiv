@@ -6,6 +6,21 @@
 -- custom icons, units, balance, and real trait behavior are finished.
 
 -- --------------------------------------------------------------------------
+-- Community Patch event callbacks used by the gameplay modules
+-- --------------------------------------------------------------------------
+
+UPDATE CustomModOptions
+SET Value = 1
+WHERE Name IN (
+    'EVENTS_UNIT_PREKILL',
+    'EVENTS_TRADE_ROUTES',
+    'EVENTS_UNIT_UPGRADES',
+    'EVENTS_MINORS_INTERACTION',
+    'EVENTS_CITY_FOUNDING',
+    'EVENTS_UNIT_CREATED'
+);
+
+-- --------------------------------------------------------------------------
 -- Colors
 -- --------------------------------------------------------------------------
 

@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <Mod id="995265a7-f41f-495b-a753-2688d72cdca3" version="1">
   <Properties>
     <Name>Kid Kiyotaka White Room</Name>
     <Teaser>White Room adaptation mechanics for Civilization V.</Teaser>
     <Description>Work-in-progress Civilization V BNW mod for Kid Kiyotaka and the Fourth Generation White Room.</Description>
     <Authors>ThatOneYi</Authors>
-    <SpecialThanks></SpecialThanks>
+    <SpecialThanks />
     <AffectsSavedGames>1</AffectsSavedGames>
     <MinCompatibleSaveVersion>0</MinCompatibleSaveVersion>
     <SupportsSinglePlayer>1</SupportsSinglePlayer>
@@ -21,20 +21,139 @@
   <References />
   <Blocks />
   <Files>
-    <File md5="CE32E1BEEEC6C93AA92DB8229DDD31C7" import="0">SQL\WhiteRoomAdaptationDummyPromotions.sql</File>
+    <File md5="58B038D80622E8D9CDC66F507C16B710" import="0">SQL\WhiteRoomPlayableCiv.sql</File>
+    <File md5="01F4B84B3CEED1310A30F3519AD089AF" import="0">SQL\WhiteRoomAdaptationDummyPromotions.sql</File>
     <File md5="1BEACAB73905429889D69DB5DD394637" import="0">SQL\WhiteRoomDuplicateDummyBuildings.sql</File>
-    <File md5="64B14AD7E74687B222D2A75DDF3B9F59" import="1">Lua\WhiteRoomDuplicateImprovements.lua</File>
+    <File md5="2FE6CFFCF7C531C30277C6575A1D834B" import="0">SQL\WhiteRoomCityHpAdaptationDummyBuildings.sql</File>
+    <File md5="23DB22D92FED83F0467AC490F3BB72A3" import="0">SQL\WhiteRoomCityRangedStrikeDummyBuildings.sql</File>
+    <File md5="DE965435F1860C67B943319CA9216459" import="0">SQL\WhiteRoomTradeRouteLearningDummyBuildings.sql</File>
+    <File md5="AF33D44CE685164170CDC20435CEA6B2" import="0">SQL\WhiteRoomCapturedCityLearningDummyBuildings.sql</File>
+    <File md5="4E4C555017AC03EAE33B584FFFFF0008" import="0">SQL\WhiteRoomCompatibilityText.sql</File>
+    <File md5="A85ADD21E5E4C344A37884067D9E3CF7" import="1">WR_Kiyotaka_Leader_256.dds</File>
+    <File md5="AE185FA0533C0E57587CF77CF033EA5D" import="1">WR_Kiyotaka_Leader_128.dds</File>
+    <File md5="E2184CA289315972484F916B826C5778" import="1">WR_Kiyotaka_Leader_80.dds</File>
+    <File md5="8664B0A1AF4EE1D2B7515330EBA21F6D" import="1">WR_Kiyotaka_Leader_64.dds</File>
+    <File md5="D110E33E826891CB17C1638815672BC2" import="1">WR_Kiyotaka_Leader_48.dds</File>
+    <File md5="B696C7308738E13D850815298BF8D94E" import="1">WR_Kiyotaka_Leader_45.dds</File>
+    <File md5="87F48602E1576B494D6350890AF182B3" import="1">WR_Kiyotaka_Leader_32.dds</File>
+    <File md5="F04901C4111F99369D20AEB72A399862" import="1">WR_Kiyotaka_Leader_24.dds</File>
+    <File md5="C8EB9A58F2B50597207ADC31D48ACA32" import="1">WR_WhiteRoom_Icon_256.dds</File>
+    <File md5="85E08121EBAE14FB21861D64A4241177" import="1">WR_WhiteRoom_Icon_128.dds</File>
+    <File md5="5CA12AB52CFD8B44650D1F20FF941807" import="1">WR_WhiteRoom_Icon_80.dds</File>
+    <File md5="8E115F51C3F744D83FAC44B65EF83469" import="1">WR_WhiteRoom_Icon_64.dds</File>
+    <File md5="E5821F47E1B1E2DFA0BA3FCABAD2E622" import="1">WR_WhiteRoom_Icon_48.dds</File>
+    <File md5="EE29EE273BC427B74734101DB9D4D8DC" import="1">WR_WhiteRoom_Icon_45.dds</File>
+    <File md5="885CAECA944F10234A95DB3A8BA5BF01" import="1">WR_WhiteRoom_Icon_32.dds</File>
+    <File md5="0F61B9CEDB5502B384A7B7E504BD2FAB" import="1">WR_WhiteRoom_Icon_24.dds</File>
+    <File md5="1CC61A4A078FC0C755BEC85B0ADD96D4" import="1">WR_WhiteRoom_Alpha_256.dds</File>
+    <File md5="E1FA371A34C640BB21BEDF9A10CC330F" import="1">WR_WhiteRoom_Alpha_128.dds</File>
+    <File md5="F1AC84FBE6F8C40133920D088AA56DE5" import="1">WR_WhiteRoom_Alpha_80.dds</File>
+    <File md5="A077176BE8DFF5A1E742FAC1BB106EC7" import="1">WR_WhiteRoom_Alpha_64.dds</File>
+    <File md5="649FAB07A30F0501BD70ACA245695F3C" import="1">WR_WhiteRoom_Alpha_48.dds</File>
+    <File md5="4B413F62A02EC183894211CFA2C6589E" import="1">WR_WhiteRoom_Alpha_45.dds</File>
+    <File md5="DBE67DFDC588A5A8B395948776FE0F5E" import="1">WR_WhiteRoom_Alpha_32.dds</File>
+    <File md5="D9DBEDDDDC83BD5C258F65E14EDA5A88" import="1">WR_WhiteRoom_Alpha_24.dds</File>
+    <File md5="A4913E414AD563B15710D93D25CB6F30" import="1">WR_Kiyotaka_DOM.dds</File>
+    <File md5="71E07507042FC94C1F1F75DA68C443B1" import="1">WR_WhiteRoom_Map.dds</File>
+    <File md5="F817528B651CE2B78A6D328D7A5A7112" import="1">WR_Kiyotaka_Unit_256.dds</File>
+    <File md5="0D84F15EB030F1D0491B62B122344ED4" import="1">WR_Kiyotaka_Unit_128.dds</File>
+    <File md5="25AE13882DAD9384C490C640BCABE656" import="1">WR_Kiyotaka_Unit_80.dds</File>
+    <File md5="0CF2DFFAC90374FF213FF5BD1B545DE5" import="1">WR_Kiyotaka_Unit_64.dds</File>
+    <File md5="B9B4B243F5DEB19BD975302485F5AE87" import="1">WR_Kiyotaka_Unit_48.dds</File>
+    <File md5="E6DA5D987648E69A9EF80C141FB07E4A" import="1">WR_Kiyotaka_Unit_45.dds</File>
+    <File md5="BD0D6594204BB69613BBDB976D7EE67C" import="1">WR_Kiyotaka_Unit_32.dds</File>
+    <File md5="8840115399D0EAC6B0A9D90909CF9F86" import="1">WR_Kiyotaka_Unit_24.dds</File>
+    <File md5="7BE799FF6229B87A8D5C11B4CC9E8333" import="1">WR_FourthGenOperative_Unit_256.dds</File>
+    <File md5="8F707140C140E48FB10AABF1F3C6500C" import="1">WR_FourthGenOperative_Unit_128.dds</File>
+    <File md5="BFA18A500D961777F4ACB0F304EE255E" import="1">WR_FourthGenOperative_Unit_80.dds</File>
+    <File md5="F4F7FC242DBCA876F35EFC40429013F7" import="1">WR_FourthGenOperative_Unit_64.dds</File>
+    <File md5="F6390647DC6DE9AF5CE4A1BFF7B52D84" import="1">WR_FourthGenOperative_Unit_48.dds</File>
+    <File md5="23FEB7F0296C70FB5BB9D5F2FE8CB566" import="1">WR_FourthGenOperative_Unit_45.dds</File>
+    <File md5="AAE063D515E224225FC78EB4E1E8B827" import="1">WR_FourthGenOperative_Unit_32.dds</File>
+    <File md5="E05D8F4DA5F8578A03B1C00560DAE4F2" import="1">WR_FourthGenOperative_Unit_24.dds</File>
+    <File md5="A85ADD21E5E4C344A37884067D9E3CF7" import="1">Art\Leader\WR_Kiyotaka_Leader_256.dds</File>
+    <File md5="AE185FA0533C0E57587CF77CF033EA5D" import="1">Art\Leader\WR_Kiyotaka_Leader_128.dds</File>
+    <File md5="E2184CA289315972484F916B826C5778" import="1">Art\Leader\WR_Kiyotaka_Leader_80.dds</File>
+    <File md5="8664B0A1AF4EE1D2B7515330EBA21F6D" import="1">Art\Leader\WR_Kiyotaka_Leader_64.dds</File>
+    <File md5="D110E33E826891CB17C1638815672BC2" import="1">Art\Leader\WR_Kiyotaka_Leader_48.dds</File>
+    <File md5="B696C7308738E13D850815298BF8D94E" import="1">Art\Leader\WR_Kiyotaka_Leader_45.dds</File>
+    <File md5="87F48602E1576B494D6350890AF182B3" import="1">Art\Leader\WR_Kiyotaka_Leader_32.dds</File>
+    <File md5="F04901C4111F99369D20AEB72A399862" import="1">Art\Leader\WR_Kiyotaka_Leader_24.dds</File>
+    <File md5="C8EB9A58F2B50597207ADC31D48ACA32" import="1">Art\Icons\WR_WhiteRoom_Icon_256.dds</File>
+    <File md5="85E08121EBAE14FB21861D64A4241177" import="1">Art\Icons\WR_WhiteRoom_Icon_128.dds</File>
+    <File md5="5CA12AB52CFD8B44650D1F20FF941807" import="1">Art\Icons\WR_WhiteRoom_Icon_80.dds</File>
+    <File md5="8E115F51C3F744D83FAC44B65EF83469" import="1">Art\Icons\WR_WhiteRoom_Icon_64.dds</File>
+    <File md5="E5821F47E1B1E2DFA0BA3FCABAD2E622" import="1">Art\Icons\WR_WhiteRoom_Icon_48.dds</File>
+    <File md5="EE29EE273BC427B74734101DB9D4D8DC" import="1">Art\Icons\WR_WhiteRoom_Icon_45.dds</File>
+    <File md5="885CAECA944F10234A95DB3A8BA5BF01" import="1">Art\Icons\WR_WhiteRoom_Icon_32.dds</File>
+    <File md5="0F61B9CEDB5502B384A7B7E504BD2FAB" import="1">Art\Icons\WR_WhiteRoom_Icon_24.dds</File>
+    <File md5="1CC61A4A078FC0C755BEC85B0ADD96D4" import="1">Art\Icons\WR_WhiteRoom_Alpha_256.dds</File>
+    <File md5="E1FA371A34C640BB21BEDF9A10CC330F" import="1">Art\Icons\WR_WhiteRoom_Alpha_128.dds</File>
+    <File md5="F1AC84FBE6F8C40133920D088AA56DE5" import="1">Art\Icons\WR_WhiteRoom_Alpha_80.dds</File>
+    <File md5="A077176BE8DFF5A1E742FAC1BB106EC7" import="1">Art\Icons\WR_WhiteRoom_Alpha_64.dds</File>
+    <File md5="649FAB07A30F0501BD70ACA245695F3C" import="1">Art\Icons\WR_WhiteRoom_Alpha_48.dds</File>
+    <File md5="4B413F62A02EC183894211CFA2C6589E" import="1">Art\Icons\WR_WhiteRoom_Alpha_45.dds</File>
+    <File md5="DBE67DFDC588A5A8B395948776FE0F5E" import="1">Art\Icons\WR_WhiteRoom_Alpha_32.dds</File>
+    <File md5="D9DBEDDDDC83BD5C258F65E14EDA5A88" import="1">Art\Icons\WR_WhiteRoom_Alpha_24.dds</File>
+    <File md5="A4913E414AD563B15710D93D25CB6F30" import="1">Art\DOM\WR_Kiyotaka_DOM.dds</File>
+    <File md5="71E07507042FC94C1F1F75DA68C443B1" import="1">Art\DOM\WR_WhiteRoom_Map.dds</File>
+    <File md5="F817528B651CE2B78A6D328D7A5A7112" import="1">Art\Units\WR_Kiyotaka_Unit_256.dds</File>
+    <File md5="0D84F15EB030F1D0491B62B122344ED4" import="1">Art\Units\WR_Kiyotaka_Unit_128.dds</File>
+    <File md5="25AE13882DAD9384C490C640BCABE656" import="1">Art\Units\WR_Kiyotaka_Unit_80.dds</File>
+    <File md5="0CF2DFFAC90374FF213FF5BD1B545DE5" import="1">Art\Units\WR_Kiyotaka_Unit_64.dds</File>
+    <File md5="B9B4B243F5DEB19BD975302485F5AE87" import="1">Art\Units\WR_Kiyotaka_Unit_48.dds</File>
+    <File md5="E6DA5D987648E69A9EF80C141FB07E4A" import="1">Art\Units\WR_Kiyotaka_Unit_45.dds</File>
+    <File md5="BD0D6594204BB69613BBDB976D7EE67C" import="1">Art\Units\WR_Kiyotaka_Unit_32.dds</File>
+    <File md5="8840115399D0EAC6B0A9D90909CF9F86" import="1">Art\Units\WR_Kiyotaka_Unit_24.dds</File>
+    <File md5="7BE799FF6229B87A8D5C11B4CC9E8333" import="1">Art\Units\WR_FourthGenOperative_Unit_256.dds</File>
+    <File md5="8F707140C140E48FB10AABF1F3C6500C" import="1">Art\Units\WR_FourthGenOperative_Unit_128.dds</File>
+    <File md5="BFA18A500D961777F4ACB0F304EE255E" import="1">Art\Units\WR_FourthGenOperative_Unit_80.dds</File>
+    <File md5="F4F7FC242DBCA876F35EFC40429013F7" import="1">Art\Units\WR_FourthGenOperative_Unit_64.dds</File>
+    <File md5="F6390647DC6DE9AF5CE4A1BFF7B52D84" import="1">Art\Units\WR_FourthGenOperative_Unit_48.dds</File>
+    <File md5="23FEB7F0296C70FB5BB9D5F2FE8CB566" import="1">Art\Units\WR_FourthGenOperative_Unit_45.dds</File>
+    <File md5="AAE063D515E224225FC78EB4E1E8B827" import="1">Art\Units\WR_FourthGenOperative_Unit_32.dds</File>
+    <File md5="E05D8F4DA5F8578A03B1C00560DAE4F2" import="1">Art\Units\WR_FourthGenOperative_Unit_24.dds</File>
+    <File md5="FE016ED51D1EABE755539BA806BD02DD" import="0">Lua\WhiteRoomLuaLoader.lua</File>
+    <File md5="C2CD19BF94C0319AD96CA94BAB5B2F29" import="1">Lua\WhiteRoomTelemetry.lua</File>
+    <File md5="8448B694140931F1F4B6FB059EC7A1DB" import="1">Lua\WhiteRoomKiyotakaFlavor.lua</File>
+    <File md5="9C87683972F994DC162A4588A0CDEB55" import="1">Lua\WhiteRoomDuplicateImprovements.lua</File>
+    <File md5="BCC7DCE65E3DE2C0FEC3AEF38DF8849B" import="1">Lua\WhiteRoomCannotSettle.lua</File>
+    <File md5="0AE3BBDADA6933CE48F9579AAA2EFE7F" import="1">Lua\WhiteRoomCityHpAdaptation.lua</File>
+    <File md5="2D8A775C14AC4D198FA490AFC80BF05B" import="1">Lua\WhiteRoomCityRangedStrikeAdaptation.lua</File>
+    <File md5="9BBDBFDC748519E3892E9833E25A007E" import="1">Lua\WhiteRoomTradeRouteLearning.lua</File>
+    <File md5="0BEF7808882E6769121E322D4FE5AAC7" import="1">Lua\WhiteRoomCapturedCityLearning.lua</File>
+    <File md5="8436EC950B87BEB5DCEDAFD1F8497B2C" import="1">Lua\WhiteRoomKiyotakaScaling.lua</File>
+    <File md5="1EB386DE0571152D2438459B57EB976A" import="1">Lua\WhiteRoomUnitCaps.lua</File>
+    <File md5="EDA9381594B6CBFB07D281A5D2D9C16B" import="1">Lua\WhiteRoomFourthGenOperative.lua</File>
+    <File md5="7C3C5756229152C7D42E60253EDBA6AF" import="0">UI\WhiteRoomStatusPanel.xml</File>
+    <File md5="7FAAD19E90CF48FFEA2D7684B985B99D" import="0">UI\WhiteRoomStatusPanel.lua</File>
+    <File md5="E6203142762478E5C94258861A990A24" import="0">UI\WhiteRoomUnitUnlock.xml</File>
+    <File md5="E1368451048E84931BAFDE09047D0897" import="0">UI\WhiteRoomUnitUnlock.lua</File>
   </Files>
   <Actions>
     <OnModActivated>
+      <UpdateDatabase>SQL\WhiteRoomPlayableCiv.sql</UpdateDatabase>
       <UpdateDatabase>SQL\WhiteRoomAdaptationDummyPromotions.sql</UpdateDatabase>
       <UpdateDatabase>SQL\WhiteRoomDuplicateDummyBuildings.sql</UpdateDatabase>
+      <UpdateDatabase>SQL\WhiteRoomCityHpAdaptationDummyBuildings.sql</UpdateDatabase>
+      <UpdateDatabase>SQL\WhiteRoomCityRangedStrikeDummyBuildings.sql</UpdateDatabase>
+      <UpdateDatabase>SQL\WhiteRoomTradeRouteLearningDummyBuildings.sql</UpdateDatabase>
+      <UpdateDatabase>SQL\WhiteRoomCapturedCityLearningDummyBuildings.sql</UpdateDatabase>
+      <UpdateDatabase>SQL\WhiteRoomCompatibilityText.sql</UpdateDatabase>
     </OnModActivated>
   </Actions>
   <EntryPoints>
-    <EntryPoint type="InGameUIAddin" file="Lua\WhiteRoomDuplicateImprovements.lua">
-      <Name>White Room Duplicate Improvement Scaling</Name>
-      <Description>Recalculates duplicate worked-improvement city yield bonuses each turn.</Description>
+    <EntryPoint type="InGameUIAddin" file="Lua\WhiteRoomLuaLoader.lua">
+      <Name>White Room Lua Loader</Name>
+      <Description>Loads all White Room placeholder Lua modules.</Description>
+    </EntryPoint>
+    <EntryPoint type="InGameUIAddin" file="UI\WhiteRoomStatusPanel.xml">
+      <Name>White Room Status Panel</Name>
+      <Description>Shows current White Room adaptation stacks for testing and play.</Description>
+    </EntryPoint>
+    <EntryPoint type="InGameUIAddin" file="UI\WhiteRoomUnitUnlock.xml">
+      <Name>White Room Unit Unlock Dossiers</Name>
+      <Description>Presents a one-time dossier when each White Room unique unit becomes available.</Description>
     </EntryPoint>
   </EntryPoints>
 </Mod>

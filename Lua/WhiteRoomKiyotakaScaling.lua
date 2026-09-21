@@ -514,6 +514,21 @@ end
 
 GameEvents.PlayerDoTurn.Add(WR_KiyotakaScaling_DoTurn)
 
+local function WR_ClearKiyotakaTransientState(playerID, unitID)
+    WR_SetSavedNumber(playerID, "PENDING_HEAL", 0)
+    WR_SetSavedNumber(playerID, "LAST_DAMAGE", 0)
+
+    local unitKey = WR_UnitDamageKey(playerID, unitID)
+    WR_DAMAGE_CACHE[unitKey] = nil
+    WR_KILL_CREDIT_CACHE[unitKey] = nil
+
+    for victimKey, creditedPlayerID in pairs(WR_ACTIVE_KIYOTAKA_TARGETS) do
+        if victimKey == unitKey or creditedPlayerID == playerID then
+            WR_ACTIVE_KIYOTAKA_TARGETS[victimKey] = nil
+        end
+    end
+end
+
 if GameEvents.UnitPrekill ~= nil then
     GameEvents.UnitPrekill.Add(function(killedPlayerID, killedUnitID, killedUnitType, x, y, delay, killerPlayerID)
         local killedPlayer = Players[killedPlayerID]
@@ -540,8 +555,16 @@ if GameEvents.UnitPrekill ~= nil then
         end
 
         if killedUnitType == UNIT_WR_KIYOTAKA then
-            if WR_IsWhiteRoomPlayer(killedPlayer) and WR_KiyotakaFlavorRecordDeath ~= nil then
+            local ownedByWhiteRoom = killedPlayer ~= nil
+                and CIV_WHITE_ROOM_KID ~= nil
+                and killedPlayer:GetCivilizationType() == CIV_WHITE_ROOM_KID
+
+            if ownedByWhiteRoom and WR_KiyotakaFlavorRecordDeath ~= nil then
                 WR_KiyotakaFlavorRecordDeath(killedPlayerID, killedUnit)
+            end
+
+            if ownedByWhiteRoom then
+                WR_ClearKiyotakaTransientState(killedPlayerID, killedUnitID)
             end
         end
     end)

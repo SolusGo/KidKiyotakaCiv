@@ -68,6 +68,54 @@ local function WR_CountUnits(player, unitType)
     return count
 end
 
+local function WR_CountOtherQueuedUnits(player, unitType, excludedCityID)
+    local count = 0
+
+    for city in player:Cities() do
+        local queueLength = city:GetOrderQueueLength()
+        for index = 0, queueLength - 1 do
+            local orderType, queuedUnitType = city:GetOrderFromQueue(index)
+            if orderType == OrderTypes.ORDER_TRAIN
+                and queuedUnitType == unitType
+                and not (city:GetID() == excludedCityID and index == 0) then
+                count = count + 1
+            end
+        end
+    end
+
+    return count
+end
+
+local function WR_PruneExcessQueuedUnits(player, unitType, cap)
+    local remainingSlots = math.max(0, cap - WR_CountUnits(player, unitType))
+
+    for city in player:Cities() do
+        local removals = {}
+        local queueLength = city:GetOrderQueueLength()
+
+        for index = 0, queueLength - 1 do
+            local orderType, queuedUnitType = city:GetOrderFromQueue(index)
+            if orderType == OrderTypes.ORDER_TRAIN and queuedUnitType == unitType then
+                if remainingSlots > 0 then
+                    remainingSlots = remainingSlots - 1
+                else
+                    removals[#removals + 1] = index
+                end
+            end
+        end
+
+        for removalIndex = #removals, 1, -1 do
+            city:PopOrder(removals[removalIndex], false, true)
+            WR_Debug(string.format(
+                "WR Unit Caps: removed excess queued %s from %s; cap is %d",
+                WR_GetUnitName(unitType),
+                city:GetName(),
+                cap
+            ))
+        end
+    end
+end
+
 local function WR_EnforceUnitCap(player, unitType, cap)
     if unitType == nil or cap == nil then
         return
@@ -104,6 +152,7 @@ function WR_UnitCaps_DoTurn(playerID)
 
     for unitType, cap in pairs(WR_UNIT_CAPS) do
         WR_EnforceUnitCap(player, unitType, cap)
+        WR_PruneExcessQueuedUnits(player, unitType, cap)
     end
 end
 
@@ -132,6 +181,37 @@ if GameEvents.PlayerCanTrain ~= nil then
         end
 
         return true
+    end)
+end
+
+if GameEvents.CityCanTrain ~= nil then
+    GameEvents.CityCanTrain.Add(function(playerID, cityID, unitType)
+        local player = Players[playerID]
+        if not WR_IsWhiteRoomPlayer(player) then
+            return not WR_IsRestrictedWhiteRoomUnit(unitType)
+        end
+
+        local cap = WR_UNIT_CAPS[unitType]
+        if cap == nil then
+            return true
+        end
+
+        return WR_CountUnits(player, unitType)
+            + WR_CountOtherQueuedUnits(player, unitType, cityID) < cap
+    end)
+end
+
+if GameEvents.UnitCreated ~= nil then
+    GameEvents.UnitCreated.Add(function(playerID, unitID, unitType, plotX, plotY)
+        local player = Players[playerID]
+        if not WR_IsWhiteRoomPlayer(player) then
+            return
+        end
+
+        local cap = WR_UNIT_CAPS[unitType]
+        if cap ~= nil then
+            WR_EnforceUnitCap(player, unitType, cap)
+        end
     end)
 end
 

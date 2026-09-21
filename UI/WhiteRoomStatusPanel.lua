@@ -117,7 +117,31 @@ local function WR_GetSavedNumber(key)
 end
 
 local function WR_CitySaveKey(prefix, playerID, city, suffix)
-    return prefix .. tostring(playerID) .. ":" .. tostring(city:GetID()) .. "_" .. suffix
+    local ok, foundedTurn = pcall(function()
+        return city:GetGameTurnFounded()
+    end)
+    if not ok or type(foundedTurn) ~= "number" then
+        foundedTurn = -1
+    end
+
+    local strongKey = prefix .. table.concat({
+        tostring(playerID),
+        tostring(city:GetID()),
+        tostring(city:GetX()),
+        tostring(city:GetY()),
+        tostring(foundedTurn)
+    }, ":") .. "_" .. suffix
+
+    if WR_SaveValue(strongKey) ~= nil then
+        return strongKey
+    end
+
+    local migrationKey = prefix .. tostring(playerID) .. "_IDENTITY_V2_MIGRATED"
+    if WR_SaveValue(migrationKey) ~= 1 then
+        return prefix .. tostring(playerID) .. ":" .. tostring(city:GetID()) .. "_" .. suffix
+    end
+
+    return strongKey
 end
 
 local function WR_PlayerSaveKey(prefix, playerID, suffix)

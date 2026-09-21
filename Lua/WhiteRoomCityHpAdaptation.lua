@@ -29,7 +29,25 @@ local function WR_IsWhiteRoomPlayer(player)
         and player:GetCivilizationType() == CIV_WHITE_ROOM_KID
 end
 
+local function WR_CityFoundedTurn(city)
+    local ok, turn = pcall(function()
+        return city:GetGameTurnFounded()
+    end)
+
+    return ok and tonumber(turn) or -1
+end
+
 local function WR_CityKey(playerID, city)
+    return table.concat({
+        tostring(playerID),
+        tostring(city:GetID()),
+        tostring(city:GetX()),
+        tostring(city:GetY()),
+        tostring(WR_CityFoundedTurn(city))
+    }, ":")
+end
+
+local function WR_LegacyCityKey(playerID, city)
     return tostring(playerID) .. ":" .. tostring(city:GetID())
 end
 
@@ -48,6 +66,27 @@ end
 
 local function WR_SetSavedNumber(playerID, city, suffix, value)
     WR_CITY_HP_SAVE.SetValue(WR_SaveKey(playerID, city, suffix), value)
+end
+
+local function WR_MigrateLegacyCityStateForPlayer(playerID, player)
+    local migrationKey = "WR_CITY_HP_" .. tostring(playerID) .. "_IDENTITY_V2_MIGRATED"
+    if WR_CITY_HP_SAVE.GetValue(migrationKey) == 1 then
+        return
+    end
+
+    for city in player:Cities() do
+        for _, suffix in ipairs({ "DEF_STACKS", "LAST_DAMAGE" }) do
+            local newKey = WR_SaveKey(playerID, city, suffix)
+            local oldKey = "WR_CITY_HP_" .. WR_LegacyCityKey(playerID, city) .. "_" .. suffix
+            local oldValue = WR_CITY_HP_SAVE.GetValue(oldKey)
+
+            if WR_CITY_HP_SAVE.GetValue(newKey) == nil and type(oldValue) == "number" then
+                WR_CITY_HP_SAVE.SetValue(newKey, oldValue)
+            end
+        end
+    end
+
+    WR_CITY_HP_SAVE.SetValue(migrationKey, 1)
 end
 
 local function WR_GetCityDamage(city)
@@ -116,6 +155,8 @@ local function WR_RecordCityHpLoss(playerID, city, oldDamage, newDamage)
 end
 
 local function WR_PrimeCityDamageCacheForPlayer(playerID, player)
+    WR_MigrateLegacyCityStateForPlayer(playerID, player)
+
     for city in player:Cities() do
         WR_CITY_DAMAGE_CACHE[WR_CityKey(playerID, city)] = WR_GetCityDamage(city)
         WR_ApplyCityDefenseStacks(city, WR_GetSavedNumber(playerID, city, "DEF_STACKS"))
@@ -127,6 +168,8 @@ function WR_CityHpAdaptation_DoTurn(playerID)
     if not WR_IsWhiteRoomPlayer(player) then
         return
     end
+
+    WR_MigrateLegacyCityStateForPlayer(playerID, player)
 
     for city in player:Cities() do
         local key = WR_CityKey(playerID, city)

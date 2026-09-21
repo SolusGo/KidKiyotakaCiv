@@ -62,6 +62,7 @@ scene still uses safe existing Civilization V art.
 - Cannot settle, can annex:
   - file: `Lua/WhiteRoomCannotSettle.lua`
   - auto-founds the starting capital from the first Settler if White Room has no cities
+  - persists an irreversible initial-capital-consumed flag and vetoes later founding through Community Patch `PlayerCanFoundCity`
   - blocks Settler training through `PlayerCanTrain` when available
   - removes later White Room Settlers that are granted, captured, or otherwise created
   - does not touch captured cities, so annex/puppet/raze flow should remain normal
@@ -69,7 +70,8 @@ scene still uses safe existing Civilization V art.
   - file: `Lua/WhiteRoomUnitCaps.lua`
   - Kiyotaka active cap: 1
   - 4th Generation Operative active cap: 3
-  - blocks training through `PlayerCanTrain` when available
+  - counts both active units and city production queues through `PlayerCanTrain`/`CityCanTrain`
+  - prunes excess legacy queues and enforces the cap immediately through Community Patch `UnitCreated`
   - removes extra capped units if they are granted, captured, or otherwise created
   - explicitly rejects Kiyotaka and the 4th Generation Operative as training or upgrade targets for every non-White Room civilization, preventing foreign unique-unit lineages from resolving into White Room units
   - keeps the highest-level/highest-XP copies when removing extras
@@ -99,6 +101,7 @@ scene still uses safe existing Civilization V art.
   - class-specific adaptation uses generated `PROMOTION_WR_KIYOTAKA_VS_<UNITCOMBAT>_<TIER>` promotions
   - movement-after-combat becomes the `Flow State` promotion once the stored chance reaches 100%
   - exact counters are saved with `Modding.OpenSaveData()` and converted into visible tier promotions
+  - death clears only transient pending-heal, last-damage, and combat-target state; permanent adaptation counters remain
   - damage-dealt credit uses `Events.EndCombatSim` when available and only fires when Kiyotaka is the attacker or defender and the opposing combat target's damage increases
   - kill credit is awarded directly from Civ V's authoritative `UnitPrekill` event while the defeated unit type and Kiyotaka's combat state are still available
   - the combat simulation records Kiyotaka's exact opposing unit before the fight; active combat state plus the victim plot provides a guarded fallback if that visual record is unavailable
@@ -113,6 +116,7 @@ scene still uses safe existing Civilization V art.
 - City HP-loss adaptation:
   - files: `Lua/WhiteRoomCityHpAdaptation.lua`, `SQL/WhiteRoomCityHpAdaptationDummyBuildings.sql`
   - tracks each White Room city's damage between player turns
+  - keys persistent/runtime state by owner, city ID, coordinates, and founding turn; legacy owner/city-ID saves migrate once
   - when city damage increases, adds +1 city defense adaptation stack for that city
   - applies invisible dummy buildings in 1/5/10/25/50 denominations
   - each stack is worth +0.25% city defense/HP scaling; visible dummy buildings apply only whole-percent amounts
@@ -121,6 +125,7 @@ scene still uses safe existing Civilization V art.
 - City ranged strike adaptation:
   - files: `Lua/WhiteRoomCityRangedStrikeAdaptation.lua`, `SQL/WhiteRoomCityRangedStrikeDummyBuildings.sql`
   - safely probes `city:HasPerformedRangedStrikeThisTurn()` with `pcall`
+  - shares the same strong city identity and one-time legacy migration used by HP adaptation and the status UI
   - polls White Room cities on turn and city-info dirty events
   - confirmed CP exposes the ranged-strike flag in `Lua.log`
   - when a White Room city flips to "has performed a ranged strike this turn", adds +1 ranged adaptation stack for that city
@@ -131,13 +136,18 @@ scene still uses safe existing Civilization V art.
   - tested in-game and confirmed working
 - Trade route learning:
   - files: `Lua/WhiteRoomTradeRouteLearning.lua`, `SQL/WhiteRoomTradeRouteLearningDummyBuildings.sql`
-  - uses Community Patch `GameEvents.PlayerTradeRouteCompleted` when available
-  - also polls active routes with `player:GetTradeRoutes()` each White Room turn, because the CP completed event may not fire for already-active routes
-  - when a White Room trade route connection completes, adds +0.125% permanent gold learning
+  - polls every player's outgoing routes so both inbound and outbound White Room connections are observed
+  - persists active counts per route fingerprint; polling opens route instances and Community Patch `PlayerTradeRouteCompleted` closes them
+  - event/poll ordering is deduplicated, save/reload does not re-award active routes, and a later route between the same endpoints earns independently
+  - each newly deployed White Room trade route instance adds +0.125% permanent gold learning
   - because Civ V building yield modifiers are integer percentages, every 8 learned connections applies +1% Gold
   - applies the current whole-percent gold modifier to all White Room cities through invisible dummy buildings
   - logs `WR Trade Route Learning: trade connection learned by White Room (...)`
   - tested in-game and confirmed working
+
+- Package integrity:
+  - `tools/sync_modinfo.py` rebuilds the `.modinfo` file list, hashes, VFS flags, database actions, and entry points from the ModBuddy project
+  - `tools/validate_mod.py` verifies package parity plus static runtime contracts and deterministic regression models
 - Captured city learning:
   - files: `Lua/WhiteRoomCapturedCityLearning.lua`, `SQL/WhiteRoomCapturedCityLearningDummyBuildings.sql`
   - listens for `Events.SerialEventCityCaptured`

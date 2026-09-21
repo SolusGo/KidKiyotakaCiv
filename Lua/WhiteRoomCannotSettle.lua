@@ -4,6 +4,7 @@ print("WhiteRoomCannotSettle.lua loaded")
 
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local UNITCLASS_SETTLER = GameInfoTypes.UNITCLASS_SETTLER
+local WR_CANNOT_SETTLE_SAVE = Modding.OpenSaveData()
 local WR_CANNOT_SETTLE_DEBUG = false
 
 local function WR_Debug(message)
@@ -17,6 +18,25 @@ local function WR_IsWhiteRoomPlayer(player)
         and player:IsAlive()
         and CIV_WHITE_ROOM_KID ~= nil
         and player:GetCivilizationType() == CIV_WHITE_ROOM_KID
+end
+
+local function WR_FoundingConsumedKey(playerID)
+    return "WR_CANNOT_SETTLE_" .. tostring(playerID) .. "_INITIAL_CAPITAL_CONSUMED"
+end
+
+local function WR_HasConsumedInitialCapital(playerID)
+    return WR_CANNOT_SETTLE_SAVE.GetValue(WR_FoundingConsumedKey(playerID)) == 1
+end
+
+local function WR_MarkInitialCapitalConsumed(playerID)
+    WR_CANNOT_SETTLE_SAVE.SetValue(WR_FoundingConsumedKey(playerID), 1)
+end
+
+local function WR_MigrateFoundingState(playerID, player)
+    if WR_CANNOT_SETTLE_SAVE.GetValue(WR_FoundingConsumedKey(playerID)) == nil
+        and (player:GetNumCities() > 0 or Game.GetGameTurn() > Game.GetStartTurn()) then
+        WR_MarkInitialCapitalConsumed(playerID)
+    end
 end
 
 local function WR_IsSettler(unit)
@@ -63,8 +83,10 @@ local function WR_KillAllSettlers(player, reason)
     end
 end
 
-local function WR_AutoFoundStartingCapital(player)
-    if player:GetNumCities() > 0 then
+local function WR_AutoFoundStartingCapital(playerID, player)
+    WR_MigrateFoundingState(playerID, player)
+
+    if WR_HasConsumedInitialCapital(playerID) or player:GetNumCities() > 0 then
         return false
     end
 
@@ -82,6 +104,11 @@ local function WR_AutoFoundStartingCapital(player)
     local y = plot:GetY()
 
     player:InitCity(x, y)
+    if player:GetNumCities() <= 0 then
+        return false
+    end
+
+    WR_MarkInitialCapitalConsumed(playerID)
     WR_KillAllSettlers(player, "starting capital founded")
 
     WR_Debug(string.format(
@@ -100,7 +127,9 @@ function WR_CannotSettle_DoTurn(playerID)
         return
     end
 
-    if WR_AutoFoundStartingCapital(player) then
+    WR_MigrateFoundingState(playerID, player)
+
+    if WR_AutoFoundStartingCapital(playerID, player) then
         return
     end
 
@@ -108,6 +137,18 @@ function WR_CannotSettle_DoTurn(playerID)
 end
 
 GameEvents.PlayerDoTurn.Add(WR_CannotSettle_DoTurn)
+
+if GameEvents.PlayerCanFoundCity ~= nil then
+    GameEvents.PlayerCanFoundCity.Add(function(playerID, plotX, plotY)
+        local player = Players[playerID]
+        if not WR_IsWhiteRoomPlayer(player) then
+            return true
+        end
+
+        WR_MigrateFoundingState(playerID, player)
+        return not WR_HasConsumedInitialCapital(playerID) and player:GetNumCities() == 0
+    end)
+end
 
 if GameEvents.PlayerCanTrain ~= nil then
     GameEvents.PlayerCanTrain.Add(function(playerID, unitType)
@@ -127,6 +168,13 @@ if GameEvents.PlayerCanTrain ~= nil then
 
         return true
     end)
+end
+
+for playerID = 0, (GameDefines.MAX_CIV_PLAYERS or 63) - 1 do
+    local player = Players[playerID]
+    if WR_IsWhiteRoomPlayer(player) then
+        WR_MigrateFoundingState(playerID, player)
+    end
 end
 
 print("WR Cannot Settle: initialized")
