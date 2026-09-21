@@ -88,28 +88,56 @@ end
 
 local function WR_PruneExcessQueuedUnits(player, unitType, cap)
     local remainingSlots = math.max(0, cap - WR_CountUnits(player, unitType))
+    local cityQueues = {}
 
     for city in player:Cities() do
-        local removals = {}
+        local row = { city = city, current = {}, later = {}, removals = {} }
         local queueLength = city:GetOrderQueueLength()
 
         for index = 0, queueLength - 1 do
             local orderType, queuedUnitType = city:GetOrderFromQueue(index)
             if orderType == OrderTypes.ORDER_TRAIN and queuedUnitType == unitType then
-                if remainingSlots > 0 then
-                    remainingSlots = remainingSlots - 1
+                if index == 0 then
+                    row.current[#row.current + 1] = index
                 else
-                    removals[#removals + 1] = index
+                    row.later[#row.later + 1] = index
                 end
             end
         end
 
-        for removalIndex = #removals, 1, -1 do
-            city:PopOrder(removals[removalIndex], false, true)
+        cityQueues[#cityQueues + 1] = row
+    end
+
+    local function WR_ReserveOrRemove(row, index)
+        if remainingSlots > 0 then
+            remainingSlots = remainingSlots - 1
+        else
+            row.removals[#row.removals + 1] = index
+        end
+    end
+
+    -- Protect legal units already in production before reserving later queue
+    -- entries. CityCanTrain cannot distinguish head-order revalidation from a
+    -- request to append the same unit behind that head order.
+    for _, row in ipairs(cityQueues) do
+        for _, index in ipairs(row.current) do
+            WR_ReserveOrRemove(row, index)
+        end
+    end
+
+    for _, row in ipairs(cityQueues) do
+        for _, index in ipairs(row.later) do
+            WR_ReserveOrRemove(row, index)
+        end
+    end
+
+    for _, row in ipairs(cityQueues) do
+        for removalIndex = #row.removals, 1, -1 do
+            row.city:PopOrder(row.removals[removalIndex], false, true)
             WR_Debug(string.format(
                 "WR Unit Caps: removed excess queued %s from %s; cap is %d",
                 WR_GetUnitName(unitType),
-                city:GetName(),
+                row.city:GetName(),
                 cap
             ))
         end
@@ -196,6 +224,10 @@ if GameEvents.CityCanTrain ~= nil then
             return true
         end
 
+        -- The three-argument callback provides no flag identifying a new
+        -- appended order. Excluding this city's head lets Civ V revalidate a
+        -- legal current build; the turn fallback safely prunes an extra copy
+        -- queued behind that same head.
         return WR_CountUnits(player, unitType)
             + WR_CountOtherQueuedUnits(player, unitType, cityID) < cap
     end)

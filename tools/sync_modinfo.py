@@ -22,6 +22,26 @@ def local_path(path: str) -> Path:
     return ROOT.joinpath(*normalized(path).split("\\"))
 
 
+def sync_associations(project_root: ET.Element, project_section: str, manifest_section: ET.Element) -> None:
+    manifest_section.clear()
+
+    for association in project_root.findall(f".//m:{project_section}/m:Association", MSBUILD):
+        association_type = (association.findtext("m:Type", namespaces=MSBUILD) or "").strip()
+        name = (association.findtext("m:Name", namespaces=MSBUILD) or "").strip()
+        attributes = {
+            "id": (association.findtext("m:Id", namespaces=MSBUILD) or "").strip(),
+            "minversion": (association.findtext("m:MinVersion", namespaces=MSBUILD) or "0").strip(),
+            "maxversion": (association.findtext("m:MaxVersion", namespaces=MSBUILD) or "999").strip(),
+        }
+
+        if association_type == "Mod":
+            attributes["title"] = name
+        elif association_type != "Dlc":
+            raise ValueError(f"Unsupported association type: {association_type}")
+
+        ET.SubElement(manifest_section, association_type, attributes)
+
+
 def main() -> None:
     project_root = ET.parse(PROJECT).getroot()
     modinfo_tree = ET.parse(MODINFO)
@@ -30,12 +50,16 @@ def main() -> None:
     files = modinfo_root.find("Files")
     actions = modinfo_root.find("Actions")
     entry_points = modinfo_root.find("EntryPoints")
-    if files is None or actions is None or entry_points is None:
-        raise RuntimeError("The modinfo is missing Files, Actions, or EntryPoints")
+    dependencies = modinfo_root.find("Dependencies")
+    references = modinfo_root.find("References")
+    if files is None or actions is None or entry_points is None or dependencies is None or references is None:
+        raise RuntimeError("The modinfo is missing a synchronized package section")
 
     files.clear()
     actions.clear()
     entry_points.clear()
+    sync_associations(project_root, "ModDependencies", dependencies)
+    sync_associations(project_root, "ModReferences", references)
 
     for content in project_root.findall(".//m:ItemGroup/m:Content", MSBUILD):
         path = normalized(content.attrib["Include"])

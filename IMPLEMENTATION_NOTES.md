@@ -71,7 +71,9 @@ scene still uses safe existing Civilization V art.
   - Kiyotaka active cap: 1
   - 4th Generation Operative active cap: 3
   - counts both active units and city production queues through `PlayerCanTrain`/`CityCanTrain`
-  - prunes excess legacy queues and enforces the cap immediately through Community Patch `UnitCreated`
+  - `CityCanTrain` cannot distinguish revalidating a current order from appending another copy behind it, so the current head is allowed and any same-city excess is safely pruned on the next player turn
+  - queue pruning reserves current production before later queue entries, avoiding cancellation of a legal in-progress unit
+  - prunes excess legacy queues and enforces the active cap immediately through Community Patch `UnitCreated`
   - removes extra capped units if they are granted, captured, or otherwise created
   - explicitly rejects Kiyotaka and the 4th Generation Operative as training or upgrade targets for every non-White Room civilization, preventing foreign unique-unit lineages from resolving into White Room units
   - keeps the highest-level/highest-XP copies when removing extras
@@ -146,8 +148,10 @@ scene still uses safe existing Civilization V art.
   - tested in-game and confirmed working
 
 - Package integrity:
+  - the ModBuddy project declares `(1) Community Patch` `d1b6328c-ff44-4b0d-aad7-c657f83610cd` version 151+ as its sole hard dependency
   - `tools/sync_modinfo.py` rebuilds the `.modinfo` file list, hashes, VFS flags, database actions, and entry points from the ModBuddy project
-  - `tools/validate_mod.py` verifies package parity plus static runtime contracts and deterministic regression models
+  - dependency and reference metadata are generated from the project alongside files, actions, and entry points
+  - `tools/validate_mod.py` verifies package parity, the exact Community Patch dependency, static runtime contracts, and deterministic regression models
 - Captured city learning:
   - files: `Lua/WhiteRoomCapturedCityLearning.lua`, `SQL/WhiteRoomCapturedCityLearningDummyBuildings.sql`
   - listens for `Events.SerialEventCityCaptured`

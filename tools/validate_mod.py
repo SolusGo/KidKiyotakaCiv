@@ -15,6 +15,9 @@ PROJECT = ROOT / "KidKiyotakaWhiteRoom.civ5proj"
 MODINFO = ROOT / "Kid Kiyotaka White Room (v 1).modinfo"
 MSBUILD = {"m": "http://schemas.microsoft.com/developer/msbuild/2003"}
 ERRORS: list[str] = []
+CP_ID = "d1b6328c-ff44-4b0d-aad7-c657f83610cd"
+CP_TITLE = "(1) Community Patch"
+CP_MIN_VERSION = 151
 
 
 def normalized(path: str) -> str:
@@ -34,9 +37,52 @@ def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
+def project_associations(project_root: ET.Element, section: str) -> list[tuple[str, str, int, int, str]]:
+    return [
+        (
+            (node.findtext("m:Type", namespaces=MSBUILD) or "").strip(),
+            (node.findtext("m:Id", namespaces=MSBUILD) or "").strip(),
+            int((node.findtext("m:MinVersion", namespaces=MSBUILD) or "0").strip()),
+            int((node.findtext("m:MaxVersion", namespaces=MSBUILD) or "999").strip()),
+            (node.findtext("m:Name", namespaces=MSBUILD) or "").strip(),
+        )
+        for node in project_root.findall(f".//m:{section}/m:Association", MSBUILD)
+    ]
+
+
+def manifest_associations(modinfo_root: ET.Element, section: str) -> list[tuple[str, str, int, int, str]]:
+    return [
+        (
+            node.tag,
+            node.attrib.get("id", ""),
+            int(node.attrib.get("minversion", "0")),
+            int(node.attrib.get("maxversion", "999")),
+            node.attrib.get("title", ""),
+        )
+        for node in modinfo_root.findall(f"./{section}/*")
+    ]
+
+
 def validate_package() -> None:
     project_root = ET.parse(PROJECT).getroot()
     modinfo_root = ET.parse(MODINFO).getroot()
+
+    project_dependencies = project_associations(project_root, "ModDependencies")
+    manifest_dependencies = manifest_associations(modinfo_root, "Dependencies")
+    cp_dependencies = [dependency for dependency in project_dependencies if dependency[1] == CP_ID]
+    check(bool(cp_dependencies), "Missing required Community Patch dependency")
+    if cp_dependencies:
+        cp_dependency = cp_dependencies[0]
+        check(cp_dependency[0] == "Mod", "Community Patch dependency must be a Mod association")
+        check(cp_dependency[2] >= CP_MIN_VERSION, "Community Patch dependency minversion must be at least 151")
+        check(cp_dependency[3] == 999, "Community Patch dependency maxversion must be 999")
+        check(cp_dependency[4] == CP_TITLE, "Community Patch dependency title is incorrect")
+    check(len(project_dependencies) == 1, "Project must contain exactly the required Community Patch dependency")
+    check(project_dependencies == manifest_dependencies, "Project and modinfo dependencies differ")
+
+    project_references = project_associations(project_root, "ModReferences")
+    manifest_references = manifest_associations(modinfo_root, "References")
+    check(project_references == manifest_references, "Project and modinfo references differ")
 
     project_files: dict[str, bool] = {}
     for content in project_root.findall(".//m:ItemGroup/m:Content", MSBUILD):
@@ -123,7 +169,7 @@ def validate_runtime_contracts() -> None:
     check("IDENTITY_V2_MIGRATED" in read("Lua/WhiteRoomCityRangedStrikeAdaptation.lua"), "Ranged city-state migration missing")
 
     caps = read("Lua/WhiteRoomUnitCaps.lua")
-    for token in ("GameEvents.PlayerCanTrain", "GameEvents.CityCanTrain", "GameEvents.UnitCreated", "GetOrderFromQueue", "WR_PruneExcessQueuedUnits"):
+    for token in ("GameEvents.PlayerCanTrain", "GameEvents.CityCanTrain", "GameEvents.UnitCreated", "GetOrderFromQueue", "WR_PruneExcessQueuedUnits", "row.current", "row.later"):
         check(token in caps, f"Unit-cap guard missing: {token}")
 
     kiyotaka = read("Lua/WhiteRoomKiyotakaScaling.lua")
@@ -175,13 +221,30 @@ def validate_behavior_models() -> None:
         "Reused city IDs must not inherit old adaptation",
     )
 
-    # Queue-aware caps allow an existing head order but reject another city.
-    cap = 1
-    active_units = 0
-    other_queued_for_current_city = 0
-    other_queued_for_second_city = 1
-    check(active_units + other_queued_for_current_city < cap, "Existing legal queue should remain trainable")
-    check(not (active_units + other_queued_for_second_city < cap), "Simultaneous over-cap queue should be blocked")
+    # Queue pruning reserves current production before later entries. The CP
+    # callback cannot identify a same-city append, so that extra is pruned.
+    def prune_queue(active_units: int, current_orders: list[str], later_orders: list[str], cap: int) -> tuple[list[str], list[str]]:
+        remaining = max(0, cap - active_units)
+        kept: list[str] = []
+        removed: list[str] = []
+        for order in current_orders + later_orders:
+            if remaining > 0:
+                kept.append(order)
+                remaining -= 1
+            else:
+                removed.append(order)
+        return kept, removed
+
+    kept, removed = prune_queue(2, ["city_a_current"], ["city_a_extra"], 3)
+    check(kept == ["city_a_current"], "Existing legal current production must be retained")
+    check(removed == ["city_a_extra"], "Excess same-city queued copy must be pruned")
+    kept, removed = prune_queue(0, ["kiyotaka_current"], [], 1)
+    check(kept == ["kiyotaka_current"] and not removed, "Below-cap Kiyotaka production must remain possible")
+
+    # External over-cap creation keeps the highest-level/highest-XP scores.
+    scores = [100001, 205002, 103003, 304004]
+    retained = sorted(scores, reverse=True)[:3]
+    check(retained == [304004, 205002, 103003], "Over-cap enforcement must retain the strongest copies")
 
     # Death cleanup only removes transient combat state.
     state = {"PENDING_HEAL": 3, "LAST_DAMAGE": 77, "COMBAT": 240, "ATTACK": 125}

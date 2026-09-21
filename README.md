@@ -125,10 +125,10 @@ most important status can be checked quickly.
 ## Requirements
 
 - Civilization V: Brave New World
-- Community Patch is recommended and used for some advanced combat/event hooks.
+- Community Patch version 151 or newer is required.
 
-The mod includes guards where possible so missing hooks do not crash the game,
-but the intended experience is with Community Patch active.
+The Community Patch dependency is declared in the mod package so its event
+options and gameplay callbacks load before White Room.
 
 ## Current Art
 

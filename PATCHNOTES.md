@@ -1,5 +1,11 @@
 # Patch Notes
 
+## Version 1 — Final integration polish — 2026-09-22
+
+- Declared Community Patch version 151+ as a hard dependency and added dependency parity validation.
+- Prioritized valid in-progress unique units over later queue entries when excess queues are pruned.
+- Documented the unavoidable same-city queue UI limitation while retaining hard cap enforcement.
+
 ## Version 1 — State integrity and packaging hardening — 2026-09-22
 
 - Enabled the Community Patch callbacks used by White Room gameplay systems.
