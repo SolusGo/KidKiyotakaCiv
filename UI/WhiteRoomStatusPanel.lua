@@ -25,6 +25,7 @@ local WR_DIPLO_LIST_CONTEXT = nil
 local WR_DIPLO_LIST_WAS_OPEN = false
 local WR_DIPLO_LIST_POLL_ELAPSED = 0
 local WR_TELEMETRY_POLL_ELAPSED = 0
+local WR_BANNER_POLL_ELAPSED = 0
 local WR_LAST_TELEMETRY_SEQUENCE = -1
 local WR_LAST_KIYOTAKA_BANNER_SEQUENCE = 0
 local WR_KIYOTAKA_BANNER_VISIBLE = false
@@ -1325,6 +1326,13 @@ local function WR_ShowKiyotakaBanner(banner)
 end
 
 local function WR_UpdateKiyotakaBanner(deltaTime)
+    -- Only an active banner needs frame-rate timing. Idle queue SaveData reads
+    -- are throttled; gameplay writes happen in a different Lua context.
+    if not WR_KIYOTAKA_BANNER_VISIBLE then
+        WR_BANNER_POLL_ELAPSED = WR_BANNER_POLL_ELAPSED + deltaTime
+        if WR_BANNER_POLL_ELAPSED < 0.5 then return end
+        WR_BANNER_POLL_ELAPSED = 0
+    end
     local playerID = WR_GetActiveWhiteRoomPlayer()
     if playerID == nil then
         WR_KIYOTAKA_BANNER_VISIBLE = false
@@ -1473,7 +1481,9 @@ ContextPtr:SetUpdate(function(deltaTime)
     WR_DIPLO_LIST_POLL_ELAPSED = WR_DIPLO_LIST_POLL_ELAPSED + deltaTime
     WR_TELEMETRY_POLL_ELAPSED = WR_TELEMETRY_POLL_ELAPSED + deltaTime
 
-    if WR_DIPLO_LIST_POLL_ELAPSED < 0.1 then
+    -- CP/EUI exposes no reliable DiploList visibility event. This check only
+    -- reads the cached control visibility; it never scans units/cities/SaveData.
+    if WR_DIPLO_LIST_POLL_ELAPSED < 0.25 then
         return
     end
 

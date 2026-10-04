@@ -1,0 +1,6 @@
+# Package hashes must describe identical bytes on Windows and other checkouts.
+*.lua text eol=lf
+*.sql text eol=lf
+*.xml text eol=lf
+*.civ5proj text eol=lf
+*.modinfo text eol=lf

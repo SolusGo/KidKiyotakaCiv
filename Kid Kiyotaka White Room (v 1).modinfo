@@ -23,14 +23,14 @@
   <References />
   <Blocks />
   <Files>
-    <File md5="58B038D80622E8D9CDC66F507C16B710" import="0">SQL\WhiteRoomPlayableCiv.sql</File>
+    <File md5="C230D609243FF7DEA65323BB415F0C45" import="0">SQL\WhiteRoomPlayableCiv.sql</File>
     <File md5="01F4B84B3CEED1310A30F3519AD089AF" import="0">SQL\WhiteRoomAdaptationDummyPromotions.sql</File>
-    <File md5="1BEACAB73905429889D69DB5DD394637" import="0">SQL\WhiteRoomDuplicateDummyBuildings.sql</File>
-    <File md5="2FE6CFFCF7C531C30277C6575A1D834B" import="0">SQL\WhiteRoomCityHpAdaptationDummyBuildings.sql</File>
+    <File md5="E5E1B2C4B45F6C4CF8ED512F503A5A67" import="0">SQL\WhiteRoomDuplicateDummyBuildings.sql</File>
+    <File md5="EEC61B09FA15246D5FCB46120B9C67AB" import="0">SQL\WhiteRoomCityHpAdaptationDummyBuildings.sql</File>
     <File md5="23DB22D92FED83F0467AC490F3BB72A3" import="0">SQL\WhiteRoomCityRangedStrikeDummyBuildings.sql</File>
     <File md5="DE965435F1860C67B943319CA9216459" import="0">SQL\WhiteRoomTradeRouteLearningDummyBuildings.sql</File>
-    <File md5="AF33D44CE685164170CDC20435CEA6B2" import="0">SQL\WhiteRoomCapturedCityLearningDummyBuildings.sql</File>
-    <File md5="4E4C555017AC03EAE33B584FFFFF0008" import="0">SQL\WhiteRoomCompatibilityText.sql</File>
+    <File md5="9F3FA897D36B6781577A055294CBE6BC" import="0">SQL\WhiteRoomCapturedCityLearningDummyBuildings.sql</File>
+    <File md5="3077D4D6EB00BACD9BD2EAF1DC5C033A" import="0">SQL\WhiteRoomCompatibilityText.sql</File>
     <File md5="A85ADD21E5E4C344A37884067D9E3CF7" import="1">WR_Kiyotaka_Leader_256.dds</File>
     <File md5="AE185FA0533C0E57587CF77CF033EA5D" import="1">WR_Kiyotaka_Leader_128.dds</File>
     <File md5="E2184CA289315972484F916B826C5778" import="1">WR_Kiyotaka_Leader_80.dds</File>
@@ -115,20 +115,21 @@
     <File md5="23FEB7F0296C70FB5BB9D5F2FE8CB566" import="1">Art\Units\WR_FourthGenOperative_Unit_45.dds</File>
     <File md5="AAE063D515E224225FC78EB4E1E8B827" import="1">Art\Units\WR_FourthGenOperative_Unit_32.dds</File>
     <File md5="E05D8F4DA5F8578A03B1C00560DAE4F2" import="1">Art\Units\WR_FourthGenOperative_Unit_24.dds</File>
-    <File md5="FE016ED51D1EABE755539BA806BD02DD" import="0">Lua\WhiteRoomLuaLoader.lua</File>
+    <File md5="5F120F38489B521625E37AAA4F707712" import="0">Lua\WhiteRoomLuaLoader.lua</File>
     <File md5="C2CD19BF94C0319AD96CA94BAB5B2F29" import="1">Lua\WhiteRoomTelemetry.lua</File>
     <File md5="8448B694140931F1F4B6FB059EC7A1DB" import="1">Lua\WhiteRoomKiyotakaFlavor.lua</File>
     <File md5="9C87683972F994DC162A4588A0CDEB55" import="1">Lua\WhiteRoomDuplicateImprovements.lua</File>
     <File md5="BCC7DCE65E3DE2C0FEC3AEF38DF8849B" import="1">Lua\WhiteRoomCannotSettle.lua</File>
     <File md5="0AE3BBDADA6933CE48F9579AAA2EFE7F" import="1">Lua\WhiteRoomCityHpAdaptation.lua</File>
-    <File md5="2D8A775C14AC4D198FA490AFC80BF05B" import="1">Lua\WhiteRoomCityRangedStrikeAdaptation.lua</File>
+    <File md5="B8EE455E7507CCF798DB96095D49DED9" import="1">Lua\WhiteRoomCityRangedStrikeAdaptation.lua</File>
     <File md5="9BBDBFDC748519E3892E9833E25A007E" import="1">Lua\WhiteRoomTradeRouteLearning.lua</File>
-    <File md5="0BEF7808882E6769121E322D4FE5AAC7" import="1">Lua\WhiteRoomCapturedCityLearning.lua</File>
-    <File md5="8436EC950B87BEB5DCEDAFD1F8497B2C" import="1">Lua\WhiteRoomKiyotakaScaling.lua</File>
+    <File md5="80C62D546377E49D1F1FB72A85303AAE" import="1">Lua\WhiteRoomCapturedCityLearning.lua</File>
+    <File md5="10DA9759812F9FAE6527427C3BEB9643" import="1">Lua\WhiteRoomKiyotakaScaling.lua</File>
+    <File md5="617051CDE89DA2640B559D5571D0568E" import="1">Lua\WhiteRoomBattleTracking.lua</File>
     <File md5="1017316E276107784567EFD3636F6236" import="1">Lua\WhiteRoomUnitCaps.lua</File>
-    <File md5="EDA9381594B6CBFB07D281A5D2D9C16B" import="1">Lua\WhiteRoomFourthGenOperative.lua</File>
+    <File md5="DF1F7AE28AB4725D7232E2018F1D1CD5" import="1">Lua\WhiteRoomFourthGenOperative.lua</File>
     <File md5="7C3C5756229152C7D42E60253EDBA6AF" import="0">UI\WhiteRoomStatusPanel.xml</File>
-    <File md5="7FAAD19E90CF48FFEA2D7684B985B99D" import="0">UI\WhiteRoomStatusPanel.lua</File>
+    <File md5="8AC072F390770DCEDA57943361C83D9F" import="0">UI\WhiteRoomStatusPanel.lua</File>
     <File md5="E6203142762478E5C94258861A990A24" import="0">UI\WhiteRoomUnitUnlock.xml</File>
     <File md5="E1368451048E84931BAFDE09047D0897" import="0">UI\WhiteRoomUnitUnlock.lua</File>
   </Files>

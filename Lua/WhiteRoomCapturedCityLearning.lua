@@ -5,7 +5,6 @@ print("WhiteRoomCapturedCityLearning.lua loaded")
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 
 local WR_CITY_LOSS_SAVE = Modding.OpenSaveData()
-local WR_CITY_LOSS_RECENT_EVENTS = {}
 local WR_CITY_LOSS_DEBUG = false
 local WR_CITY_LOSS_LAST_APPLY_LOG = {}
 local WR_PlayerName
@@ -218,10 +217,10 @@ local function WR_RecordCityLossForWhiteRoom(playerID, oldOwnerID, cityID, newOw
         tostring(newOwnerID)
     }, ":")
 
-    if WR_CITY_LOSS_RECENT_EVENTS[eventKey] then
+    if WR_GetSavedNumber(playerID, "CAPTURE_" .. eventKey) == 1 then
         return
     end
-    WR_CITY_LOSS_RECENT_EVENTS[eventKey] = true
+    WR_SetSavedNumber(playerID, "CAPTURE_" .. eventKey, 1)
 
     local cityLossStacks = WR_GetSavedNumber(playerID, "CITY_LOSS_STACKS") + 1
     WR_SetSavedNumber(playerID, "CITY_LOSS_STACKS", cityLossStacks)
@@ -255,7 +254,8 @@ end
 
 local function WR_RecordOtherPlayerCityLoss(oldOwnerID, cityID, newOwnerID)
     local oldOwner = Players[oldOwnerID]
-    if oldOwner == nil or WR_IsWhiteRoomPlayer(oldOwner) then
+    if oldOwner == nil or oldOwnerID == newOwnerID
+        or oldOwner:GetCivilizationType() == CIV_WHITE_ROOM_KID then
         return
     end
 
@@ -273,13 +273,15 @@ end
 
 GameEvents.PlayerDoTurn.Add(WR_CapturedCityLearning_DoTurn)
 
-if Events.SerialEventCityCaptured ~= nil then
-    Events.SerialEventCityCaptured.Add(function(hexPos, oldOwnerID, cityID, newOwnerID)
-        WR_RecordOtherPlayerCityLoss(oldOwnerID, cityID, newOwnerID)
-    end)
-    WR_Debug("WR Captured City Learning: SerialEventCityCaptured hook available")
-else
-    WR_Debug("WR Captured City Learning: SerialEventCityCaptured hook unavailable")
-end
+GameEvents.CityCaptureComplete.Add(function(oldOwnerID, isCapital, x, y, newOwnerID, population, wasConquest)
+    local plot = Map.GetPlot(x, y)
+    local city = plot ~= nil and plot:GetPlotCity() or nil
+    -- Coordinates remain stable across capture, even when the city ID changes.
+    local cityIdentity = tostring(x) .. ":" .. tostring(y)
+    if city ~= nil then
+        cityIdentity = cityIdentity .. ":" .. tostring(city:GetGameTurnFounded())
+    end
+    WR_RecordOtherPlayerCityLoss(oldOwnerID, cityIdentity, newOwnerID)
+end)
 
-print("WR Captured City Learning: initialized")
+print("WR Captured City Learning: initialized with CityCaptureComplete")

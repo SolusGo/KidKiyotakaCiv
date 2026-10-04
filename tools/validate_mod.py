@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 import re
+import sqlite3
 import sys
 import xml.etree.ElementTree as ET
 
@@ -101,6 +102,7 @@ def validate_package() -> None:
             check(node.attrib.get("md5", "").upper() == actual_md5, f"Stale md5 in modinfo: {path}")
 
     check(project_files == manifest_files, "Project and modinfo file/import lists differ")
+    check(project_files.get("Lua\\WhiteRoomBattleTracking.lua") is True, "Shared battle tracker must be packaged in VFS")
 
     project_actions = [
         (
@@ -141,6 +143,7 @@ def validate_package() -> None:
 def validate_runtime_contracts() -> None:
     sql = read("SQL/WhiteRoomPlayableCiv.sql")
     required_options = {
+        "EVENTS_BATTLES",
         "EVENTS_UNIT_PREKILL",
         "EVENTS_TRADE_ROUTES",
         "EVENTS_UNIT_UPGRADES",
@@ -148,9 +151,10 @@ def validate_runtime_contracts() -> None:
         "EVENTS_CITY_FOUNDING",
         "EVENTS_UNIT_CREATED",
     }
+    option_update = re.search(r"UPDATE\s+CustomModOptions\s+SET\s+Value\s*=\s*1\s+WHERE\s+Name\s+IN\s*\((.*?)\)", sql, re.I | re.S)
+    enabled_options = set(re.findall(r"'([^']+)'", option_update.group(1))) if option_update else set()
     for option in required_options:
-        check(option in sql, f"Missing Community Patch option: {option}")
-    check(bool(re.search(r"UPDATE\s+CustomModOptions\s+SET\s+Value\s*=\s*1", sql, re.I | re.S)), "CustomModOptions are not enabled")
+        check(option in enabled_options, f"Missing enabled Community Patch option: {option}")
 
     cannot_settle = read("Lua/WhiteRoomCannotSettle.lua")
     check("GameEvents.PlayerCanFoundCity" in cannot_settle, "Founding veto hook missing")
@@ -176,10 +180,125 @@ def validate_runtime_contracts() -> None:
     check("WR_ClearKiyotakaTransientState" in kiyotaka, "Kiyotaka death cleanup missing")
     cleanup_match = re.search(r"local function WR_ClearKiyotakaTransientState.*?\nend", kiyotaka, re.S)
     cleanup = cleanup_match.group(0) if cleanup_match else ""
-    for token in ("PENDING_HEAL", "LAST_DAMAGE", "WR_DAMAGE_CACHE", "WR_ACTIVE_KIYOTAKA_TARGETS"):
+    for token in ("PENDING_HEAL", "LAST_DAMAGE"):
         check(token in cleanup, f"Kiyotaka cleanup does not clear {token}")
     for permanent in ("COMBAT", "ATTACK", "RESISTANCE", "HEALING", "DESPERATION", "MOVE_CHANCE"):
         check(f'"{permanent}"' not in cleanup, f"Kiyotaka cleanup resets permanent {permanent} progress")
+
+    battles = read("Lua/WhiteRoomBattleTracking.lua")
+    for hook in ("BattleStarted", "BattleJoined", "BattleFinished"):
+        check(f"GameEvents.{hook}.Add" in battles, f"Authoritative battle hook missing: {hook}")
+    loader = read("Lua/WhiteRoomLuaLoader.lua")
+    for consumer in ("WhiteRoomKiyotakaScaling.lua", "WhiteRoomFourthGenOperative.lua"):
+        check(loader.index("WhiteRoomBattleTracking.lua") < loader.index(consumer), "Battle tracker must load before consumers")
+        check("WR_BattleTracking.finished" in read(f"Lua/{consumer}"), f"Gameplay battle subscriber missing: {consumer}")
+
+    for path in ("SQL/WhiteRoomCityHpAdaptationDummyBuildings.sql", "SQL/WhiteRoomCapturedCityLearningDummyBuildings.sql"):
+        source = read(path)
+        check("BuildingDefenseModifier" in source, f"Percentage defense missing in {path}")
+        building_insert = re.search(r"INSERT\s+INTO\s+Buildings\s*\(([^)]*)\)", source, re.I | re.S)
+        columns = building_insert.group(1) if building_insert else ""
+        check(not re.search(r"\b(Defense|ExtraCityHitPoints)\b", columns), f"Flat defense/HP must not represent percentage adaptation in {path}")
+    ranged = read("Lua/WhiteRoomCityRangedStrikeAdaptation.lua")
+    check("LAST_RANGED_STRIKE_COUNTED_TURN" in ranged, "Persistent ranged-strike turn guard missing")
+    capture = read("Lua/WhiteRoomCapturedCityLearning.lua")
+    check("GameEvents.CityCaptureComplete.Add" in capture, "Gameplay city capture hook missing")
+    check("SerialEventCityCaptured.Add" not in capture, "UI city capture must not award permanent progress")
+    compatibility = read("SQL/WhiteRoomCompatibilityText.sql")
+    check("AURON" not in compatibility, "Unrelated third-party repair must not return")
+    check("DELETE FROM" not in compatibility.upper(), "Global orphan cleanup must not return")
+    panel = read("UI/WhiteRoomStatusPanel.lua")
+    check("WR_BANNER_POLL_ELAPSED < 0.5" in panel, "Idle banner SaveData reads must be throttled")
+
+
+def validate_sql_effects() -> None:
+    # Minimal BNW/CP schema for the changed SQL: CP adds BuildingDefenseModifier.
+    db = sqlite3.connect(":memory:")
+    db.executescript("""
+        CREATE TABLE BuildingClasses(Type TEXT PRIMARY KEY, DefaultBuilding TEXT, Description TEXT);
+        CREATE TABLE Buildings(Type TEXT PRIMARY KEY, BuildingClass TEXT, Cost INTEGER, FaithCost INTEGER,
+            GreatWorkCount INTEGER, PrereqTech TEXT, Description TEXT, NeverCapture INTEGER, NukeImmune INTEGER,
+            HurryCostModifier INTEGER, BuildingDefenseModifier INTEGER DEFAULT 0, Defense INTEGER DEFAULT 0,
+            ExtraCityHitPoints INTEGER DEFAULT 0, Civilopedia TEXT, Strategy TEXT, Help TEXT, IconAtlas TEXT,
+            PortraitIndex INTEGER, ConquestProb INTEGER, ShowInPedia INTEGER, IsDummy INTEGER);
+        CREATE TABLE UnitPromotions(Type TEXT PRIMARY KEY, Description TEXT, Help TEXT, Sound TEXT,
+            CannotBeChosen INTEGER, LostWithUpgrade INTEGER, CityAttack INTEGER, PortraitIndex INTEGER,
+            IconAtlas TEXT, PediaType TEXT, PediaEntry TEXT);
+        CREATE TABLE Language_en_US(Tag TEXT PRIMARY KEY, Text TEXT);
+        CREATE TABLE UnitClasses(Type TEXT PRIMARY KEY, DefaultUnit TEXT);
+        CREATE TABLE Units(Type TEXT PRIMARY KEY);
+        CREATE TABLE Civilizations(Type TEXT PRIMARY KEY);
+        CREATE TABLE Civilization_UnitClassOverrides(CivilizationType TEXT, UnitClassType TEXT, UnitType TEXT);
+        CREATE TABLE Resources(Type TEXT, Description TEXT);
+        CREATE TABLE Unit_FreePromotions(UnitType TEXT, PromotionType TEXT);
+        INSERT INTO Resources VALUES('RESOURCE_FOREIGN', NULL);
+        INSERT INTO Unit_FreePromotions VALUES('UNIT_FOREIGN', 'PROMOTION_NOT_LOADED_YET');
+        INSERT INTO Buildings(Type, Description) VALUES('BUILDING_FOREIGN', NULL);
+        INSERT INTO UnitClasses VALUES('UNITCLASS_FOREIGN', NULL);
+        INSERT INTO Civilizations VALUES('CIVILIZATION_WHITE_ROOM_KID'), ('CIVILIZATION_FOREIGN');
+    """)
+    for stem in ("CITY_DEF_ADAPT", "CITY_LOSS_DEF"):
+        filename = "WhiteRoomCityHpAdaptationDummyBuildings.sql" if stem == "CITY_DEF_ADAPT" else "WhiteRoomCapturedCityLearningDummyBuildings.sql"
+        db.executescript(read(f"SQL/{filename}"))
+        for percent in (1, 5, 10, 25, 50):
+            effect = db.execute("SELECT BuildingDefenseModifier, Defense, ExtraCityHitPoints FROM Buildings WHERE Type=?",
+                                (f"BUILDING_WR_{stem}_{percent}",)).fetchone()
+            check(effect == (percent, 0, 0), f"Incorrect percentage dummy: {stem}_{percent}: {effect}")
+    for unit in ("KIYOTAKA", "FOURTH_GEN_OPERATIVE"):
+        db.execute("INSERT INTO Units VALUES(?)", (f"UNIT_WR_{unit}",))
+        db.execute("INSERT INTO UnitClasses VALUES(?, NULL)", (f"UNITCLASS_WR_{unit}",))
+        db.execute("INSERT INTO Civilization_UnitClassOverrides VALUES(?, ?, ?)",
+                   ("CIVILIZATION_WHITE_ROOM_KID", f"UNITCLASS_WR_{unit}", f"UNIT_WR_{unit}"))
+    db.executescript(read("SQL/WhiteRoomCompatibilityText.sql"))
+    check(db.execute("SELECT Description FROM Resources").fetchone() == (None,), "Foreign resource rewritten")
+    check(db.execute("SELECT Description FROM Buildings WHERE Type='BUILDING_FOREIGN'").fetchone() == (None,), "Foreign building rewritten")
+    check(db.execute("SELECT COUNT(*) FROM Unit_FreePromotions").fetchone() == (1,), "Foreign orphan link deleted")
+    check(db.execute("SELECT DefaultUnit FROM UnitClasses WHERE Type='UNITCLASS_FOREIGN'").fetchone() == (None,), "Foreign unit class rewritten")
+    check(db.execute("SELECT COUNT(*) FROM Civilization_UnitClassOverrides WHERE CivilizationType='CIVILIZATION_FOREIGN' AND UnitType IS NULL").fetchone() == (2,), "White Room unit exclusivity broken")
+    db.close()
+
+
+def validate_lua() -> None:
+    try:
+        from lupa.lua51 import LuaRuntime
+    except ImportError:
+        check(False, "Install requirements-dev.txt to run Lua 5.1 syntax/gameplay tests")
+        return
+    lua = LuaRuntime(unpack_returned_tuples=True)
+    compile_lua = lua.eval("function(source, name) local fn, err = loadstring(source, name); assert(fn, err) end")
+    for folder in ("Lua", "UI", "tools/tests"):
+        for path in sorted((ROOT / folder).glob("*.lua")):
+            compile_lua(path.read_text(encoding="utf-8-sig"), str(path))
+    lua.execute(read("tools/tests/white_room_mock.lua"))
+    lua.execute(read("Lua/WhiteRoomTelemetry.lua"))
+    lua.execute("""
+        local record = WR_RecordTelemetry
+        WR_RecordTelemetry = function(playerID, category, title, detail)
+            TELEMETRY[#TELEMETRY + 1] = { playerID, category, title, detail }
+            return record(playerID, category, title, detail)
+        end
+    """)
+    lua.execute(read("Lua/WhiteRoomKiyotakaFlavor.lua"))
+    lua.execute("""
+        local record = WR_KiyotakaFlavorEvent
+        WR_KiyotakaFlavorEvent = function(playerID, unit, kind, ...)
+            FLAVOR[#FLAVOR + 1] = kind
+            return record(playerID, unit, kind, ...)
+        end
+    """)
+    for path in ("Lua/WhiteRoomBattleTracking.lua", "Lua/WhiteRoomKiyotakaScaling.lua",
+                 "Lua/WhiteRoomFourthGenOperative.lua", "Lua/WhiteRoomCapturedCityLearning.lua"):
+        lua.execute(read(path))
+    lua.globals().reloadRanged = lambda: lua.execute(read("Lua/WhiteRoomCityRangedStrikeAdaptation.lua"))
+    lua.globals().reloadCapture = lambda: lua.execute(read("Lua/WhiteRoomCapturedCityLearning.lua"))
+    lua.execute(read("tools/tests/white_room_assertions.lua"))
+    messages = list(lua.globals().LOG.values())
+    for expected in ("WR Adaptation Telemetry: initialized", "WR Kiyotaka Flavor: initialized",
+                     "WR Battle Tracking: initialized", "WR Perfect Adaptation: initialized",
+                     "WR 4th Generation Operative: initialized", "WR Captured City Learning: initialized",
+                     "WR City Ranged Adaptation: initialized"):
+        check(any(message.startswith(expected) for message in messages), f"Expected initialization log missing: {expected}")
+    print("Passed Lua 5.1 syntax and executable gameplay/reload regressions (no animation events).")
 
 
 def validate_behavior_models() -> None:
@@ -221,6 +340,22 @@ def validate_behavior_models() -> None:
         "Reused city IDs must not inherit old adaptation",
     )
 
+    # Persisted per-city turn state outlives all transient Lua tables.
+    saved: dict[str, int] = {}
+    key = city_key(0, 4, 10, 12, 5)
+    def ranged_strike(turn: int, performed: bool) -> None:
+        if performed and saved.get(key + "_LAST_RANGED_STRIKE_COUNTED_TURN", -1) != turn:
+            saved[key + "_LAST_RANGED_STRIKE_COUNTED_TURN"] = turn
+            saved[key + "_ATTACK_STACKS"] = saved.get(key + "_ATTACK_STACKS", 0) + 1
+    ranged_strike(10, True)
+    check(saved[key + "_ATTACK_STACKS"] == 1, "First ranged strike should award")
+    saved = dict(saved)  # save/reload retains only persistent state
+    ranged_strike(10, True)
+    check(saved[key + "_ATTACK_STACKS"] == 1, "Same-turn reload must not re-award ranged strike")
+    ranged_strike(11, False)
+    ranged_strike(11, True)
+    check(saved[key + "_ATTACK_STACKS"] == 2, "Next-turn strike must award")
+
     # Queue pruning reserves current production before later entries. The CP
     # callback cannot identify a same-city append, so that extra is pruned.
     def prune_queue(active_units: int, current_orders: list[str], later_orders: list[str], cap: int) -> tuple[list[str], list[str]]:
@@ -257,6 +392,8 @@ def main() -> int:
     validate_package()
     validate_runtime_contracts()
     validate_behavior_models()
+    validate_sql_effects()
+    validate_lua()
     if ERRORS:
         print("Validation failed:")
         for error in ERRORS:

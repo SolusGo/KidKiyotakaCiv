@@ -5,7 +5,6 @@ print("WhiteRoomCityRangedStrikeAdaptation.lua loaded")
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 
 local WR_CITY_RANGED_SAVE = Modding.OpenSaveData()
-local WR_CITY_RANGED_STATE = {}
 local WR_HAS_PERFORMED_SUPPORT = nil
 local WR_CITY_RANGED_DEBUG = false
 local WR_CITY_RANGED_PERCENT_PER_STACK = 0.25
@@ -171,16 +170,20 @@ local function WR_PollCity(playerID, city, reason)
         return
     end
 
-    local key = WR_CityKey(playerID, city)
-    local previous = WR_CITY_RANGED_STATE[key]
-    WR_CITY_RANGED_STATE[key] = hasPerformed
+    local turn = Game.GetGameTurn()
+    local lastTurn = tonumber(WR_CITY_RANGED_SAVE.GetValue(
+        WR_SaveKey(playerID, city, "LAST_RANGED_STRIKE_COUNTED_TURN")
+    ))
+    if lastTurn == nil then
+        -- An old save may already have counted a strike before this fix.
+        -- Prime a true flag at load without granting a duplicate; retain stacks.
+        lastTurn = reason == "initial" and hasPerformed and turn or -1
+        WR_SetSavedNumber(playerID, city, "LAST_RANGED_STRIKE_COUNTED_TURN", lastTurn)
+    end
 
-    if hasPerformed and previous ~= true then
-        WR_Debug(string.format(
-            "WR City Ranged Probe: %s has performed a ranged strike this turn (%s)",
-            city:GetName(),
-            reason
-        ))
+    if hasPerformed and lastTurn ~= turn then
+        -- Persist before changing buildings: city-info callbacks can re-enter.
+        WR_SetSavedNumber(playerID, city, "LAST_RANGED_STRIKE_COUNTED_TURN", turn)
         WR_RecordRangedStrike(playerID, city, reason)
     end
 end
@@ -213,6 +216,15 @@ end
 
 GameEvents.PlayerDoTurn.Add(function(playerID)
     WR_PollPlayerCities(playerID, "PlayerDoTurn")
+end)
+
+-- Gameplay callback covers AI/off-screen city strikes; UI dirties remain as a
+-- fallback if a CP build updates the performed-strike flag after battle finish.
+table.insert(WR_BattleTracking.finished, function(battle)
+    local attacker = battle.members[0]
+    if attacker ~= nil and attacker.isCity then
+        WR_PollPlayerCities(attacker.playerID, "BattleFinished")
+    end
 end)
 
 if Events.ActivePlayerTurnStart ~= nil then

@@ -61,9 +61,8 @@ local WR_DESPERATION_PROMOTIONS = {
     "PROMOTION_WR_KIYOTAKA_DESPERATION_ADAPTATION_VIII"
 }
 
-local WR_DAMAGE_CACHE = {}
 local WR_KILL_CREDIT_CACHE = {}
-local WR_ACTIVE_KIYOTAKA_TARGETS = {}
+local WR_DEATH_CACHE = {}
 
 local function WR_SaveKey(playerID, key)
     return "WR_KIYOTAKA_" .. tostring(playerID) .. "_" .. key
@@ -286,7 +285,7 @@ local function WR_RecordDamageTaken(playerID, unit, oldDamage, newDamage)
     WR_ChangeSavedNumber(playerID, "HEALING", 13)
     WR_ChangeSavedNumber(playerID, "DESPERATION", 13)
 
-    if oldDamage < 75 and newDamage >= 75 then
+    if unit ~= nil and oldDamage < 75 and newDamage >= 75 then
         WR_RecordLowHpSurvival(playerID, unit, "damage taken")
     end
 
@@ -404,61 +403,6 @@ local function WR_RecordKill(playerID, unit, killedUnitType, flavorEventType)
     WR_CheckFlavorMilestones(playerID, unit)
 end
 
-local function WR_PrimeDamageCache()
-    for playerID = 0, (GameDefines.MAX_CIV_PLAYERS or 63) - 1 do
-        local player = Players[playerID]
-        if player ~= nil and player:IsAlive() then
-            for unit in player:Units() do
-                local key = WR_UnitDamageKey(playerID, unit:GetID())
-                WR_DAMAGE_CACHE[key] = unit:GetDamage()
-            end
-        end
-    end
-end
-
-local function WR_IsDirectKiyotakaCombat(unit, victimX, victimY)
-    if unit == nil or victimX == nil or victimY == nil then
-        return false
-    end
-
-    local stateOK, isActiveCombat = pcall(function()
-        return unit:IsFighting()
-            or unit:IsAttacking()
-            or unit:IsDefending()
-            or unit:IsInCombat()
-    end)
-    if not stateOK or not isActiveCombat then
-        return false
-    end
-
-    local unitPlot = unit:GetPlot()
-    local victimPlot = Map.GetPlot(victimX, victimY)
-    if unitPlot == nil or victimPlot == nil then
-        return false
-    end
-
-    return Map.PlotDistance(
-        unitPlot:GetX(),
-        unitPlot:GetY(),
-        victimPlot:GetX(),
-        victimPlot:GetY()
-    ) <= 1
-end
-
-local function WR_MarkKiyotakaCombatTarget(killerPlayerID, killerUnitID, victimPlayerID, victimUnitID)
-    if victimPlayerID == nil or victimUnitID == nil or victimUnitID < 0 then
-        return
-    end
-
-    local killerPlayer = Players[killerPlayerID]
-    local killerUnit = killerPlayer ~= nil and killerPlayer:GetUnitByID(killerUnitID) or nil
-    if WR_IsWhiteRoomPlayer(killerPlayer)
-        and killerUnit ~= nil
-        and killerUnit:GetUnitType() == UNIT_WR_KIYOTAKA then
-        WR_ACTIVE_KIYOTAKA_TARGETS[WR_UnitDamageKey(victimPlayerID, victimUnitID)] = killerPlayerID
-    end
-end
-
 local function WR_ApplyPendingHeal(playerID, unit)
     local pendingHeal = WR_GetSavedNumber(playerID, "PENDING_HEAL")
     if pendingHeal <= 0 then
@@ -500,16 +444,8 @@ function WR_KiyotakaScaling_DoTurn(playerID)
     WR_RegisterFlavorDeployment(playerID, unit)
     WR_ApplyPendingHeal(playerID, unit)
 
-    local lastDamage = WR_GetSavedNumber(playerID, "LAST_DAMAGE")
-    local currentDamage = unit:GetDamage()
-    if lastDamage > 0 and currentDamage > lastDamage then
-        WR_RecordDamageTaken(playerID, unit, lastDamage, currentDamage)
-    end
-
-    WR_SetSavedNumber(playerID, "LAST_DAMAGE", currentDamage)
-    WR_DAMAGE_CACHE[WR_UnitDamageKey(playerID, unit:GetID())] = currentDamage
+    WR_SetSavedNumber(playerID, "LAST_DAMAGE", unit:GetDamage())
     WR_ApplyPerfectAdaptation(playerID, unit)
-    WR_PrimeDamageCache()
 end
 
 GameEvents.PlayerDoTurn.Add(WR_KiyotakaScaling_DoTurn)
@@ -517,169 +453,67 @@ GameEvents.PlayerDoTurn.Add(WR_KiyotakaScaling_DoTurn)
 local function WR_ClearKiyotakaTransientState(playerID, unitID)
     WR_SetSavedNumber(playerID, "PENDING_HEAL", 0)
     WR_SetSavedNumber(playerID, "LAST_DAMAGE", 0)
+end
 
-    local unitKey = WR_UnitDamageKey(playerID, unitID)
-    WR_DAMAGE_CACHE[unitKey] = nil
-    WR_KILL_CREDIT_CACHE[unitKey] = nil
+-- Snapshot ownership before combat; elimination must not discard final progress.
+table.insert(WR_BattleTracking.joined, function(member, unit)
+    local player = Players[member.playerID]
+    member.isKiyotaka = not member.isCity
+        and member.unitType == UNIT_WR_KIYOTAKA and WR_IsWhiteRoomPlayer(player)
+    if member.isKiyotaka then WR_RegisterFlavorDeployment(member.playerID, unit) end
+end)
 
-    for victimKey, creditedPlayerID in pairs(WR_ACTIVE_KIYOTAKA_TARGETS) do
-        if victimKey == unitKey or creditedPlayerID == playerID then
-            WR_ACTIVE_KIYOTAKA_TARGETS[victimKey] = nil
+table.insert(WR_BattleTracking.finished, function(battle)
+    for _, role in ipairs({ 0, 1 }) do
+        local member = battle.members[role]
+        local opponent = battle.members[1 - role]
+        if member ~= nil and member.isKiyotaka and opponent ~= nil then
+            local unit = member.unit
+            if opponent.damageDelta > 0 then
+                local flavor = role == 1 and "COUNTERATTACK" or "DAMAGE_DEALT"
+                if role == 0 then
+                    if opponent.damageBefore > 0 then flavor = "WOUNDED_TARGET"
+                    elseif member.damageDelta == 0 then flavor = "NO_DAMAGE" end
+                end
+                WR_RecordDamageDealt(member.playerID, unit, "combat target", flavor)
+            end
+            -- Preserve final damage even if the unit was removed before finish.
+            if member.damageDelta > 0 then
+                WR_RecordDamageTaken(member.playerID, unit, member.damageBefore, member.damageAfter)
+            end
+            WR_SetSavedNumber(member.playerID, "LAST_DAMAGE", unit ~= nil and unit:GetDamage() or 0)
         end
     end
-end
+end)
 
-if GameEvents.UnitPrekill ~= nil then
-    GameEvents.UnitPrekill.Add(function(killedPlayerID, killedUnitID, killedUnitType, x, y, delay, killerPlayerID)
-        local killedPlayer = Players[killedPlayerID]
-        local killedUnit = killedPlayer ~= nil and killedPlayer:GetUnitByID(killedUnitID) or nil
+GameEvents.UnitPrekill.Add(function(killedPlayerID, killedUnitID, killedUnitType, x, y, delay, killerPlayerID)
+    local killer, victim = WR_BattleTracking.FindKillPair(killedPlayerID, killedUnitID, killerPlayerID)
+    local deathKey = WR_UnitDamageKey(killedPlayerID, killedUnitID)
+    if killer ~= nil and killer.isKiyotaka and not WR_KILL_CREDIT_CACHE[deathKey] then
+        WR_KILL_CREDIT_CACHE[deathKey] = true
+        local player = Players[killer.playerID]
+        local unit = player ~= nil and player:GetUnitByID(killer.entityID) or nil
+        local flavor = victim.damageBefore > 0 and "WOUNDED_KILL" or "KILL"
+        WR_RecordKill(killer.playerID, unit, killedUnitType, flavor)
+    end
 
-        local killerPlayer = killerPlayerID ~= nil and killerPlayerID >= 0 and Players[killerPlayerID] or nil
-        if WR_IsWhiteRoomPlayer(killerPlayer) then
-            local kiyotaka = WR_FindKiyotaka(killerPlayer)
-            local deathKey = WR_UnitDamageKey(killedPlayerID, killedUnitID)
-            local matchedCombat = WR_ACTIVE_KIYOTAKA_TARGETS[deathKey] == killerPlayerID
-            if not WR_KILL_CREDIT_CACHE[deathKey]
-                and (matchedCombat or WR_IsDirectKiyotakaCombat(kiyotaka, x, y)) then
-                WR_KILL_CREDIT_CACHE[deathKey] = true
-
-                local priorDamage = tonumber(WR_DAMAGE_CACHE[deathKey]) or 0
-                local maxHitPoints = killedUnit ~= nil and killedUnit:GetMaxHitPoints()
-                    or tonumber(GameDefines.MAX_HIT_POINTS)
-                    or 100
-                local flavorEventType = priorDamage > 0 and priorDamage < maxHitPoints
-                    and "WOUNDED_KILL"
-                    or "KILL"
-                WR_RecordKill(killerPlayerID, kiyotaka, killedUnitType, flavorEventType)
-            end
+    local killedPlayer = Players[killedPlayerID]
+    if killedUnitType == UNIT_WR_KIYOTAKA and not WR_DEATH_CACHE[deathKey]
+        and killedPlayer ~= nil and killedPlayer:GetCivilizationType() == CIV_WHITE_ROOM_KID then
+        WR_DEATH_CACHE[deathKey] = true
+        local unit = killedPlayer:GetUnitByID(killedUnitID)
+        if WR_KiyotakaFlavorRecordDeath ~= nil then
+            WR_KiyotakaFlavorRecordDeath(killedPlayerID, unit)
         end
+        WR_ClearKiyotakaTransientState(killedPlayerID, killedUnitID)
+    end
+end)
 
-        if killedUnitType == UNIT_WR_KIYOTAKA then
-            local ownedByWhiteRoom = killedPlayer ~= nil
-                and CIV_WHITE_ROOM_KID ~= nil
-                and killedPlayer:GetCivilizationType() == CIV_WHITE_ROOM_KID
+-- Gameplay creation resets deduplication when Civ V reuses a unit ID.
+GameEvents.UnitCreated.Add(function(playerID, unitID)
+    local key = WR_UnitDamageKey(playerID, unitID)
+    WR_KILL_CREDIT_CACHE[key] = nil
+    WR_DEATH_CACHE[key] = nil
+end)
 
-            if ownedByWhiteRoom and WR_KiyotakaFlavorRecordDeath ~= nil then
-                WR_KiyotakaFlavorRecordDeath(killedPlayerID, killedUnit)
-            end
-
-            if ownedByWhiteRoom then
-                WR_ClearKiyotakaTransientState(killedPlayerID, killedUnitID)
-            end
-        end
-    end)
-end
-
-if Events.SerialEventUnitCreated ~= nil then
-    Events.SerialEventUnitCreated.Add(function(playerID, unitID)
-        local key = WR_UnitDamageKey(playerID, unitID)
-        WR_KILL_CREDIT_CACHE[key] = nil
-        WR_ACTIVE_KIYOTAKA_TARGETS[key] = nil
-    end)
-end
-
-if Events.SerialEventUnitSetDamage ~= nil then
-    Events.SerialEventUnitSetDamage.Add(function(playerID, unitID, damage)
-        local player = Players[playerID]
-        if player == nil then
-            return
-        end
-
-        local unit = player:GetUnitByID(unitID)
-        if unit == nil then
-            return
-        end
-
-        local key = WR_UnitDamageKey(playerID, unitID)
-        local oldDamage = WR_DAMAGE_CACHE[key]
-        local newDamage = unit:GetDamage()
-        if type(damage) == "number" then
-            newDamage = damage
-        end
-
-        WR_DAMAGE_CACHE[key] = newDamage
-        if oldDamage == nil or newDamage <= oldDamage then
-            return
-        end
-
-        if unit:GetUnitType() == UNIT_WR_KIYOTAKA and WR_IsWhiteRoomPlayer(player) then
-            WR_RecordDamageTaken(playerID, unit, oldDamage, newDamage)
-            WR_SetSavedNumber(playerID, "LAST_DAMAGE", newDamage)
-            return
-        end
-    end)
-end
-
-if Events.RunCombatSim ~= nil then
-    Events.RunCombatSim.Add(function(
-        attackerPlayerID,
-        attackerUnitID,
-        attackerUnitDamage,
-        attackerFinalUnitDamage,
-        attackerMaxHitPoints,
-        defenderPlayerID,
-        defenderUnitID
-    )
-        WR_MarkKiyotakaCombatTarget(attackerPlayerID, attackerUnitID, defenderPlayerID, defenderUnitID)
-        WR_MarkKiyotakaCombatTarget(defenderPlayerID, defenderUnitID, attackerPlayerID, attackerUnitID)
-    end)
-end
-
-if Events.EndCombatSim ~= nil then
-    Events.EndCombatSim.Add(function(
-        attackerPlayerID,
-        attackerUnitID,
-        attackerUnitDamage,
-        attackerFinalUnitDamage,
-        attackerMaxHitPoints,
-        defenderPlayerID,
-        defenderUnitID,
-        defenderUnitDamage,
-        defenderFinalUnitDamage,
-        defenderMaxHitPoints,
-        attackerX,
-        attackerY,
-        defenderX,
-        defenderY
-    )
-        local attackerPlayer = Players[attackerPlayerID]
-        if WR_IsWhiteRoomPlayer(attackerPlayer) then
-            local attackerUnit = attackerPlayer:GetUnitByID(attackerUnitID)
-            if attackerUnit ~= nil
-                and attackerUnit:GetUnitType() == UNIT_WR_KIYOTAKA
-                and defenderFinalUnitDamage ~= nil
-                and defenderUnitDamage ~= nil
-                and defenderFinalUnitDamage > defenderUnitDamage then
-                local flavorEventType = "DAMAGE_DEALT"
-                if type(defenderUnitDamage) == "number" and defenderUnitDamage > 0 then
-                    flavorEventType = "WOUNDED_TARGET"
-                elseif type(attackerFinalUnitDamage) == "number"
-                    and type(attackerUnitDamage) == "number"
-                    and attackerFinalUnitDamage <= attackerUnitDamage then
-                    flavorEventType = "NO_DAMAGE"
-                end
-
-                WR_RecordDamageDealt(attackerPlayerID, attackerUnit, "combat target", flavorEventType)
-            end
-        end
-
-        local defenderPlayer = Players[defenderPlayerID]
-        if WR_IsWhiteRoomPlayer(defenderPlayer) then
-            local defenderUnit = defenderPlayer:GetUnitByID(defenderUnitID)
-            if defenderUnit ~= nil
-                and defenderUnit:GetUnitType() == UNIT_WR_KIYOTAKA
-                and attackerFinalUnitDamage ~= nil
-                and attackerUnitDamage ~= nil
-                and attackerFinalUnitDamage > attackerUnitDamage then
-                WR_RecordDamageDealt(defenderPlayerID, defenderUnit, "counterattack target", "COUNTERATTACK")
-            end
-        end
-
-        WR_ACTIVE_KIYOTAKA_TARGETS[WR_UnitDamageKey(attackerPlayerID, attackerUnitID)] = nil
-        WR_ACTIVE_KIYOTAKA_TARGETS[WR_UnitDamageKey(defenderPlayerID, defenderUnitID)] = nil
-    end)
-end
-
-WR_PrimeDamageCache()
-
-print("WR Perfect Adaptation: initialized")
+print("WR Perfect Adaptation: initialized with gameplay battle tracking")

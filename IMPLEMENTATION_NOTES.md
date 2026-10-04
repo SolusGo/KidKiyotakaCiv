@@ -104,10 +104,10 @@ scene still uses safe existing Civilization V art.
   - movement-after-combat becomes the `Flow State` promotion once the stored chance reaches 100%
   - exact counters are saved with `Modding.OpenSaveData()` and converted into visible tier promotions
   - death clears only transient pending-heal, last-damage, and combat-target state; permanent adaptation counters remain
-  - damage-dealt credit uses `Events.EndCombatSim` when available and only fires when Kiyotaka is the attacker or defender and the opposing combat target's damage increases
+  - damage-dealt and damage-taken credit use shared Community Patch `BattleStarted` / `BattleJoined` / `BattleFinished` snapshots, independent of Quick Combat, visibility, or animation
   - kill credit is awarded directly from Civ V's authoritative `UnitPrekill` event while the defeated unit type and Kiyotaka's combat state are still available
-  - the combat simulation records Kiyotaka's exact opposing unit before the fight; active combat state plus the victim plot provides a guarded fallback if that visual record is unavailable
-  - credit requires that exact combat pairing or Kiyotaka actively fighting within one tile of the victim; proximity by itself is insufficient, so nearby allied kills grant no adaptation, XP, telemetry, or kill flavor
+  - gameplay battle participants record exact opposing units; `UnitPrekill` retains terminal damage before removal, and city conquest retains terminal city damage before owner/HP replacement
+  - kill credit requires the exact attacker/defender pairing; nearby allied kills and collateral/bystander victims grant no Kiyotaka kill adaptation or XP
   - per-victim deduplication protects against delayed-death callbacks firing more than once, while the `UnitPrekill` unit type preserves class-specific adaptation for direct kills and counterattack kills
   - contextual flavor separates ordinary attacks, clean exchanges, counterattacks, wounded targets, kills, wounded kills, damage, below-half-health pressure, critical survival, recovery, deployment, Flow State, tier breakthroughs, class-doctrine milestones, and death
   - routine combat barks use a 35% chance, a one-turn cooldown, and per-event no-repeat selection; forced milestone/survival lines bypass the chance and cooldown
@@ -121,16 +121,17 @@ scene still uses safe existing Civilization V art.
   - keys persistent/runtime state by owner, city ID, coordinates, and founding turn; legacy owner/city-ID saves migrate once
   - when city damage increases, adds +1 city defense adaptation stack for that city
   - applies invisible dummy buildings in 1/5/10/25/50 denominations
-  - each stack is worth +0.25% city defense/HP scaling; visible dummy buildings apply only whole-percent amounts
+  - each stack is worth +0.25% city defense; dummy buildings apply whole percentages through CP `BuildingDefenseModifier`, not flat strength or extra HP
   - logs `WR City HP Adaptation: <city> took damage (...)`
   - tested in-game and confirmed working
 - City ranged strike adaptation:
   - files: `Lua/WhiteRoomCityRangedStrikeAdaptation.lua`, `SQL/WhiteRoomCityRangedStrikeDummyBuildings.sql`
   - safely probes `city:HasPerformedRangedStrikeThisTurn()` with `pcall`
   - shares the same strong city identity and one-time legacy migration used by HP adaptation and the status UI
-  - polls White Room cities on turn and city-info dirty events
+  - polls White Room cities on turn/city-info dirty events and gameplay city battle completion
   - confirmed CP exposes the ranged-strike flag in `Lua.log`
-  - when a White Room city flips to "has performed a ranged strike this turn", adds +1 ranged adaptation stack for that city
+  - a true performed-strike flag awards once per game turn, guarded by persistent `LAST_RANGED_STRIKE_COUNTED_TURN` under the strong city identity
+  - existing saves without the new guard retain all stacks; an already-true flag at initial load is conservatively primed without re-awarding
   - applies invisible dummy buildings in 1/5/10/25/50 denominations
   - dummy building writes are idempotent to avoid city-info dirty event loops/freezes
   - each stack is worth +0.25% city `RangedStrikeModifier`; visible dummy buildings apply only whole-percent amounts
@@ -154,7 +155,8 @@ scene still uses safe existing Civilization V art.
   - `tools/validate_mod.py` verifies package parity, the exact Community Patch dependency, static runtime contracts, and deterministic regression models
 - Captured city learning:
   - files: `Lua/WhiteRoomCapturedCityLearning.lua`, `SQL/WhiteRoomCapturedCityLearningDummyBuildings.sql`
-  - listens for `Events.SerialEventCityCaptured`
+  - listens for authoritative `GameEvents.CityCaptureComplete`; coordinates/founding turn identify the captured city, and capture deduplication is persisted
+  - excludes White Room own losses even if the capture eliminates its last city
   - triggers when any non-White-Room major civ or City-State loses a city
   - each city-loss event gives White Room +0.5% attack vs cities and +0.25% city defense learning
   - city defense uses repeatable invisible dummy buildings in 1/5/10/25/50 denominations
@@ -165,9 +167,8 @@ scene still uses safe existing Civilization V art.
   - tested in-game with IGE and confirmed working
 
 - CP research tooltip compatibility:
-  - repairs malformed `AURONTRAIT` building references from Arendelle's United Republic of Nations across yield and happiness tooltip tables
-  - removes remaining orphaned `BuildingType` rows from CP building-class yield and happiness tooltip tables
-  - removes orphaned `Unit_FreePromotions` links that would abort CP's research-panel refresh and leave stale technology text
+  - compatibility SQL is scoped to White Room-owned text, dummy buildings, and unit classes
+  - unrelated mod rows and orphaned foreign references are deliberately left untouched
   - normalizes only White Room's two custom unit classes when their `DefaultUnit` is `NULL`, preserving civilization-only availability without rewriting unrelated custom civilizations' classes
 - Phase 4 in-game status UI:
   - files: `UI/WhiteRoomStatusPanel.xml`, `UI/WhiteRoomStatusPanel.lua`
@@ -236,6 +237,8 @@ WR Adaptation Telemetry: initialized; retaining newest 32 records
 WhiteRoomLuaLoader included WhiteRoomKiyotakaFlavor.lua
 WhiteRoomKiyotakaFlavor.lua loaded
 WR Kiyotaka Flavor: initialized with contextual barks, telemetry notes, and banner queue
+WR Battle Tracking: initialized with Community Patch gameplay events
+WhiteRoomLuaLoader included WhiteRoomBattleTracking.lua
 WhiteRoomLuaLoader included WhiteRoomDuplicateImprovements.lua
 WhiteRoomDuplicateImprovements.lua loaded
 WR Duplicate Improvements: initialized
@@ -252,14 +255,13 @@ WR Trade Route Learning: player:GetTradeRoutes() polling available
 WR Trade Route Learning: initialized
 WhiteRoomLuaLoader included WhiteRoomCapturedCityLearning.lua
 WhiteRoomCapturedCityLearning.lua loaded
-WR Captured City Learning: SerialEventCityCaptured hook available
-WR Captured City Learning: initialized
+WR Captured City Learning: initialized with CityCaptureComplete
 WhiteRoomLuaLoader included WhiteRoomCannotSettle.lua
 WhiteRoomCannotSettle.lua loaded
 WR Cannot Settle: initialized
 WhiteRoomLuaLoader included WhiteRoomKiyotakaScaling.lua
 WhiteRoomKiyotakaScaling.lua loaded
-WR Perfect Adaptation: initialized
+WR Perfect Adaptation: initialized with gameplay battle tracking
 WhiteRoomLuaLoader included WhiteRoomUnitCaps.lua
 WhiteRoomUnitCaps.lua loaded
 WR Unit Caps: initialized; Kiyotaka cap 1, 4th Generation Operative cap 3
@@ -284,10 +286,41 @@ WR Status Panel: initialized
   `TECH_PLASTIC` for the 4th Generation Operative.
 - Static unique unit SQL was validated against a temporary copy of the local
   Civ V debug database.
-- Perfect Adaptation SQL was validated against a temporary copy of the local
-  Civ V debug database. Unit damage dealt requires Community Patch
-  `Events.EndCombatSim`.
+- Perfect Adaptation uses Community Patch gameplay battle hooks
+  (`EVENTS_BATTLES = 1`); animation events are not authoritative.
 - Leader/civ icons and Dawn of Man art use the supplied Kid Kiyotaka image. The animated diplomacy leader scene intentionally still uses existing Civ V art to avoid crashes.
-- Community Patch may expose useful city/combat hooks, but those still need
-  explicit probing before exact damage or city ranged-strike mechanics are
-  attempted.
+- Community Patch event signatures and the percentage defense field were
+  checked against the installed CP declarations and upstream combat source.
+
+## Gameplay-hook follow-up verification (2026-10-05)
+
+Install development dependencies with `python -m pip install -r requirements-dev.txt`.
+Packaged text uses LF line endings via `.gitattributes` so Git checkout does not
+silently invalidate the manifest's byte-level MD5 hashes.
+Run `python tools/sync_modinfo.py` after changing packaged assets, then
+`python tools/validate_mod.py`. The validator requires Lua 5.1 via Lupa and checks:
+
+- All Lua source syntax, project/manifest parity, MD5 hashes, CP dependency/options,
+  and tracker-before-consumer load order.
+- Actual Kiyotaka/Operative gameplay handlers without animation events: non-lethal
+  damage, defending, siege kills, immediate XP, bystander rejection, lethal damage,
+  final archived records, recycled callsigns, nested battles, AI ownership,
+  city ranged attacks, captured-city damage, flavor banners, and persisted telemetry.
+- Actual ranged-strike modules across reloads, next-turn strikes and legacy saves,
+  plus deterministic behavior models and persistent capture deduplication.
+- Changed SQL against a minimal CP schema: percentage denominations, no unintended
+  flat defense/HP effects, retained unit exclusivity, and unchanged foreign rows.
+- Expected initialization messages in the mocked runtime.
+
+The status panel keeps its layout. Only visible banner timing runs every frame;
+idle queue reads are throttled to 0.5 seconds. Telemetry checks run at 0.5 seconds
+only on visible Units/Telemetry tabs. DiploList visibility has no reliable CP/EUI
+event, so a cached-control-only poll remains at 0.25 seconds; city screens,
+diplomacy, popups and turn transitions retain their existing event handlers.
+
+All configured balance values and permanent progression keys are preserved.
+The new percentage field requires the already-declared Community Patch 151+
+dependency. Old city dummy instances automatically use the corrected definition.
+No live Civ V test was performed for this follow-up: earlier in-game confirmations
+above refer to the prior implementation. Test Quick Combat on/off, attacker/defender
+kills and non-kills, ranged city strikes, capture and same-turn reload in-game.

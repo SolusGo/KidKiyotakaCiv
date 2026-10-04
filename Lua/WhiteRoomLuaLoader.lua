@@ -16,6 +16,7 @@ end
 
 WR_Include("WhiteRoomTelemetry.lua")
 WR_Include("WhiteRoomKiyotakaFlavor.lua")
+WR_Include("WhiteRoomBattleTracking.lua")
 WR_Include("WhiteRoomCannotSettle.lua")
 WR_Include("WhiteRoomDuplicateImprovements.lua")
 WR_Include("WhiteRoomCityHpAdaptation.lua")

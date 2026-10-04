@@ -5,6 +5,7 @@ print("WhiteRoomFourthGenOperative.lua loaded")
 local CIV_WHITE_ROOM_KID = GameInfoTypes.CIVILIZATION_WHITE_ROOM_KID
 local UNIT_WR_FOURTH_GEN_OPERATIVE = GameInfoTypes.UNIT_WR_FOURTH_GEN_OPERATIVE
 local WR_OPERATIVE_SAVE = Modding.OpenSaveData()
+local WR_OPERATIVE_DEATHS = {}
 
 local function WR_IsWhiteRoomPlayer(player)
     return player ~= nil
@@ -111,28 +112,8 @@ local function WR_EnsureOperativeIdentity(playerID, unit)
     return serial
 end
 
-local function WR_IsFriendlyTerritory(playerID, unit)
-    local plot = unit ~= nil and unit:GetPlot() or nil
-    return plot ~= nil and plot:GetOwner() == playerID
-end
-
-local function WR_DamageDelta(beforeDamage, afterDamage)
-    if type(beforeDamage) ~= "number" or type(afterDamage) ~= "number" then
-        return 0
-    end
-
-    return math.max(0, afterDamage - beforeDamage)
-end
-
-local function WR_WasDestroyed(finalDamage, maxHitPoints)
-    return type(finalDamage) == "number"
-        and type(maxHitPoints) == "number"
-        and maxHitPoints > 0
-        and finalDamage >= maxHitPoints
-end
-
-local function WR_RecordOperativeEngagement(playerID, unit, damageDealt, damageTaken, attackedWounded, friendlyTerritory, killedTarget)
-    local serial = WR_EnsureOperativeIdentity(playerID, unit)
+local function WR_RecordOperativeEngagement(playerID, unit, damageDealt, damageTaken, attackedWounded, friendlyTerritory, killedTarget, snapshotSerial)
+    local serial = snapshotSerial or WR_EnsureOperativeIdentity(playerID, unit)
     if serial <= 0 then
         return
     end
@@ -209,52 +190,37 @@ end
 
 GameEvents.PlayerDoTurn.Add(WR_FourthGenOperative_DoTurn)
 
-if Events.EndCombatSim ~= nil then
-    Events.EndCombatSim.Add(function(
-        attackerPlayerID,
-        attackerUnitID,
-        attackerUnitDamage,
-        attackerFinalUnitDamage,
-        attackerMaxHitPoints,
-        defenderPlayerID,
-        defenderUnitID,
-        defenderUnitDamage,
-        defenderFinalUnitDamage,
-        defenderMaxHitPoints
-    )
-        local attackerPlayer = Players[attackerPlayerID]
-        if WR_IsWhiteRoomPlayer(attackerPlayer) then
-            local attackerUnit = attackerPlayer:GetUnitByID(attackerUnitID)
-            if WR_IsOperativeUnit(attackerUnit) then
-                WR_RecordOperativeEngagement(
-                    attackerPlayerID,
-                    attackerUnit,
-                    WR_DamageDelta(defenderUnitDamage, defenderFinalUnitDamage),
-                    WR_DamageDelta(attackerUnitDamage, attackerFinalUnitDamage),
-                    defenderUnitID ~= nil and defenderUnitID >= 0 and type(defenderUnitDamage) == "number" and defenderUnitDamage > 0,
-                    WR_IsFriendlyTerritory(attackerPlayerID, attackerUnit),
-                    defenderUnitID ~= nil and defenderUnitID >= 0 and WR_WasDestroyed(defenderFinalUnitDamage, defenderMaxHitPoints)
-                )
-            end
-        end
+-- Keep the callsign snapshot even when UnitPrekill archives/removes the unit.
+table.insert(WR_BattleTracking.joined, function(member, unit)
+    if not member.isCity and WR_IsWhiteRoomPlayer(Players[member.playerID]) and WR_IsOperativeUnit(unit) then
+        member.operativeSerial = WR_EnsureOperativeIdentity(member.playerID, unit)
+    end
+end)
 
-        local defenderPlayer = Players[defenderPlayerID]
-        if WR_IsWhiteRoomPlayer(defenderPlayer) then
-            local defenderUnit = defenderPlayer:GetUnitByID(defenderUnitID)
-            if WR_IsOperativeUnit(defenderUnit) then
-                WR_RecordOperativeEngagement(
-                    defenderPlayerID,
-                    defenderUnit,
-                    WR_DamageDelta(attackerUnitDamage, attackerFinalUnitDamage),
-                    WR_DamageDelta(defenderUnitDamage, defenderFinalUnitDamage),
-                    false,
-                    WR_IsFriendlyTerritory(defenderPlayerID, defenderUnit),
-                    attackerUnitID ~= nil and attackerUnitID >= 0 and WR_WasDestroyed(attackerFinalUnitDamage, attackerMaxHitPoints)
-                )
-            end
+table.insert(WR_BattleTracking.finished, function(battle)
+    for _, role in ipairs({ 0, 1 }) do
+        local member = battle.members[role]
+        local opponent = battle.members[1 - role]
+        if member ~= nil and member.operativeSerial ~= nil and opponent ~= nil then
+            WR_RecordOperativeEngagement(
+                member.playerID, member.unit, opponent.damageDelta, member.damageDelta,
+                role == 0 and not opponent.isCity and opponent.damageBefore > 0,
+                member.friendlyTerritory,
+                not opponent.isCity and opponent.destroyed and opponent.killerPlayerID == member.playerID,
+                member.operativeSerial
+            )
         end
-    end)
-end
+    end
+end)
+
+GameEvents.UnitCreated.Add(function(playerID, unitID)
+    WR_OPERATIVE_DEATHS[tostring(playerID) .. ":" .. tostring(unitID)] = nil
+    local player = Players[playerID]
+    if WR_IsWhiteRoomPlayer(player) then
+        local unit = player:GetUnitByID(unitID)
+        if WR_IsOperativeUnit(unit) then WR_EnsureOperativeIdentity(playerID, unit) end
+    end
+end)
 
 if GameEvents.UnitPrekill ~= nil then
     GameEvents.UnitPrekill.Add(function(killedPlayerID, killedUnitID, killedUnitType, x, y, delay, killerPlayerID)
@@ -263,9 +229,12 @@ if GameEvents.UnitPrekill ~= nil then
         end
 
         local player = Players[killedPlayerID]
-        if not WR_IsWhiteRoomPlayer(player) then
+        if player == nil or player:GetCivilizationType() ~= CIV_WHITE_ROOM_KID then
             return
         end
+        local deathKey = tostring(killedPlayerID) .. ":" .. tostring(killedUnitID)
+        if WR_OPERATIVE_DEATHS[deathKey] then return end
+        WR_OPERATIVE_DEATHS[deathKey] = true
 
         local unit = player:GetUnitByID(killedUnitID)
         local serial = WR_GetOperativeSerial(killedPlayerID, killedUnitID)
