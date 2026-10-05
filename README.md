@@ -19,29 +19,52 @@ The White Room begins normally, but cannot found additional cities after its
 capital. Conquered cities can still be annexed, puppeted, or razed. Its strength
 comes from turning a narrow start into long-term compounding power.
 
-## Trait: Masterpiece of the White Room
+## UA / UU / UB Overview
 
-The White Room permanently learns from repetition and failure.
+UA means **Unique Ability**, UU means **Unique Unit**, and UB means **Unique
+Building**.
+
+| Type | Name | Summary |
+| --- | --- | --- |
+| UA | Masterpiece of the White Room | One founded capital; learns from worked improvement patterns, city damage, ranged strikes, trade connections, foreign city losses, and Kiyotaka's combat. |
+| UU | Kiyotaka Ayanokoji | Robotics super-unit with permanent Perfect Adaptation; maximum 1 active copy. |
+| UU | 4th Generation Operative | Plastics elite infantry with double XP, friendly-territory and wounded-target bonuses; maximum 3 active copies. |
+| UB | None | The civilization has two unique units instead of a unique building. Hidden adaptation buildings implement its bonuses and cannot be constructed. |
+
+Both UUs are additional White Room-exclusive unit classes, not replacements for
+standard units.
+
+## Unique Ability (UA): Masterpiece of the White Room
+
+The White Room learns from repetition and failure.
 
 - Cannot found new cities after the starting capital.
 - May annex, puppet, or raze conquered cities.
-- Worked duplicate improvements improve city yields.
-- Cities become stronger after taking damage.
-- Cities improve their ranged strikes after firing.
-- Trade route connections improve empire gold output.
+- Each additional currently worked, unpillaged improvement of the same type
+  gives its city +0.5% to the linked yield. This bonus follows the current worked
+  pattern rather than accumulating permanently each turn.
+- Each detected increase in a city's damage adds a permanent +0.25% city-defense
+  stack for that city.
+- A city's ranged strike adds a permanent +0.25% ranged-strike stack, counted at
+  most once per game turn and protected against reload duplication.
+- Each newly deployed trade-route connection involving the White Room adds
+  permanent +0.125% Gold output to its cities.
 - When another civilization or City-State loses a city, the White Room improves
-  its anti-city doctrine and city defense.
+  permanent empire-wide attack strength against cities by +0.5% and city defense
+  by +0.25%. White Room's own city losses do not count.
 - Kiyotaka permanently adapts through combat.
 
 Most scaling is intentionally uncapped. The civilization is designed to feel
 quiet early, then increasingly difficult to answer if opponents fail to end the
 game before the White Room has learned enough.
 
-## Unique Unit: Kiyotaka Ayanokoji
+## Unique Unit (UU): Kiyotaka Ayanokoji
 
 **Unlocks:** Robotics  
 **Limit:** 1 active copy  
 **Role:** Singular late-game super-unit
+
+**Base Stats:** 130 Combat Strength, 3 Movement, 1200 Production, +8 additional maintenance.
 
 Kiyotaka is extremely expensive and cannot be purchased. He starts with a suite
 of elite promotions, including March, Blitz, Drill I, Shock I, Cover I, Medic I,
@@ -75,11 +98,13 @@ decoded enemy combat classes, and death also create White Room assessment
 banners. Every adaptation event is preserved in telemetry with its associated
 Subject Note, even when no floating combat line is shown.
 
-## Unique Unit: 4th Generation Operative
+## Unique Unit (UU): 4th Generation Operative
 
 **Unlocks:** Plastics  
 **Limit:** 3 active copies  
 **Role:** Elite infantry strike team
+
+**Base Stats:** 85 Combat Strength, 2 Movement, 650 Production, +4 additional maintenance.
 
 4th Generation Operatives are costly, capped elite units. They cannot be
 purchased and are meant to operate as a small, specialized force rather than a
@@ -89,6 +114,20 @@ They begin with March, Drill I, Shock I, Cover I, Ignore Terrain Cost, White
 Room Training, a friendly-territory bonus, and a bonus against wounded units.
 They also cannot be gifted to City-States when the Community Patch event hook is
 available.
+
+White Room Training grants +100% experience, Controlled Environment grants +15%
+Combat Strength in friendly territory, and Exploit Weakness grants +33% when
+attacking wounded units. Each deployment has a persistent `OPERATIVE-##` callsign
+and a service record that remains archived after its loss.
+
+Production costs above are base values before game-speed and other modifiers.
+
+## Unique Buildings (UBs): None
+
+There is no player-buildable unique building or replacement building. The mod's
+invisible dummy buildings apply worked-improvement yields, city-defense
+adaptation, ranged-strike adaptation, trade learning, and captured-city learning.
+They are implementation details of the UA, not additional UBs.
 
 ## Gameplay Style
 
