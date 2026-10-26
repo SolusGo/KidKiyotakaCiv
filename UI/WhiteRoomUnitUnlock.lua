@@ -12,6 +12,8 @@ local WR_DIPLOMACY_OPEN = false
 local WR_UNLOCK_DEFINITIONS = {
     {
         UnitType = "UNIT_WR_FOURTH_GEN_OPERATIVE",
+        Artwork = "Art/UI/WR_UI_Operatives.dds",
+        Capacity = 3,
         Title = "DOSSIER 04: THE DEMONIC GENERATION",
         Record = "GENERATION 04 // BETA",
         Program = "OPERATIVE FIELD PROGRAM",
@@ -21,6 +23,8 @@ local WR_UNLOCK_DEFINITIONS = {
     },
     {
         UnitType = "UNIT_WR_KIYOTAKA",
+        Artwork = "Art/UI/WR_UI_Subject.dds",
+        Capacity = 1,
         Title = "SUBJECT A-04: THE MASTERPIECE",
         Record = "SUBJECT A-04",
         Program = "PERFECT ADAPTATION",
@@ -66,6 +70,8 @@ local function WR_ResolveUnlocks()
 
         if unitInfo ~= nil and techInfo ~= nil then
             definition.UnitID = unitInfo.ID
+            definition.Combat = unitInfo.Combat or 0
+            definition.Moves = unitInfo.Moves or 0
             definition.UnitName = WR_Localize(unitInfo.Description)
             definition.TechID = techInfo.ID
             definition.TechType = techInfo.Type
@@ -105,24 +111,12 @@ local function WR_TeamHasTech(player, techID)
 end
 
 local function WR_IsPresentationBlocked()
-    return WR_CITY_SCREEN_OPEN or WR_DIPLOMACY_OPEN
+    local _, player = WR_GetActiveWhiteRoomPlayer()
+    return player == nil or WR_CITY_SCREEN_OPEN or WR_DIPLOMACY_OPEN
 end
 
 local function WR_SetUnitPortrait(unlock)
-    local shown = false
-
-    if unlock ~= nil and unlock.IconAtlas ~= nil and IconHookup ~= nil then
-        local ok, result = pcall(
-            IconHookup,
-            unlock.PortraitIndex,
-            128,
-            unlock.IconAtlas,
-            Controls.UnitPortrait
-        )
-        shown = ok and result ~= false
-    end
-
-    Controls.PortraitFrame:SetHide(not shown)
+    Controls.UnlockArtwork:SetTexture(unlock.Artwork)
 end
 
 local function WR_SetTechPortrait(unlock)
@@ -160,6 +154,12 @@ local function WR_ShowNextUnlock()
     Controls.ProgramLabel:SetText(WR_CURRENT_UNLOCK.Program)
     Controls.StatusLabel:SetText(WR_CURRENT_UNLOCK.Status)
     Controls.BodyLabel:SetText(WR_CURRENT_UNLOCK.Body)
+    Controls.UnlockStatsLabel:SetText(string.format(
+        "%d STRENGTH    /    %d MOVEMENT    /    %d ACTIVE MAX    /    NO PURCHASE",
+        WR_CURRENT_UNLOCK.Combat, WR_CURRENT_UNLOCK.Moves, WR_CURRENT_UNLOCK.Capacity
+    ))
+    Controls.BodyScrollPanel:CalculateInternalSize()
+    if Controls.BodyScrollPanel.SetScrollValue ~= nil then Controls.BodyScrollPanel:SetScrollValue(0) end
     Controls.QuoteLabel:SetText("\"" .. WR_CURRENT_UNLOCK.Quote .. "\"")
     Controls.UnlockPanel:SetHide(false)
 end
@@ -281,6 +281,30 @@ WR_TryIncludeIconSupport()
 WR_ResolveUnlocks()
 
 Controls.AcknowledgeButton:RegisterCallback(Mouse.eLClick, WR_CloseUnlock)
+
+-- Manual replays never change seen/progression keys or send new notifications.
+if LuaEvents ~= nil then
+    LuaEvents.WR_OpenPersonnelDossier.Add(function(requestedPlayerID, unitType)
+        local playerID, player = WR_GetActiveWhiteRoomPlayer()
+        if player == nil or requestedPlayerID ~= playerID or WR_IsPresentationBlocked() then return end
+        for _, unlock in ipairs(WR_UNLOCK_DEFINITIONS) do
+            if unlock.UnitType == unitType and WR_TeamHasTech(player, unlock.TechID) then
+                if WR_CURRENT_UNLOCK == unlock then return end
+                table.insert(WR_PENDING_UNLOCKS, unlock)
+                WR_ShowNextUnlock()
+                return
+            end
+        end
+    end)
+end
+
+if Events.GameplaySetActivePlayer ~= nil then
+    Events.GameplaySetActivePlayer.Add(function()
+        Controls.UnlockPanel:SetHide(true)
+        WR_CURRENT_UNLOCK = nil
+        WR_PENDING_UNLOCKS = {}
+    end)
+end
 
 ContextPtr:SetInputHandler(function(uiMsg, wParam)
     if uiMsg == KeyEvents.KeyDown

@@ -446,6 +446,30 @@
       <SubType>Lua</SubType>
       <ImportIntoVFS>True</ImportIntoVFS>
     </Content>
+    <Content Include="Art\UI\WR_UI_Facility.dds">
+      <SubType>Content</SubType>
+      <ImportIntoVFS>True</ImportIntoVFS>
+    </Content>
+    <Content Include="Art\UI\WR_UI_FacilityPanel.dds">
+      <SubType>Content</SubType>
+      <ImportIntoVFS>True</ImportIntoVFS>
+    </Content>
+    <Content Include="Art\UI\WR_UI_Subject.dds">
+      <SubType>Content</SubType>
+      <ImportIntoVFS>True</ImportIntoVFS>
+    </Content>
+    <Content Include="Art\UI\WR_UI_SubjectPanel.dds">
+      <SubType>Content</SubType>
+      <ImportIntoVFS>True</ImportIntoVFS>
+    </Content>
+    <Content Include="Art\UI\WR_UI_Operatives.dds">
+      <SubType>Content</SubType>
+      <ImportIntoVFS>True</ImportIntoVFS>
+    </Content>
+    <Content Include="Art\UI\WR_UI_OperativesPanel.dds">
+      <SubType>Content</SubType>
+      <ImportIntoVFS>True</ImportIntoVFS>
+    </Content>
     <Content Include="UI\WhiteRoomStatusPanel.xml">
       <SubType>Lua</SubType>
       <ImportIntoVFS>False</ImportIntoVFS>
@@ -473,6 +497,7 @@
     <Folder Include="Art\DOM\" />
     <Folder Include="Art\Units\" />
     <Folder Include="Art\Source\" />
+    <Folder Include="Art\UI\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Firaxis\ModBuddy\Civ5Mod.targets" />
 </Project>

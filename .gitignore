@@ -15,3 +15,7 @@ Packages/
 # Local Codex/agent scratch data
 .agents/
 .codex/
+
+# Python validation/preview caches
+__pycache__/
+*.pyc

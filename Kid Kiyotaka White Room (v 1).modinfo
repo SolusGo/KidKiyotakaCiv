@@ -128,10 +128,16 @@
     <File md5="617051CDE89DA2640B559D5571D0568E" import="1">Lua\WhiteRoomBattleTracking.lua</File>
     <File md5="1017316E276107784567EFD3636F6236" import="1">Lua\WhiteRoomUnitCaps.lua</File>
     <File md5="DF1F7AE28AB4725D7232E2018F1D1CD5" import="1">Lua\WhiteRoomFourthGenOperative.lua</File>
-    <File md5="7C3C5756229152C7D42E60253EDBA6AF" import="0">UI\WhiteRoomStatusPanel.xml</File>
-    <File md5="8AC072F390770DCEDA57943361C83D9F" import="0">UI\WhiteRoomStatusPanel.lua</File>
-    <File md5="E6203142762478E5C94258861A990A24" import="0">UI\WhiteRoomUnitUnlock.xml</File>
-    <File md5="E1368451048E84931BAFDE09047D0897" import="0">UI\WhiteRoomUnitUnlock.lua</File>
+    <File md5="7E17ED92C87224975A0E6B807D70438C" import="1">Art\UI\WR_UI_Facility.dds</File>
+    <File md5="D7F7EF8194F554A72B141C22AB5C11CD" import="1">Art\UI\WR_UI_FacilityPanel.dds</File>
+    <File md5="96EA578110F02AE98D65D99090B5B247" import="1">Art\UI\WR_UI_Subject.dds</File>
+    <File md5="5E4D8561C4B3C03BDD9A45783B486260" import="1">Art\UI\WR_UI_SubjectPanel.dds</File>
+    <File md5="C9915D12D811C75CD260D3AB6997E90F" import="1">Art\UI\WR_UI_Operatives.dds</File>
+    <File md5="DCF3C88FD547738C383C7D8DFA500A65" import="1">Art\UI\WR_UI_OperativesPanel.dds</File>
+    <File md5="6A66CE8C6A21E88680FB08AE5DBB392F" import="0">UI\WhiteRoomStatusPanel.xml</File>
+    <File md5="F020F548537D8F9AE1B9E7ADD82ABB58" import="0">UI\WhiteRoomStatusPanel.lua</File>
+    <File md5="24B260A2C89A104C53404F581A2B45C4" import="0">UI\WhiteRoomUnitUnlock.xml</File>
+    <File md5="4DA9E50ABD66F6F0F4782A64E7AFB553" import="0">UI\WhiteRoomUnitUnlock.lua</File>
   </Files>
   <Actions>
     <OnModActivated>

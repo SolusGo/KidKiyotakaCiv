@@ -1,101 +1,222 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context ID="WhiteRoomStatusPanel">
-  <GridButton ID="WhiteRoomStatusButton" Anchor="R,T" Offset="24,96" Size="184,42" ToolTip="Open White Room adaptation status" Style="BaseButton">
+  <Button ID="WhiteRoomStatusButton" Anchor="R,T" Offset="24,96" Size="184,42" ToolTip="Open the White Room facility dossier">
+    <Box Anchor="L,T" Offset="0,0" Size="184,42" Color="15,21,27,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="184,42" Color="222,181,112,24" /></ShowOnMouseOver>
+    <Box Anchor="L,T" Offset="0,0" Size="3,42" Color="222,181,112,255" />
     <Image ID="WhiteRoomButtonIcon" Anchor="L,C" Offset="12,0" Size="32,32" />
-    <Label Anchor="L,C" Offset="54,0" Font="TwCenMT18" FontStyle="Shadow" String="WHITE ROOM" ColorSet="Beige_Black_Alpha" />
-    <Box Anchor="R,C" Offset="10,0" Size="4,22" Color="210,185,105,220" />
-  </GridButton>
-
-  <Grid ID="StatusPanel" Anchor="C,C" Size="900,650" Style="Grid9DetailFive140" Hidden="1" ConsumeMouse="1">
-    <Box Style="MenuLeftSideTreatment" />
-    <Box Style="MenuRightSideTreatment" />
-
-    <Grid ID="HeaderIconFrame" Anchor="L,T" Offset="48,14" Size="72,72" Style="GridBlackIndent8">
-      <Grid Anchor="C,C" Offset="0,0" Size="76,76" Style="Grid9Frame">
-        <Image ID="HeaderCivIcon" Anchor="C,C" Offset="0,0" Size="64,64" />
+    <Label Anchor="L,T" Offset="54,12" Size="120,22" Font="TwCenMT16" String="WHITE ROOM" Color="234,234,225,255" TruncateWidth="120" />
+  </Button>
+  <Grid ID="StatusPanel" Anchor="C,C" Size="920,650" Hidden="1" ConsumeMouse="1">
+    <Box Anchor="L,T" Offset="0,0" Size="920,650" Color="15,21,27,255" />
+    <Image ID="SectionArt" Anchor="L,T" Size="216,324" Texture="Art/UI/WR_UI_FacilityPanel.dds" />
+    <Box Anchor="L,T" Offset="0,0" Size="216,72" Color="12,18,24,180" />
+    <Box Anchor="L,T" Offset="0,218" Size="216,106" Color="12,18,24,240" />
+    <Box Anchor="L,T" Offset="0,324" Size="216,326" Color="12,18,24,255" />
+    <Box Anchor="L,T" Offset="215,0" Size="1,650" Color="50,62,70,255" />
+    <Box Anchor="L,T" Offset="0,0" Size="920,2" Color="222,181,112,255" />
+    <Label Anchor="L,T" Offset="20,20" Size="150,25" Font="TwCenMT20" String="WHITE ROOM" Color="234,234,225,255" TruncateWidth="150" />
+    <Label Anchor="L,T" Offset="20,47" Size="160,18" Font="TwCenMT14" String="GENERATION 04" Color="142,157,165,255" TruncateWidth="160" />
+    <Grid ID="HeaderIconFrame" Anchor="L,T" Offset="166,20" Size="32,32"><Image ID="HeaderCivIcon" Size="32,32" /></Grid>
+    <Label ID="SectionEyebrow" Anchor="L,T" Offset="20,228" Size="184,18" Font="TwCenMT14" String="CONTROL DIVISION" Color="222,181,112,255" TruncateWidth="184" />
+    <Label ID="SectionTitle" Anchor="L,T" Offset="20,250" Size="184,28" Font="TwCenMT22" String="THE FACILITY" Color="234,234,225,255" TruncateWidth="184" />
+    <Label ID="SectionDescription" Anchor="L,T" Offset="20,281" Size="178,40" Font="TwCenMT14" String="Every pattern becomes an advantage." Color="142,157,165,255" WrapWidth="178"/>
+    <Label Anchor="L,T" Offset="20,328" Size="178,18" Font="TwCenMT14" String="ARCHIVE DIRECTORY" Color="142,157,165,255" TruncateWidth="178" />
+    <Button ID="EmpireTabButton" Anchor="L,T" Offset="12,352" Size="192,40">
+      <Box ID="EmpireTabSelection" Anchor="L,T" Offset="0,0" Size="192,40" Color="20,28,35,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="192,40" Color="222,181,112,24" /></ShowOnMouseOver>
+      <Label Anchor="L,T" Offset="10,12" Size="24,18" Font="TwCenMT14" String="01" Color="222,181,112,255" TruncateWidth="24" />
+      <Label ID="EmpireTabText" Anchor="L,T" Offset="42,10" Size="144,23" Font="TwCenMT16" String="FACILITY" Color="234,234,225,255" TruncateWidth="144" />
+    </Button>
+    <Button ID="CitiesTabButton" Anchor="L,T" Offset="12,396" Size="192,40">
+      <Box ID="CitiesTabSelection" Anchor="L,T" Offset="0,0" Size="192,40" Color="20,28,35,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="192,40" Color="222,181,112,24" /></ShowOnMouseOver>
+      <Label Anchor="L,T" Offset="10,12" Size="24,18" Font="TwCenMT14" String="02" Color="222,181,112,255" TruncateWidth="24" />
+      <Label ID="CitiesTabText" Anchor="L,T" Offset="42,10" Size="144,23" Font="TwCenMT16" String="CITY NETWORK" Color="234,234,225,255" TruncateWidth="144" />
+    </Button>
+    <Button ID="KiyotakaTabButton" Anchor="L,T" Offset="12,440" Size="192,40">
+      <Box ID="KiyotakaTabSelection" Anchor="L,T" Offset="0,0" Size="192,40" Color="20,28,35,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="192,40" Color="222,181,112,24" /></ShowOnMouseOver>
+      <Label Anchor="L,T" Offset="10,12" Size="24,18" Font="TwCenMT14" String="03" Color="222,181,112,255" TruncateWidth="24" />
+      <Label ID="KiyotakaTabText" Anchor="L,T" Offset="42,10" Size="144,23" Font="TwCenMT16" String="SUBJECT 004" Color="234,234,225,255" TruncateWidth="144" />
+    </Button>
+    <Button ID="UnitsTabButton" Anchor="L,T" Offset="12,484" Size="192,40">
+      <Box ID="UnitsTabSelection" Anchor="L,T" Offset="0,0" Size="192,40" Color="20,28,35,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="192,40" Color="222,181,112,24" /></ShowOnMouseOver>
+      <Label Anchor="L,T" Offset="10,12" Size="24,18" Font="TwCenMT14" String="04" Color="222,181,112,255" TruncateWidth="24" />
+      <Label ID="UnitsTabText" Anchor="L,T" Offset="42,10" Size="144,23" Font="TwCenMT16" String="OPERATIVES" Color="234,234,225,255" TruncateWidth="144" />
+    </Button>
+    <Button ID="TelemetryTabButton" Anchor="L,T" Offset="12,528" Size="192,40">
+      <Box ID="TelemetryTabSelection" Anchor="L,T" Offset="0,0" Size="192,40" Color="20,28,35,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="192,40" Color="222,181,112,24" /></ShowOnMouseOver>
+      <Label Anchor="L,T" Offset="10,12" Size="24,18" Font="TwCenMT14" String="05" Color="222,181,112,255" TruncateWidth="24" />
+      <Label ID="TelemetryTabText" Anchor="L,T" Offset="42,10" Size="144,23" Font="TwCenMT16" String="TELEMETRY" Color="234,234,225,255" TruncateWidth="144" />
+    </Button>
+    <Box Anchor="L,T" Offset="20,590" Size="176,1" Color="50,62,70,255" />
+    <Label ID="SectionQuote" Anchor="L,T" Offset="20,605" Size="176,36" Font="TwCenMT14" String="OBSERVE. UNDERSTAND. ADAPT." Color="142,157,165,255" WrapWidth="176"/>
+    <Image Anchor="L,T" Offset="216,2" Size="704,102" Texture="Art/UI/WR_UI_Facility.dds" Color="255,255,255,42" />
+    <Label ID="HeaderClassification" Anchor="L,T" Offset="240,22" Size="440,18" Font="TwCenMT14" String="WHITE ROOM / STRATEGIC INTELLIGENCE" Color="222,181,112,255" TruncateWidth="440" />
+    <Label ID="TitleLabel" Anchor="L,T" Offset="240,46" Size="500,34" Font="TwCenMT24" String="FACILITY OVERVIEW" Color="234,234,225,255" TruncateWidth="500" />
+    <Label ID="HeaderSubtitle" Anchor="L,T" Offset="240,82" Size="652,22" Font="TwCenMT14" String="Permanent learning. Measured advantage." Color="142,157,165,255" TruncateWidth="652" />
+    <Box Anchor="L,T" Offset="240,110" Size="652,1" Color="50,62,70,255" />
+    <Label ID="SystemStateLabel" Anchor="L,T" Offset="768,24" Size="126,18" Font="TwCenMT14" String="LIVE // E-01" Color="222,181,112,255" TruncateWidth="126" />
+    <Label ID="SummaryTitle" Anchor="L,T" Offset="240,124" Size="652,22" Font="TwCenMT16" String="ADAPTATION AT A GLANCE" Color="142,157,165,255" TruncateWidth="652" />
+    <Grid Anchor="L,T" Offset="240,154" Size="154,78">
+      <Box Anchor="L,T" Offset="0,0" Size="154,78" Color="23,31,38,255" />
+      <Box Anchor="L,T" Offset="0,0" Size="154,1" Color="50,62,70,255" />
+      <Label ID="SummaryMetricOneCaption" Anchor="L,T" Offset="12,10" Size="130,18" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="130" />
+      <Label ID="SummaryMetricOne" Anchor="L,T" Offset="12,34" Size="132,36" Font="TwCenMT20" String="" Color="234,234,225,255" WrapWidth="132"/>
+    </Grid>
+    <Grid Anchor="L,T" Offset="406,154" Size="154,78">
+      <Box Anchor="L,T" Offset="0,0" Size="154,78" Color="23,31,38,255" />
+      <Box Anchor="L,T" Offset="0,0" Size="154,1" Color="50,62,70,255" />
+      <Label ID="SummaryMetricTwoCaption" Anchor="L,T" Offset="12,10" Size="130,18" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="130" />
+      <Label ID="SummaryMetricTwo" Anchor="L,T" Offset="12,34" Size="132,36" Font="TwCenMT20" String="" Color="234,234,225,255" WrapWidth="132"/>
+    </Grid>
+    <Grid Anchor="L,T" Offset="572,154" Size="154,78">
+      <Box Anchor="L,T" Offset="0,0" Size="154,78" Color="23,31,38,255" />
+      <Box Anchor="L,T" Offset="0,0" Size="154,1" Color="50,62,70,255" />
+      <Label ID="SummaryMetricThreeCaption" Anchor="L,T" Offset="12,10" Size="130,18" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="130" />
+      <Label ID="SummaryMetricThree" Anchor="L,T" Offset="12,34" Size="132,36" Font="TwCenMT20" String="" Color="234,234,225,255" WrapWidth="132"/>
+    </Grid>
+    <Grid Anchor="L,T" Offset="738,154" Size="154,78">
+      <Box Anchor="L,T" Offset="0,0" Size="154,78" Color="23,31,38,255" />
+      <Box Anchor="L,T" Offset="0,0" Size="154,1" Color="50,62,70,255" />
+      <Label ID="SummaryMetricFourCaption" Anchor="L,T" Offset="12,10" Size="130,18" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="130" />
+      <Label ID="SummaryMetricFour" Anchor="L,T" Offset="12,34" Size="132,36" Font="TwCenMT20" String="" Color="234,234,225,255" WrapWidth="132"/>
+    </Grid>
+    <Label ID="DetailedRecordLabel" Anchor="L,T" Offset="240,252" Size="310,22" Font="TwCenMT14" String="DETAILED FACILITY RECORD" Color="222,181,112,255" TruncateWidth="310" />
+    <Label ID="RecordStreamLabel" Anchor="L,T" Offset="606,254" Size="288,18" Font="TwCenMT14" String="STREAM // EMPIRE" Color="142,157,165,255" TruncateWidth="288" />
+    <Box Anchor="L,T" Offset="240,278" Size="652,1" Color="50,62,70,255" />
+    <Grid ID="SubjectMetrics" Anchor="L,T" Offset="240,292" Size="652,158" Hidden="1">
+      <Grid Anchor="L,T" Offset="0,0" Size="318,46">
+        <Box Anchor="L,T" Offset="0,0" Size="318,46" Color="23,31,38,255" />
+        <Label Anchor="L,T" Offset="10,8" Size="146,18" Font="TwCenMT14" String="COMBAT" Color="142,157,165,255" TruncateWidth="146" />
+        <Label ID="SubjectCombatValue" Anchor="L,T" Offset="174,6" Size="134,22" Font="TwCenMT16" String="+0.00%" Color="234,234,225,255" TruncateWidth="134" />
+        <Box Anchor="L,T" Offset="10,35" Size="298,3" Color="50,62,70,255" />
+        <Box ID="SubjectCombatFill" Anchor="L,T" Offset="10,35" Size="1,3" Color="222,181,112,255" />
+      </Grid>
+      <Grid Anchor="L,T" Offset="334,0" Size="318,46">
+        <Box Anchor="L,T" Offset="0,0" Size="318,46" Color="23,31,38,255" />
+        <Label Anchor="L,T" Offset="10,8" Size="146,18" Font="TwCenMT14" String="ATTACK" Color="142,157,165,255" TruncateWidth="146" />
+        <Label ID="SubjectAttackValue" Anchor="L,T" Offset="174,6" Size="134,22" Font="TwCenMT16" String="+0.00%" Color="234,234,225,255" TruncateWidth="134" />
+        <Box Anchor="L,T" Offset="10,35" Size="298,3" Color="50,62,70,255" />
+        <Box ID="SubjectAttackFill" Anchor="L,T" Offset="10,35" Size="1,3" Color="222,181,112,255" />
+      </Grid>
+      <Grid Anchor="L,T" Offset="0,52" Size="318,46">
+        <Box Anchor="L,T" Offset="0,0" Size="318,46" Color="23,31,38,255" />
+        <Label Anchor="L,T" Offset="10,8" Size="146,18" Font="TwCenMT14" String="RESISTANCE" Color="142,157,165,255" TruncateWidth="146" />
+        <Label ID="SubjectResistanceValue" Anchor="L,T" Offset="174,6" Size="134,22" Font="TwCenMT16" String="+0.00%" Color="234,234,225,255" TruncateWidth="134" />
+        <Box Anchor="L,T" Offset="10,35" Size="298,3" Color="50,62,70,255" />
+        <Box ID="SubjectResistanceFill" Anchor="L,T" Offset="10,35" Size="1,3" Color="222,181,112,255" />
+      </Grid>
+      <Grid Anchor="L,T" Offset="334,52" Size="318,46">
+        <Box Anchor="L,T" Offset="0,0" Size="318,46" Color="23,31,38,255" />
+        <Label Anchor="L,T" Offset="10,8" Size="146,18" Font="TwCenMT14" String="RECOVERY" Color="142,157,165,255" TruncateWidth="146" />
+        <Label ID="SubjectHealingValue" Anchor="L,T" Offset="174,6" Size="134,22" Font="TwCenMT16" String="+0.00%" Color="234,234,225,255" TruncateWidth="134" />
+        <Box Anchor="L,T" Offset="10,35" Size="298,3" Color="50,62,70,255" />
+        <Box ID="SubjectHealingFill" Anchor="L,T" Offset="10,35" Size="1,3" Color="222,181,112,255" />
+      </Grid>
+      <Grid Anchor="L,T" Offset="0,104" Size="318,46">
+        <Box Anchor="L,T" Offset="0,0" Size="318,46" Color="23,31,38,255" />
+        <Label Anchor="L,T" Offset="10,8" Size="146,18" Font="TwCenMT14" String="LOW-HP POWER" Color="142,157,165,255" TruncateWidth="146" />
+        <Label ID="SubjectDesperationValue" Anchor="L,T" Offset="174,6" Size="134,22" Font="TwCenMT16" String="+0.00%" Color="234,234,225,255" TruncateWidth="134" />
+        <Box Anchor="L,T" Offset="10,35" Size="298,3" Color="50,62,70,255" />
+        <Box ID="SubjectDesperationFill" Anchor="L,T" Offset="10,35" Size="1,3" Color="222,181,112,255" />
+      </Grid>
+      <Grid Anchor="L,T" Offset="334,104" Size="318,46">
+        <Box Anchor="L,T" Offset="0,0" Size="318,46" Color="23,31,38,255" />
+        <Label Anchor="L,T" Offset="10,8" Size="146,18" Font="TwCenMT14" String="FLOW STATE" Color="142,157,165,255" TruncateWidth="146" />
+        <Label ID="SubjectFlowValue" Anchor="L,T" Offset="174,6" Size="134,22" Font="TwCenMT16" String="+0.00%" Color="234,234,225,255" TruncateWidth="134" />
+        <Box Anchor="L,T" Offset="10,35" Size="298,3" Color="50,62,70,255" />
+        <Box ID="SubjectFlowFill" Anchor="L,T" Offset="10,35" Size="1,3" Color="222,181,112,255" />
       </Grid>
     </Grid>
-
-    <Label ID="TitleLabel" Anchor="C,T" Offset="0,18" Font="TwCenMT24" FontStyle="Shadow" String="WHITE ROOM CONTROL" ColorSet="Beige_Black_Alpha" />
-    <Label Anchor="C,T" Offset="0,50" Font="TwCenMT14" FontStyle="Shadow" String="ADAPTATION ARCHIVE // LIVE FACILITY READOUT" ColorSet="Beige_Black_Alpha" />
-    <Grid Anchor="R,T" Offset="48,22" Size="112,28" Style="GridBlackIndent8">
-      <Box Anchor="L,C" Offset="10,0" Size="5,5" Color="110,225,170,255" />
-      <Label ID="SystemStateLabel" Anchor="C,C" Offset="7,0" Size="82,18" Font="TwCenMT14" FontStyle="Shadow" String="LIVE // E-01" ColorSet="Beige_Black_Alpha" />
-    </Grid>
-    <Grid Anchor="C,T" Offset="0,78" Size="810,1" Style="Grid9Bar" />
-
-    <GridButton ID="EmpireTabButton" Anchor="C,T" Offset="-288,94" Size="136,32" String="[ICON_GOLD] Empire" ToolTip="Show empire-wide White Room learning" Style="BaseButton" />
-    <GridButton ID="CitiesTabButton" Anchor="C,T" Offset="-144,94" Size="136,32" String="[ICON_CAPITAL] Cities" ToolTip="Show per-city adaptation and worked improvements" Style="BaseButton" />
-    <GridButton ID="KiyotakaTabButton" Anchor="C,T" Offset="0,94" Size="136,32" String="[ICON_RESEARCH] Kiyotaka" ToolTip="Show Kiyotaka Perfect Adaptation counters" Style="BaseButton" />
-    <GridButton ID="UnitsTabButton" Anchor="C,T" Offset="144,94" Size="136,32" String="[ICON_STRENGTH] Units" ToolTip="Show unique unit deployment and caps" Style="BaseButton" />
-    <GridButton ID="TelemetryTabButton" Anchor="C,T" Offset="288,94" Size="136,32" String="[ICON_RESEARCH] Telemetry" ToolTip="Show live adaptation telemetry" Style="BaseButton" />
-
-    <Grid ID="EmpireTabSelection" Anchor="C,T" Offset="-288,132" Size="124,3" Style="Grid9Bar" Hidden="0" />
-    <Grid ID="CitiesTabSelection" Anchor="C,T" Offset="-144,132" Size="124,3" Style="Grid9Bar" Hidden="1" />
-    <Grid ID="KiyotakaTabSelection" Anchor="C,T" Offset="0,132" Size="124,3" Style="Grid9Bar" Hidden="1" />
-    <Grid ID="UnitsTabSelection" Anchor="C,T" Offset="144,132" Size="124,3" Style="Grid9Bar" Hidden="1" />
-    <Grid ID="TelemetryTabSelection" Anchor="C,T" Offset="288,132" Size="124,3" Style="Grid9Bar" Hidden="1" />
-
-    <Label ID="SummaryTitle" Anchor="C,T" Offset="0,140" Size="780,26" Font="TwCenMT20" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
-
-    <Grid Anchor="C,T" Offset="-300,172" Size="180,78" Style="GridBlackIndent8">
-      <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
-        <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
-        <Label ID="SummaryMetricOneCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
-        <Label ID="SummaryMetricOne" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
-        <Label Anchor="R,T" Offset="9,7" Size="18,16" Font="TwCenMT14" FontStyle="Shadow" String="01" ColorSet="Beige_Black_Alpha" />
+    <Grid ID="OperativeRoster" Anchor="L,T" Offset="240,292" Size="652,158" Hidden="1">
+      <Grid ID="OperativeOneCard" Anchor="L,T" Offset="0,0" Size="208,158">
+        <Box Anchor="L,T" Offset="0,0" Size="208,158" Color="23,31,38,255" />
+        <Box Anchor="L,T" Offset="0,0" Size="208,2" Color="222,181,112,255" />
+        <Label ID="OperativeOneName" Anchor="L,T" Offset="12,14" Size="184,24" Font="TwCenMT18" String="AWAITING DEPLOYMENT" Color="234,234,225,255" TruncateWidth="184" />
+        <Label ID="OperativeOneState" Anchor="L,T" Offset="12,40" Size="184,18" Font="TwCenMT14" String="EMPTY ROSTER SLOT" Color="142,157,165,255" TruncateWidth="184" />
+        <Label ID="OperativeOneVitals" Anchor="L,T" Offset="12,68" Size="184,20" Font="TwCenMT16" String="--" Color="234,234,225,255" TruncateWidth="184" />
+        <Box Anchor="L,T" Offset="12,94" Size="184,3" Color="50,62,70,255" />
+        <Box ID="OperativeOneHealthFill" Anchor="L,T" Offset="12,94" Size="1,3" Color="131,193,177,255" />
+        <Label ID="OperativeOneKills" Anchor="L,T" Offset="12,109" Size="184,20" Font="TwCenMT14" String="NO SERVICE RECORD" Color="142,157,165,255" TruncateWidth="184" />
+        <Label ID="OperativeOneExperience" Anchor="L,T" Offset="12,134" Size="184,18" Font="TwCenMT14" String="" Color="222,181,112,255" TruncateWidth="184" />
+      </Grid>
+      <Grid ID="OperativeTwoCard" Anchor="L,T" Offset="222,0" Size="208,158">
+        <Box Anchor="L,T" Offset="0,0" Size="208,158" Color="23,31,38,255" />
+        <Box Anchor="L,T" Offset="0,0" Size="208,2" Color="222,181,112,255" />
+        <Label ID="OperativeTwoName" Anchor="L,T" Offset="12,14" Size="184,24" Font="TwCenMT18" String="AWAITING DEPLOYMENT" Color="234,234,225,255" TruncateWidth="184" />
+        <Label ID="OperativeTwoState" Anchor="L,T" Offset="12,40" Size="184,18" Font="TwCenMT14" String="EMPTY ROSTER SLOT" Color="142,157,165,255" TruncateWidth="184" />
+        <Label ID="OperativeTwoVitals" Anchor="L,T" Offset="12,68" Size="184,20" Font="TwCenMT16" String="--" Color="234,234,225,255" TruncateWidth="184" />
+        <Box Anchor="L,T" Offset="12,94" Size="184,3" Color="50,62,70,255" />
+        <Box ID="OperativeTwoHealthFill" Anchor="L,T" Offset="12,94" Size="1,3" Color="131,193,177,255" />
+        <Label ID="OperativeTwoKills" Anchor="L,T" Offset="12,109" Size="184,20" Font="TwCenMT14" String="NO SERVICE RECORD" Color="142,157,165,255" TruncateWidth="184" />
+        <Label ID="OperativeTwoExperience" Anchor="L,T" Offset="12,134" Size="184,18" Font="TwCenMT14" String="" Color="222,181,112,255" TruncateWidth="184" />
+      </Grid>
+      <Grid ID="OperativeThreeCard" Anchor="L,T" Offset="444,0" Size="208,158">
+        <Box Anchor="L,T" Offset="0,0" Size="208,158" Color="23,31,38,255" />
+        <Box Anchor="L,T" Offset="0,0" Size="208,2" Color="222,181,112,255" />
+        <Label ID="OperativeThreeName" Anchor="L,T" Offset="12,14" Size="184,24" Font="TwCenMT18" String="AWAITING DEPLOYMENT" Color="234,234,225,255" TruncateWidth="184" />
+        <Label ID="OperativeThreeState" Anchor="L,T" Offset="12,40" Size="184,18" Font="TwCenMT14" String="EMPTY ROSTER SLOT" Color="142,157,165,255" TruncateWidth="184" />
+        <Label ID="OperativeThreeVitals" Anchor="L,T" Offset="12,68" Size="184,20" Font="TwCenMT16" String="--" Color="234,234,225,255" TruncateWidth="184" />
+        <Box Anchor="L,T" Offset="12,94" Size="184,3" Color="50,62,70,255" />
+        <Box ID="OperativeThreeHealthFill" Anchor="L,T" Offset="12,94" Size="1,3" Color="131,193,177,255" />
+        <Label ID="OperativeThreeKills" Anchor="L,T" Offset="12,109" Size="184,20" Font="TwCenMT14" String="NO SERVICE RECORD" Color="142,157,165,255" TruncateWidth="184" />
+        <Label ID="OperativeThreeExperience" Anchor="L,T" Offset="12,134" Size="184,18" Font="TwCenMT14" String="" Color="222,181,112,255" TruncateWidth="184" />
       </Grid>
     </Grid>
-    <Grid Anchor="C,T" Offset="-100,172" Size="180,78" Style="GridBlackIndent8">
-      <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
-        <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
-        <Label ID="SummaryMetricTwoCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
-        <Label ID="SummaryMetricTwo" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
-        <Label Anchor="R,T" Offset="9,7" Size="18,16" Font="TwCenMT14" FontStyle="Shadow" String="02" ColorSet="Beige_Black_Alpha" />
+    <Grid ID="TelemetryFeed" Anchor="L,T" Offset="240,292" Size="652,282" Hidden="1">
+      <Grid ID="FeedOneCard" Anchor="L,T" Offset="0,0" Size="652,86">
+        <Box Anchor="L,T" Offset="0,0" Size="652,86" Color="23,31,38,255" />
+        <Box Anchor="L,T" Offset="0,0" Size="2,86" Color="222,181,112,255" />
+        <Label ID="FeedOneCategory" Anchor="L,T" Offset="14,8" Size="230,18" Font="TwCenMT14" String="SYSTEM" Color="222,181,112,255" TruncateWidth="230" />
+        <Label ID="FeedOneTurn" Anchor="L,T" Offset="482,8" Size="156,18" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="156" />
+        <Label ID="FeedOneHeadline" Anchor="L,T" Offset="14,29" Size="624,22" Font="TwCenMT16" String="" Color="234,234,225,255" TruncateWidth="624"/>
+        <Label ID="FeedOneDetail" Anchor="L,T" Offset="14,52" Size="624,30" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="624"/>
+      </Grid>
+      <Grid ID="FeedTwoCard" Anchor="L,T" Offset="0,94" Size="652,86">
+        <Box Anchor="L,T" Offset="0,0" Size="652,86" Color="23,31,38,255" />
+        <Box Anchor="L,T" Offset="0,0" Size="2,86" Color="222,181,112,255" />
+        <Label ID="FeedTwoCategory" Anchor="L,T" Offset="14,8" Size="230,18" Font="TwCenMT14" String="SYSTEM" Color="222,181,112,255" TruncateWidth="230" />
+        <Label ID="FeedTwoTurn" Anchor="L,T" Offset="482,8" Size="156,18" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="156" />
+        <Label ID="FeedTwoHeadline" Anchor="L,T" Offset="14,29" Size="624,22" Font="TwCenMT16" String="" Color="234,234,225,255" TruncateWidth="624"/>
+        <Label ID="FeedTwoDetail" Anchor="L,T" Offset="14,52" Size="624,30" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="624"/>
+      </Grid>
+      <Grid ID="FeedThreeCard" Anchor="L,T" Offset="0,188" Size="652,86">
+        <Box Anchor="L,T" Offset="0,0" Size="652,86" Color="23,31,38,255" />
+        <Box Anchor="L,T" Offset="0,0" Size="2,86" Color="222,181,112,255" />
+        <Label ID="FeedThreeCategory" Anchor="L,T" Offset="14,8" Size="230,18" Font="TwCenMT14" String="SYSTEM" Color="222,181,112,255" TruncateWidth="230" />
+        <Label ID="FeedThreeTurn" Anchor="L,T" Offset="482,8" Size="156,18" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="156" />
+        <Label ID="FeedThreeHeadline" Anchor="L,T" Offset="14,29" Size="624,22" Font="TwCenMT16" String="" Color="234,234,225,255" TruncateWidth="624"/>
+        <Label ID="FeedThreeDetail" Anchor="L,T" Offset="14,52" Size="624,30" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="624"/>
       </Grid>
     </Grid>
-    <Grid Anchor="C,T" Offset="100,172" Size="180,78" Style="GridBlackIndent8">
-      <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
-        <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
-        <Label ID="SummaryMetricThreeCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
-        <Label ID="SummaryMetricThree" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
-        <Label Anchor="R,T" Offset="9,7" Size="18,16" Font="TwCenMT14" FontStyle="Shadow" String="03" ColorSet="Beige_Black_Alpha" />
-      </Grid>
+    <Grid ID="FeedPager" Anchor="L,T" Offset="534,245" Size="358,28" Hidden="1">
+      <Button ID="FeedNewerButton" Anchor="L,T" Size="74,26" ToolTip="Show newer records"><Box Anchor="L,T" Offset="0,0" Size="74,26" Color="23,31,38,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="74,26" Color="222,181,112,24" /></ShowOnMouseOver><Label Anchor="L,T" Offset="10,5" Size="64,20" Font="TwCenMT14" String="NEWER" Color="234,234,225,255" TruncateWidth="64" /></Button>
+      <Button ID="FeedOlderButton" Anchor="L,T" Offset="84,0" Size="74,26" ToolTip="Show older records"><Box Anchor="L,T" Offset="0,0" Size="74,26" Color="23,31,38,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="74,26" Color="222,181,112,24" /></ShowOnMouseOver><Label Anchor="L,T" Offset="10,5" Size="64,20" Font="TwCenMT14" String="OLDER" Color="234,234,225,255" TruncateWidth="64" /></Button>
+      <Label ID="FeedPageLabel" Anchor="L,T" Offset="172,5" Size="186,20" Font="TwCenMT14" String="PAGE 1 / 1" Color="142,157,165,255" TruncateWidth="186" />
     </Grid>
-    <Grid Anchor="C,T" Offset="300,172" Size="180,78" Style="GridBlackIndent8">
-      <Grid Anchor="C,C" Offset="0,0" Size="184,82" Style="Grid9Frame">
-        <Box Anchor="L,C" Offset="10,0" Size="3,52" Color="210,185,105,220" />
-        <Label ID="SummaryMetricFourCaption" Anchor="L,T" Offset="20,10" Size="140,18" Font="TwCenMT14" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
-        <Label ID="SummaryMetricFour" Anchor="L,T" Offset="20,31" Size="142,38" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="142" String="" ColorSet="Beige_Black_Alpha" />
-        <Label Anchor="R,T" Offset="9,7" Size="18,16" Font="TwCenMT14" FontStyle="Shadow" String="04" ColorSet="Beige_Black_Alpha" />
-      </Grid>
+    <Button ID="OpenDossierButton" Anchor="L,T" Offset="714,245" Size="178,28" Hidden="1" ToolTip="Reopen this unit's unlocked personnel dossier">
+      <Box Anchor="L,T" Size="178,28" Color="51,43,32,255" />
+      <ShowOnMouseOver><Box Anchor="L,T" Size="178,28" Color="222,181,112,24" /></ShowOnMouseOver>
+      <Label ID="OpenDossierText" Anchor="L,T" Offset="12,6" Size="154,20" Font="TwCenMT14" String="PERSONNEL DOSSIER" Color="222,181,112,255" />
+    </Button>
+    <Grid ID="RecordArea" Anchor="L,T" Offset="240,292" Size="652,282">
+      <Box ID="RecordBackdrop" Anchor="L,T" Offset="0,0" Size="652,282" Color="12,18,24,255" />
+      <ScrollPanel ID="StatusScrollPanel" Anchor="L,T" Offset="10,8" Size="632,266" Vertical="1">
+        <Label ID="StatusText" Anchor="L,T" Offset="0,0" Font="TwCenMT16" WrapWidth="608" String="" Color="234,234,225,255" />
+      </ScrollPanel>
     </Grid>
-
-    <Grid Anchor="C,T" Offset="0,282" Size="820,288" Style="GridBlackIndent8">
-      <Label Anchor="L,T" AnchorSide="I.O" Offset="12,-18" Font="TwCenMT18" FontStyle="Shadow" String="DETAILED FACILITY RECORD" ColorSet="Beige_Black_Alpha" />
-      <Label ID="RecordStreamLabel" Anchor="R,T" AnchorSide="I.O" Offset="12,-17" Size="190,18" Font="TwCenMT14" FontStyle="Shadow" String="STREAM // EMPIRE" ColorSet="Beige_Black_Alpha" />
-      <Grid Anchor="C,C" Offset="0,0" Size="824,292" Style="Grid9Frame">
-        <ScrollPanel ID="StatusScrollPanel" Anchor="C,C" Offset="0,0" Size="790,262" Vertical="1">
-          <Label ID="StatusText" Anchor="L,T" Offset="8,8" Size="748,4096" Font="TwCenMT18" FontStyle="Shadow" WrapWidth="748" String="" ColorSet="Beige_Black_Alpha" />
-        </ScrollPanel>
-      </Grid>
-    </Grid>
-
-    <Grid Anchor="C,B" Offset="0,76" Size="810,1" Style="Grid9Bar" />
-    <Label ID="FooterStatusLabel" Anchor="L,B" Offset="48,51" Size="160,18" Font="TwCenMT14" FontStyle="Shadow" String="FACILITY LINK: STABLE" ColorSet="Beige_Black_Alpha" />
-    <GridButton ID="RefreshButton" Anchor="C,B" Offset="-180,42" Size="160,36" String="[ICON_RESEARCH] Refresh" ToolTip="Refresh White Room status" Style="BaseButton" />
-    <GridButton ID="CompactButton" Anchor="C,B" Offset="0,42" Size="160,36" String="[ICON_BULLET] Compact" ToolTip="Toggle compact or expanded White Room status details" Style="BaseButton" />
-    <GridButton ID="CloseButton" Anchor="C,B" Offset="180,42" Size="160,36" String="Close" ToolTip="Close White Room status" Style="BaseButton" />
+    <Box Anchor="L,T" Offset="240,592" Size="652,1" Color="50,62,70,255" />
+    <Label ID="FooterStatusLabel" Anchor="L,T" Offset="240,608" Size="210,18" Font="TwCenMT14" String="FACILITY LINK: STABLE" Color="142,157,165,255" TruncateWidth="210" />
+    <Button ID="RefreshButton" Anchor="L,T" Offset="496,606" Size="122,30" ToolTip="Refresh facility records"><Box Anchor="L,T" Offset="0,0" Size="122,30" Color="23,31,38,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="122,30" Color="222,181,112,24" /></ShowOnMouseOver><Label Anchor="L,T" Offset="17,7" Size="100,20" Font="TwCenMT14" String="SYNC RECORDS" Color="234,234,225,255" TruncateWidth="100" /></Button>
+    <Button ID="CompactButton" Anchor="L,T" Offset="632,606" Size="122,30"><Box Anchor="L,T" Offset="0,0" Size="122,30" Color="23,31,38,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="122,30" Color="222,181,112,24" /></ShowOnMouseOver><Label ID="CompactButtonText" Anchor="L,T" Offset="16,7" Size="104,20" Font="TwCenMT14" String="COMPACT" Color="234,234,225,255" TruncateWidth="104" /></Button>
+    <Button ID="CloseButton" Anchor="L,T" Offset="768,606" Size="124,30" ToolTip="Close the White Room archive"><Box Anchor="L,T" Offset="0,0" Size="124,30" Color="51,43,32,255" /><ShowOnMouseOver><Box Anchor="L,T" Size="124,30" Color="222,181,112,24" /></ShowOnMouseOver><Label Anchor="L,T" Offset="40,7" Size="70,20" Font="TwCenMT14" String="CLOSE" Color="222,181,112,255" TruncateWidth="70" /></Button>
   </Grid>
 
-  <Grid ID="FlavorBanner" Anchor="C,T" Offset="0,82" Size="760,104" Style="GridBlackIndent8" Hidden="1">
-    <Grid Anchor="C,C" Offset="0,0" Size="764,108" Style="Grid9Frame">
-      <Box Anchor="L,C" Offset="12,0" Size="4,76" Color="210,185,105,240" />
-      <Label ID="FlavorBannerTitle" Anchor="L,T" Offset="30,12" Size="500,28" Font="TwCenMT20" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
-      <Label Anchor="R,T" Offset="24,14" Size="190,20" Font="TwCenMT14" FontStyle="Shadow" String="WHITE ROOM // LIVE ASSESSMENT" ColorSet="Beige_Black_Alpha" />
-      <Grid Anchor="C,T" Offset="0,42" Size="700,1" Style="Grid9Bar" />
-      <Label ID="FlavorBannerSubtitle" Anchor="L,T" Offset="30,50" Size="700,22" Font="TwCenMT16" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
-      <Label ID="FlavorBannerQuote" Anchor="L,T" Offset="30,74" Size="700,22" Font="TwCenMT16" FontStyle="Shadow" String="" ColorSet="Beige_Black_Alpha" />
-    </Grid>
+  <Grid ID="FlavorBanner" Anchor="C,T" Offset="0,82" Size="760,112" Hidden="1">
+    <Box Anchor="L,T" Offset="0,0" Size="760,112" Color="15,21,27,255" />
+    <Image Anchor="L,T" Size="96,112" Texture="Art/UI/WR_UI_SubjectPanel.dds" />
+    <Box Anchor="L,T" Offset="96,0" Size="3,112" Color="222,181,112,255" />
+    <Label ID="FlavorBannerTitle" Anchor="L,T" Offset="120,12" Size="618,26" Font="TwCenMT20" String="" Color="234,234,225,255" TruncateWidth="618" />
+    <Label ID="FlavorBannerSubtitle" Anchor="L,T" Offset="120,44" Size="618,22" Font="TwCenMT14" String="" Color="142,157,165,255" TruncateWidth="618"/>
+    <Label ID="FlavorBannerQuote" Anchor="L,T" Offset="120,74" Size="618,26" Font="TwCenMT16" String="" Color="222,181,112,255" TruncateWidth="618"/>
+    <Box Anchor="L,T" Offset="0,111" Size="760,1" Color="50,62,70,255" />
   </Grid>
 </Context>

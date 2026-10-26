@@ -30,15 +30,17 @@ local WR_LAST_TELEMETRY_SEQUENCE = -1
 local WR_LAST_KIYOTAKA_BANNER_SEQUENCE = 0
 local WR_KIYOTAKA_BANNER_VISIBLE = false
 local WR_KIYOTAKA_BANNER_REMAINING = 0
+local WR_FEED_PAGE = 0
+local WR_LAST_SECTION_ART = nil
 
 local WR_BLOCKING_POPUP_TYPES = {}
 
 local WR_TAB_PRESENTATION = {
-    EMPIRE = {state = "LIVE // E-01", stream = "STREAM // EMPIRE"},
-    CITIES = {state = "LIVE // C-02", stream = "STREAM // CITY NETWORK"},
-    KIYOTAKA = {state = "LIVE // S-04", stream = "STREAM // SUBJECT 004"},
-    UNITS = {state = "LIVE // U-04", stream = "STREAM // GEN-4 OPERATIVES"},
-    TELEMETRY = {state = "REC // T-05", stream = "STREAM // ADAPTATION FEED"}
+    EMPIRE = {state = "LIVE // E-01", stream = "STREAM // EMPIRE", title = "FACILITY OVERVIEW", eyebrow = "CONTROL DIVISION", section = "THE FACILITY", description = "Every pattern becomes an advantage.", art = "WR_UI_FacilityPanel.dds", quote = "OBSERVE. UNDERSTAND. ADAPT."},
+    CITIES = {state = "LIVE // C-02", stream = "STREAM // CITY NETWORK", title = "CITY INTELLIGENCE", eyebrow = "INFRASTRUCTURE DIVISION", section = "THE NETWORK", description = "Pressure becomes a stronger foundation.", art = "WR_UI_FacilityPanel.dds", quote = "STRUCTURE THROUGH REPETITION."},
+    KIYOTAKA = {state = "LIVE // S-04", stream = "STREAM // SUBJECT 004", title = "PERFECT ADAPTATION", eyebrow = "SUBJECT A-04 / RESTRICTED", section = "THE MASTERPIECE", description = "The experiment has no known ceiling.", art = "WR_UI_SubjectPanel.dds", quote = "EVERY FAILURE BECOMES DATA."},
+    UNITS = {state = "LIVE // U-04", stream = "STREAM // GEN-4 OPERATIVES", title = "OPERATIVE COMMAND", eyebrow = "FIELD OPERATIONS DIVISION", section = "GENERATION 04", description = "Individual identities. Shared doctrine.", art = "WR_UI_OperativesPanel.dds", quote = "PRECISION IS NOT AN ACCIDENT."},
+    TELEMETRY = {state = "REC // T-05", stream = "STREAM // ADAPTATION FEED", title = "ADAPTATION TELEMETRY", eyebrow = "OBSERVATION DIVISION", section = "THE RECORD", description = "Nothing is wasted. Everything is recorded.", art = "WR_UI_FacilityPanel.dds", quote = "THE PATTERN IS ALREADY CHANGING."}
 }
 
 local function WR_RegisterBlockingPopup(popupType)
@@ -316,7 +318,7 @@ local function WR_FormatHalfPercentStacks(halfStacks)
 end
 
 local function WR_Divider()
-    return "------------------------------------------------------------"
+    return ""
 end
 
 local function WR_Color(text, colorTag)
@@ -611,9 +613,7 @@ local function WR_GetKiyotakaProfile(playerID)
 end
 
 local function WR_AppendPanelHeader(lines, title, player)
-    table.insert(lines, WR_Header(title))
-    table.insert(lines, WR_Divider())
-    table.insert(lines, "Player: " .. (player:GetName() or "White Room") .. "    Turn: " .. tostring(Game.GetGameTurn()))
+    table.insert(lines, "OPERATOR // " .. (player:GetName() or "White Room") .. "    /    TURN " .. tostring(Game.GetGameTurn()))
     table.insert(lines, "")
 end
 
@@ -992,6 +992,26 @@ local function WR_BuildStatusText()
         return "No active White Room civilization found in this game."
     end
 
+    if WR_ACTIVE_TAB == "KIYOTAKA" and not WR_COMPACT_MODE then
+        local profile = WR_GetKiyotakaProfile(playerID)
+        local unit = WR_FindKiyotaka(player)
+        if unit ~= nil then
+            local plot = unit:GetPlot()
+            table.insert(lines, string.format("FIELD RECORD // Level %d / XP %d / Position %s", unit:GetLevel(), unit:GetExperience(),
+                plot ~= nil and string.format("%d, %d", plot:GetX(), plot:GetY()) or "unknown"))
+        else
+            table.insert(lines, "FIELD RECORD // Subject not deployed. Permanent adaptation remains archived.")
+        end
+        table.insert(lines, "")
+        table.insert(lines, "DECODED CLASS DOCTRINES")
+        table.insert(lines, #profile.classParts > 0 and table.concat(profile.classParts, "  /  ") or "No class-specific kill data recorded yet.")
+        table.insert(lines, "")
+        table.insert(lines, "RECOVERY // " .. tostring(profile.pendingHeal) .. " HP queued for the next White Room turn")
+        table.insert(lines, "FLOW // " .. (profile.flowRemaining > 0 and ("Needs +" .. WR_FormatPercentFromHundredths(profile.flowRemaining)) or "Flow State active"))
+        table.insert(lines, "Meters show progress to the next applied threshold, not a cap on stored adaptation.")
+        return table.concat(lines, "[NEWLINE]")
+    end
+
     if WR_ACTIVE_TAB == "CITIES" then
         WR_AppendPanelHeader(lines, "City Adaptation Records", player)
         WR_AppendCities(lines, playerID, player)
@@ -1166,7 +1186,7 @@ local function WR_UpdateSummaryPanel()
         WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_STRENGTH] DEPLOYMENT", kiyotaka ~= nil and "ACTIVE" or "MISSING")
         WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "[ICON_BULLET] VITALS", WR_UnitHpLine(kiyotaka))
         WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_RESEARCH] ADAPTATION", "+" .. WR_FormatPercentFromHundredths(kiyotakaProfile.totalScore))
-        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_MOVES] FLOW STATE", WR_StatusTag(kiyotakaProfile.moveChance >= 10000) .. " " .. WR_FormatPercentFromHundredths(kiyotakaProfile.moveChance))
+        WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_MOVES] FLOW STATE", WR_FormatPercentFromHundredths(kiyotakaProfile.moveChance))
     elseif WR_ACTIVE_TAB == "UNITS" then
         local operativeCount = WR_CountOperatives(player)
         local operativeLifetime = WR_GetOperativeLifetimeSummary(playerID)
@@ -1184,9 +1204,9 @@ local function WR_UpdateSummaryPanel()
         WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_STRENGTH] OPERATIVE DATA", tostring(telemetry.operative))
     else
         WR_SetLabel(Controls.SummaryTitle, "Facility Readout")
-        WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_GOLD] TRADE GOLD", WR_FormatStoredApplied(tradeHalfStacks * 0.5, math.floor(tradeHalfStacks / 2)))
+        WR_SetSummaryMetric(Controls.SummaryMetricOneCaption, Controls.SummaryMetricOne, "[ICON_GOLD] TRADE GOLD", string.format("+%.2f%%", tradeHalfStacks * 0.5))
         WR_SetSummaryMetric(Controls.SummaryMetricTwoCaption, Controls.SummaryMetricTwo, "[ICON_CAPITAL] CITY LOSSES", tostring(cityLossStacks))
-        WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_STRENGTH] VS CITIES", WR_FormatStoredApplied(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK, math.floor(cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK)))
+        WR_SetSummaryMetric(Controls.SummaryMetricThreeCaption, Controls.SummaryMetricThree, "[ICON_STRENGTH] VS CITIES", string.format("+%.2f%%", cityLossStacks * WR_CITY_LOSS_ATTACK_PERCENT_PER_STACK))
         WR_SetSummaryMetric(Controls.SummaryMetricFourCaption, Controls.SummaryMetricFour, "[ICON_RESEARCH] BEST CITY", bestCityName)
     end
 
@@ -1204,20 +1224,30 @@ end
 local function WR_UpdateTabButtons()
     local presentation = WR_TAB_PRESENTATION[WR_ACTIVE_TAB] or WR_TAB_PRESENTATION.EMPIRE
 
-    WR_SetButtonString(Controls.EmpireTabButton, "[ICON_GOLD] " .. (WR_ACTIVE_TAB == "EMPIRE" and "EMPIRE" or "Empire"))
-    WR_SetButtonString(Controls.CitiesTabButton, "[ICON_CAPITAL] " .. (WR_ACTIVE_TAB == "CITIES" and "CITIES" or "Cities"))
-    WR_SetButtonString(Controls.KiyotakaTabButton, "[ICON_RESEARCH] " .. (WR_ACTIVE_TAB == "KIYOTAKA" and "KIYOTAKA" or "Kiyotaka"))
-    WR_SetButtonString(Controls.UnitsTabButton, "[ICON_STRENGTH] " .. (WR_ACTIVE_TAB == "UNITS" and "UNITS" or "Units"))
-    WR_SetButtonString(Controls.TelemetryTabButton, "[ICON_RESEARCH] " .. (WR_ACTIVE_TAB == "TELEMETRY" and "TELEMETRY" or "Telemetry"))
+    WR_SetLabel(Controls.EmpireTabText, "FACILITY")
+    WR_SetLabel(Controls.CitiesTabText, "CITY NETWORK")
+    WR_SetLabel(Controls.KiyotakaTabText, "SUBJECT 004")
+    WR_SetLabel(Controls.UnitsTabText, "OPERATIVES")
+    WR_SetLabel(Controls.TelemetryTabText, "TELEMETRY")
     Controls.EmpireTabSelection:SetHide(WR_ACTIVE_TAB ~= "EMPIRE")
     Controls.CitiesTabSelection:SetHide(WR_ACTIVE_TAB ~= "CITIES")
     Controls.KiyotakaTabSelection:SetHide(WR_ACTIVE_TAB ~= "KIYOTAKA")
     Controls.UnitsTabSelection:SetHide(WR_ACTIVE_TAB ~= "UNITS")
     Controls.TelemetryTabSelection:SetHide(WR_ACTIVE_TAB ~= "TELEMETRY")
+    WR_SetLabel(Controls.TitleLabel, presentation.title)
+    WR_SetLabel(Controls.SectionEyebrow, presentation.eyebrow)
+    WR_SetLabel(Controls.SectionTitle, presentation.section)
+    WR_SetLabel(Controls.SectionDescription, presentation.description)
+    WR_SetLabel(Controls.SectionQuote, presentation.quote)
+    if WR_LAST_SECTION_ART ~= presentation.art then
+        Controls.SectionArt:SetTexture("Art/UI/" .. presentation.art)
+        WR_LAST_SECTION_ART = presentation.art
+    end
+    WR_SetLabel(Controls.HeaderSubtitle, "ARCHIVE / " .. tostring(Game.GetGameTurn()) .. "    //    " .. presentation.stream)
     WR_SetLabel(Controls.SystemStateLabel, presentation.state)
     WR_SetLabel(Controls.RecordStreamLabel, presentation.stream)
     WR_SetLabel(Controls.FooterStatusLabel, WR_ACTIVE_TAB == "TELEMETRY" and "FACILITY LINK: RECORDING" or "FACILITY LINK: STABLE")
-    WR_SetButtonString(Controls.CompactButton, "[ICON_BULLET] " .. (WR_COMPACT_MODE and "Expanded" or "Compact"))
+    WR_SetLabel(Controls.CompactButtonText, WR_COMPACT_MODE and "EXPANDED" or "COMPACT")
     WR_SetTooltip(Controls.EmpireTabButton, "Facility-level learning from trade routes and observed city losses.")
     WR_SetTooltip(Controls.CitiesTabButton, "Per-city adaptation records: damage defense, ranged strikes, duplicate yields, and worked improvements.")
     WR_SetTooltip(Controls.KiyotakaTabButton, "Kiyotaka's Perfect Adaptation dossier, including Flow State and class matchups.")
@@ -1226,18 +1256,139 @@ local function WR_UpdateTabButtons()
     WR_SetTooltip(Controls.CompactButton, WR_COMPACT_MODE and "Show full White Room status details." or "Show a shorter White Room status readout.")
 end
 
+-- Visual presentation reads existing state only. No new gameplay/save keys.
+local function WR_SetMeter(control, fraction, width)
+    local clamped = math.max(0, math.min(1, fraction or 0))
+    control:SetSizeVal(math.max(1, math.floor(width * clamped)), 3)
+    control:SetHide(clamped <= 0)
+end
+
+local function WR_TierProgress(value, wholePercent)
+    if wholePercent then return (value % 100) / 100, math.floor(value / 100) + 1 end
+    local previous = 0
+    for _, threshold in ipairs({100, 500, 1000, 2000, 3500, 5000, 7500, 10000}) do
+        if value < threshold then return (value - previous) / (threshold - previous), threshold / 100 end
+        previous = threshold
+    end
+    return 1, 100
+end
+
+local function WR_UpdateSubjectMeters(playerID)
+    local profile = WR_GetKiyotakaProfile(playerID)
+    for _, entry in ipairs({
+        {"Combat", profile.combat}, {"Attack", profile.attack},
+        {"Resistance", profile.resistance}, {"Healing", profile.healing, true},
+        {"Desperation", profile.desperation}, {"Flow", profile.moveChance}
+    }) do
+        local name, value = entry[1], entry[2]
+        local fraction, target = WR_TierProgress(value, entry[3])
+        if name == "Flow" then fraction, target = value / 10000, 100 end
+        WR_SetLabel(Controls["Subject" .. name .. "Value"], "+" .. WR_FormatPercentFromHundredths(value))
+        WR_SetMeter(Controls["Subject" .. name .. "Fill"], fraction, 298)
+        WR_SetTooltip(Controls["Subject" .. name .. "Value"], name == "Flow"
+            and "Progress toward Flow State at 100%. All fractional progress is retained."
+            or ("Progress toward the next applied threshold: " .. tostring(target) .. "%. All fractional progress is retained."))
+    end
+end
+
+local function WR_UpdateOperativeCards(playerID, player)
+    local records = WR_GetActiveOperativeRecords(playerID, player)
+    for index, name in ipairs({"One", "Two", "Three"}) do
+        local record = records[index]
+        local prefix = "Operative" .. name
+        if record ~= nil then
+            local unit = record.unit
+            local maximum = unit:GetMaxHitPoints()
+            local health = math.max(0, maximum - unit:GetDamage())
+            WR_SetLabel(Controls[prefix .. "Name"], record.callsign)
+            WR_SetLabel(Controls[prefix .. "State"], "DEPLOYED // T" .. tostring(record.deployTurn))
+            WR_SetLabel(Controls[prefix .. "Vitals"], string.format("HP %d / %d", health, maximum))
+            WR_SetLabel(Controls[prefix .. "Kills"], string.format("%d kills / %d combats", record.kills, record.combats))
+            WR_SetLabel(Controls[prefix .. "Experience"], string.format("LEVEL %d // XP %d", unit:GetLevel(), unit:GetExperience()))
+            WR_SetMeter(Controls[prefix .. "HealthFill"], health / math.max(1, maximum), 184)
+            WR_SetTooltip(Controls[prefix .. "Card"], string.format("%s // %s[NEWLINE]Damage %d dealt / %d taken[NEWLINE]%d wounded-target / %d friendly-territory engagements",
+                record.callsign, record.location, record.damageDealt, record.damageTaken, record.woundedEngagements, record.friendlyEngagements))
+        else
+            WR_SetLabel(Controls[prefix .. "Name"], "VACANT // 0" .. tostring(index))
+            WR_SetLabel(Controls[prefix .. "State"], "AWAITING DEPLOYMENT")
+            WR_SetLabel(Controls[prefix .. "Vitals"], "--")
+            WR_SetLabel(Controls[prefix .. "Kills"], "NO ACTIVE SERVICE RECORD")
+            WR_SetLabel(Controls[prefix .. "Experience"], "CAPACITY RESERVED")
+            WR_SetMeter(Controls[prefix .. "HealthFill"], 0, 184)
+            WR_SetTooltip(Controls[prefix .. "Card"], "An available roster slot, not an unlocked or deployed unit. Plastics is required to train Operatives.")
+        end
+    end
+end
+
+local function WR_UpdateTelemetryCards(playerID)
+    local events = WR_GetTelemetryEvents(playerID)
+    local pages = math.max(1, math.ceil(#events / 3))
+    WR_FEED_PAGE = math.max(0, math.min(WR_FEED_PAGE, pages - 1))
+    for index, name in ipairs({"One", "Two", "Three"}) do
+        local event = events[WR_FEED_PAGE * 3 + index]
+        local prefix = "Feed" .. name
+        Controls[prefix .. "Card"]:SetHide(event == nil and index > 1)
+        WR_SetLabel(Controls[prefix .. "Category"], event ~= nil and event.category or "SYSTEM / STANDBY")
+        WR_SetLabel(Controls[prefix .. "Turn"], event ~= nil and string.format("TURN %d / %04d", event.turn, event.sequence) or "")
+        WR_SetLabel(Controls[prefix .. "Headline"], event ~= nil and event.headline or "AWAITING THE FIRST OBSERVATION")
+        WR_SetLabel(Controls[prefix .. "Detail"], event ~= nil and event.detail or "Combat, city pressure, trade and foreign collapses will appear here.")
+        WR_SetTooltip(Controls[prefix .. "Card"], event ~= nil and (event.headline .. "[NEWLINE]" .. event.detail) or "")
+    end
+    WR_SetLabel(Controls.FeedPageLabel, string.format("PAGE %d / %d", WR_FEED_PAGE + 1, pages))
+    Controls.FeedNewerButton:SetDisabled(WR_FEED_PAGE <= 0)
+    Controls.FeedOlderButton:SetDisabled(WR_FEED_PAGE >= pages - 1)
+end
+
+local function WR_UpdateVisualRecords()
+    local playerID, player = WR_GetActiveWhiteRoomPlayer()
+    local subject = WR_ACTIVE_TAB == "KIYOTAKA" and not WR_COMPACT_MODE
+    local roster = WR_ACTIVE_TAB == "UNITS" and not WR_COMPACT_MODE
+    local feed = WR_ACTIVE_TAB == "TELEMETRY" and not WR_COMPACT_MODE
+    local dossier = WR_ACTIVE_TAB == "KIYOTAKA" or WR_ACTIVE_TAB == "UNITS"
+    Controls.SubjectMetrics:SetHide(not subject)
+    Controls.OperativeRoster:SetHide(not roster)
+    Controls.TelemetryFeed:SetHide(not feed)
+    Controls.FeedPager:SetHide(not feed)
+    Controls.RecordStreamLabel:SetHide(feed or dossier)
+    Controls.OpenDossierButton:SetHide(not dossier)
+    Controls.RecordArea:SetHide(feed)
+    -- Compact mode keeps the complete legacy text readout available.
+    local short = subject or roster
+    Controls.RecordArea:SetOffsetVal(240, short and 464 or 292)
+    Controls.RecordArea:SetSizeVal(652, short and 110 or 282)
+    Controls.RecordBackdrop:SetSizeVal(652, short and 110 or 282)
+    Controls.StatusScrollPanel:SetSizeVal(632, short and 94 or 266)
+    if player ~= nil then
+        if dossier then
+            local unitType = WR_ACTIVE_TAB == "KIYOTAKA" and UNIT_WR_KIYOTAKA or UNIT_WR_FOURTH_GEN_OPERATIVE
+            local info = GameInfo.Units[unitType]
+            local techID = info ~= nil and GameInfoTypes[info.PrereqTech] or nil
+            local team = Teams[player:GetTeam()]
+            local unlocked = team ~= nil and techID ~= nil and team:IsHasTech(techID)
+            Controls.OpenDossierButton:SetDisabled(not unlocked)
+            WR_SetLabel(Controls.OpenDossierText, unlocked and "PERSONNEL DOSSIER" or "DOSSIER CLASSIFIED")
+        end
+        if subject then WR_UpdateSubjectMeters(playerID) end
+        if roster then WR_UpdateOperativeCards(playerID, player) end
+        if feed then WR_UpdateTelemetryCards(playerID) end
+    end
+end
+
 local WR_RefreshPanel
 
 local function WR_SetActiveTab(tabName)
     WR_ACTIVE_TAB = tabName
+    WR_FEED_PAGE = 0
     WR_UpdateTabButtons()
     WR_RefreshPanel()
+    if Controls.StatusScrollPanel.SetScrollValue ~= nil then Controls.StatusScrollPanel:SetScrollValue(0) end
 end
 
 WR_RefreshPanel = function()
     WR_UpdateTabButtons()
     WR_UpdateSummaryPanel()
     Controls.StatusText:SetString(WR_BuildStatusText())
+    WR_UpdateVisualRecords()
 
     if WR_ACTIVE_TAB == "CITIES" then
         WR_SetTooltip(Controls.StatusText, "City records are sorted by adaptation score. Duplicate worked improvements give +0.5% per duplicate to their linked yield; whole-percent values are applied through hidden buildings.")
@@ -1397,7 +1548,7 @@ end
 
 WR_TryIncludeIconSupport()
 WR_SetCivIcon(Controls.WhiteRoomButtonIcon, 32)
-Controls.HeaderIconFrame:SetHide(not WR_SetCivIcon(Controls.HeaderCivIcon, 64))
+Controls.HeaderIconFrame:SetHide(not WR_SetCivIcon(Controls.HeaderCivIcon, 32))
 
 Controls.WhiteRoomStatusButton:RegisterCallback(Mouse.eLClick, WR_TogglePanel)
 Controls.EmpireTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetActiveTab("EMPIRE") end)
@@ -1408,6 +1559,21 @@ Controls.TelemetryTabButton:RegisterCallback(Mouse.eLClick, function() WR_SetAct
 Controls.RefreshButton:RegisterCallback(Mouse.eLClick, WR_RefreshPanel)
 Controls.CompactButton:RegisterCallback(Mouse.eLClick, WR_ToggleCompactMode)
 Controls.CloseButton:RegisterCallback(Mouse.eLClick, WR_HidePanel)
+Controls.OpenDossierButton:RegisterCallback(Mouse.eLClick, function()
+    local playerID, player = WR_GetActiveWhiteRoomPlayer()
+    if player ~= nil and LuaEvents ~= nil then
+        local unitType = WR_ACTIVE_TAB == "KIYOTAKA" and "UNIT_WR_KIYOTAKA" or "UNIT_WR_FOURTH_GEN_OPERATIVE"
+        LuaEvents.WR_OpenPersonnelDossier(playerID, unitType)
+    end
+end)
+Controls.FeedNewerButton:RegisterCallback(Mouse.eLClick, function()
+    WR_FEED_PAGE = math.max(0, WR_FEED_PAGE - 1)
+    WR_RefreshPanel()
+end)
+Controls.FeedOlderButton:RegisterCallback(Mouse.eLClick, function()
+    WR_FEED_PAGE = WR_FEED_PAGE + 1
+    WR_RefreshPanel()
+end)
 
 ContextPtr:SetInputHandler(function(uiMsg, wParam)
     if uiMsg == KeyEvents.KeyDown and wParam == Keys.VK_ESCAPE and not Controls.StatusPanel:IsHidden() then
@@ -1425,6 +1591,14 @@ if Events.ActivePlayerTurnStart ~= nil then
         if not Controls.StatusPanel:IsHidden() then
             WR_RefreshPanel()
         end
+    end)
+end
+
+if Events.GameplaySetActivePlayer ~= nil then
+    Events.GameplaySetActivePlayer.Add(function()
+        WR_KIYOTAKA_BANNER_VISIBLE = false
+        WR_HidePanel()
+        WR_UpdateChromeVisibility()
     end)
 end
 

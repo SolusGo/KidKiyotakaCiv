@@ -301,6 +301,55 @@ def validate_lua() -> None:
     print("Passed Lua 5.1 syntax and executable gameplay/reload regressions (no animation events).")
 
 
+def validate_ui() -> None:
+    from ui_fixture import make_ui
+    from PIL import Image
+    manifest = ET.parse(MODINFO).getroot()
+    vfs_assets = {normalized(node.text or "") for node in manifest.findall("./Files/File") if node.attrib.get("import") == "1"}
+    for texture in (ROOT / "Art/UI").glob("*.dds"):
+        with Image.open(texture) as art:
+            check(art.format == "DDS" and art.width % 4 == 0 and art.height % 4 == 0, f"Invalid DDS dimensions: {texture.name}")
+        check(texture.read_bytes()[84:88] == b"DXT5", f"UI art must use compressed DXT5: {texture.name}")
+        check(normalized(str(texture.relative_to(ROOT))) in vfs_assets, f"UI art not imported into VFS: {texture.name}")
+    for name in ("WhiteRoomStatusPanel", "WhiteRoomUnitUnlock"):
+        tree = ET.parse(ROOT / "UI" / (name + ".xml"))
+        ids = [node.attrib["ID"] for node in tree.iter() if "ID" in node.attrib]
+        check(len(ids) == len(set(ids)), f"Duplicate UI control IDs in {name}")
+        references = set(re.findall(r"Controls\.([A-Za-z0-9_]+)", read(f"UI/{name}.lua")))
+        check(references <= set(ids), f"UI Lua references missing controls in {name}: {references - set(ids)}")
+        for node in tree.iter("Image"):
+            texture = node.attrib.get("Texture")
+            if texture:
+                check((ROOT / texture).is_file(), f"UI texture missing: {texture}")
+    lua, _ = make_ui()
+    lua.execute(read("tools/tests/white_room_ui_assertions.lua"))
+    unlock, _ = make_ui("unlock")
+    unlock.execute("""
+        TECHS[21] = true
+        GameEvents.TeamTechResearched(0, 21)
+        expect(Controls.UnlockPanel:IsHidden(), false, "Kiyotaka unlock visible")
+        expect(Controls.UnlockArtwork.texture, "Art/UI/WR_UI_Subject.dds", "Kiyotaka unlock art")
+        assert(Controls.BodyScrollPanel.measured, "lore scroll must be measured")
+        assert(string.find(Controls.UnlockStatsLabel.text, "130 STRENGTH"), "live unit stats")
+        Controls.AcknowledgeButton:Click()
+        TECHS[22] = true
+        GameEvents.TeamTechResearched(0, 22)
+        expect(Controls.UnlockArtwork.texture, "Art/UI/WR_UI_Operatives.dds", "Operative unlock art")
+        Controls.AcknowledgeButton:Click()
+        GameEvents.TeamTechResearched(0, 21)
+        expect(Controls.UnlockPanel:IsHidden(), true, "unlock remains one-time")
+        local writesBeforeReplay = UI_SAVE_WRITES
+        LuaEvents.WR_OpenPersonnelDossier(0, "UNIT_WR_KIYOTAKA")
+        expect(Controls.UnlockPanel:IsHidden(), false, "unlocked dossier can be replayed")
+        expect(UI_SAVE_WRITES, writesBeforeReplay, "replaying dossier does not mutate saves")
+        Events.GameplaySetActivePlayer()
+        expect(Controls.UnlockPanel:IsHidden(), true, "active player change closes dossier")
+    """)
+    foreign, _ = make_ui("unlock", active_player=1)
+    foreign.execute("TECHS[21] = true; GameEvents.TeamTechResearched(0, 21); expect(Controls.UnlockPanel:IsHidden(), true, 'foreign unlock privacy')")
+    print("Passed XML controls, real UI Lua navigation, meters, roster, feed paging, unlock art, privacy and idle-poll tests.")
+
+
 def validate_behavior_models() -> None:
     # Founding: one initial capital is legal; losing it never restores the right.
     consumed = False
@@ -394,6 +443,7 @@ def main() -> int:
     validate_behavior_models()
     validate_sql_effects()
     validate_lua()
+    validate_ui()
     if ERRORS:
         print("Validation failed:")
         for error in ERRORS:

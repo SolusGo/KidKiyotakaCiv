@@ -161,6 +161,26 @@ The panel is split into focused tabs:
 Each tab includes a compact summary strip above the detailed readout so the
 most important status can be checked quickly.
 
+### Restricted Archive UI
+
+The interface now has original White Room facility, Kiyotaka, and Operative
+artwork; graphite panels with ivory text and amber accents; and a dedicated
+archive navigation rail. Kiyotaka's dossier includes six adaptation meters, while
+the Operatives tab displays individual callsign, health, level, and combat cards.
+Telemetry uses paged event cards with full details in tooltips. Compact mode
+retains the text readout.
+
+Technology unlocks use illustrated personnel dossiers with scrollable lore.
+After the relevant technology is researched, **Personnel Dossier** on the
+Kiyotaka or Operatives tab reopens that unit's dossier without resetting unlocks
+or changing progression.
+
+![Kiyotaka dossier layout preview](docs/ui/kiyotaka.png)
+
+This is a layout preview using the real UI Lua with mock game data, not an
+in-game screenshot. More previews, artwork provenance, and testing notes are in
+[`UI_REDESIGN.md`](UI_REDESIGN.md).
+
 ## Requirements
 
 - Civilization V: Brave New World
